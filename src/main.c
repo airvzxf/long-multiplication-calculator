@@ -145,7 +145,7 @@ void print_text(struct Multiplication *m) {
 
     print_multiplication_separator(separator);
     printf("= %llu", m->result);
-    if (m->is_printing_description) printf(" ---> Final result", m->result);
+    if (m->is_printing_description) printf(" ---> Final result");
     printf("\n");
 }
 
