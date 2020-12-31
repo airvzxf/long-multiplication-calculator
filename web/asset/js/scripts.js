@@ -19,6 +19,7 @@ function calculate() {
     Warning.hide()
     const multiplier_element = document.getElementById('multiplier')
     const multiplicand_element = document.getElementById('multiplicand')
+    const print_description = document.getElementsByName('print_description')
     const answer = document.getElementById('answer')
     const solution = document.getElementById('solution')
     const error_text = document.getElementById('error-text')
@@ -40,10 +41,17 @@ function calculate() {
         return
     }
 
+    let is_print_description;
+    for (let i = 0; i < print_description.length; i++) {
+        if (print_description[i].checked) {
+            is_print_description = print_description[i].value
+        }
+    }
+
     const result = multiplier * multiplicand
     answer.innerText = result.toLocaleString('en')
 
-    const url = "asset/bash/init.sh?" + multiplier + "," + multiplicand + ",plain"
+    const url = "asset/bash/init.sh?" + multiplier + "," + multiplicand + ",plain," + is_print_description
     let xml_http_request = new XMLHttpRequest()
     xml_http_request.open("GET", url, true)
     xml_http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')

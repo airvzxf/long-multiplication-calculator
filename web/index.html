@@ -1,6 +1,6 @@
 <!doctype html>
 
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="utf-8">
 
@@ -33,12 +33,26 @@
             Note: The maximum value supported for the result is 8,999,999,999,999,999,999.
         </p>
 
+        <hr class="percent-70">
+
         <p>
+            <strong>Options:</strong><br>
+
+            Print description:
+            <input checked id="print_description_yes" name="print_description" type="radio" value="yes">
+            <label for="print_description_yes">Yes</label>
+
+            <input id="print_description_no" name="print_description" type="radio" value="no">
+            <label for="print_description_no">No</label>
+            <br>
+            <br>
+
             <label for="multiplier">Multiplier:</label>
             <input id="multiplier" onkeydown="enter_emulation()" placeholder="51" size="5" type="number">
 
             <label for="multiplicand">Multiplicand:</label>
             <input id="multiplicand" onkeydown="enter_emulation()" placeholder="3416" size="5" type="number">
+            <br>
 
             <button onclick="calculate()">Calculate</button>
         </p>
@@ -68,8 +82,6 @@
     </section>
 
     <footer>
-        <br>
-        <br>
         <br>
         <hr>
         <p>

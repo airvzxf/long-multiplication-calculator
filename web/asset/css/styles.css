@@ -23,6 +23,7 @@ header, section, footer {
 .hidden {
     display: none;
 }
+
 .container {
     max-width: 720px;
     margin: 0 auto;
@@ -62,4 +63,8 @@ header, section, footer {
 
 #answer {
     font-weight: bolder;
+}
+
+.percent-70 {
+    width: 70%;
 }
