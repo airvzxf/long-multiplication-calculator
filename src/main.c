@@ -18,9 +18,11 @@ struct Multiplication {
     unsigned long long int result;
     unsigned long long int result_size;
 
-    // Decrease the size of the array if the exit code is 139 (interrupted by signal 11: SIGSEGV).
+// Decrease the size of the array if the exit code is 139 (interrupted by signal 11: SIGSEGV).
     unsigned long long int operations[500000];
     unsigned long long int operations_size;
+
+    unsigned char is_printing_description;
 };
 
 int count_digits(unsigned long long int number);
@@ -83,11 +85,15 @@ void print_text(struct Multiplication *m) {
 
     sub_spaces_left = spaces_left + (m->result_size - m->multiplicand_size);
     set_text_fill(&spaces_str, ' ', sub_spaces_left);
-    printf("%s%s ---> Multiplicand => a\n", spaces_str, m->multiplicand_str);
+    printf("%s%s", spaces_str, m->multiplicand_str);
+    if (m->is_printing_description) printf(" ---> Multiplicand => a");
+    printf("\n");
 
     sub_spaces_left = spaces_left - 1 + (m->result_size - m->multiplier_size);
     set_text_fill(&spaces_str, ' ', sub_spaces_left);
-    printf("x%s%s ---> Multiplier   => b\n", spaces_str, m->multiplier_str);
+    printf("x%s%s", spaces_str, m->multiplier_str);
+    if (m->is_printing_description) printf(" ---> Multiplier   => b");
+    printf("\n");
 
     print_multiplication_custom_separator(separator, '=');
 
@@ -100,17 +106,24 @@ void print_text(struct Multiplication *m) {
         spaces_inner_left = pre_space - count_digits(m->operations[i]);
         set_text_fill(&spaces_str, ' ', spaces_inner_left);
         printf("  %s%llu", spaces_str, m->operations[i]);
-        printf(" %s---> First digit: b%llu * a[x]\n", description_str, actual_multiplier);
+        if (m->is_printing_description) {
+            printf(" %s---> First digit: b%llu * a[x]", description_str, actual_multiplier);
+        }
+        printf("\n");
 
         spaces_inner_left = pre_space - count_digits(m->operations[i + 1]);
         set_text_fill(&spaces_str, ' ', spaces_inner_left);
         printf("+ %s%llu", spaces_str, m->operations[i + 1]);
-        printf(" %s---> Carry: b%llu * a[x]\n", description_str, actual_multiplier);
+        if (m->is_printing_description) {
+            printf(" %s---> Carry: b%llu * a[x]", description_str, actual_multiplier);
+        }
+        printf("\n");
 
         spaces_inner_left = pre_space - count_digits(m->operations[i + 2]);
         set_text_fill(&spaces_str, ' ', spaces_inner_left);
         printf("= %s%llu", spaces_str, m->operations[i + 2]);
-        printf(" %s---> Result of the sum\n", description_str);
+        if (m->is_printing_description) printf(" %s---> Result of the sum", description_str);
+        printf("\n");
 
         if (i + 3 < m->operations_size) {
             print_multiplication_separator(separator);
@@ -126,11 +139,14 @@ void print_text(struct Multiplication *m) {
         set_text_fill(&spaces_str, ' ', spaces_inner_left);
         set_text_fill(&zeros_str, '0', (i / 3));
         printf("+ %s%llu%s", spaces_str, m->operations[i], zeros_str);
-        printf(" ---> Result: b%llu * a\n", actual_multiplier);
+        if (m->is_printing_description) printf(" ---> Result: b%llu * a", actual_multiplier);
+        printf("\n");
     }
 
     print_multiplication_separator(separator);
-    printf("= %llu ---> Final result\n", m->result);
+    printf("= %llu", m->result);
+    if (m->is_printing_description) printf(" ---> Final result", m->result);
+    printf("\n");
 }
 
 void generate_operations(struct Multiplication *m) {
@@ -181,19 +197,22 @@ unsigned long long int get_power(unsigned long long int base, unsigned long long
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 4) {
+    if (argc != 5) {
         printf("Content-Type: text/plain;charset=UTF-8\n\n");
         printf("Error: Some arguments are missing.\n");
         if (argc < 2) {
-            printf("The argument #1 is missing.\n");
+            printf("The argument #1 (multiplier) is missing.\n");
         }
         if (argc < 3) {
-            printf("The argument #2 is missing.\n");
+            printf("The argument #2 (multiplicand) is missing.\n");
         }
         if (argc < 4) {
-            printf("The argument #3 is missing.\n");
+            printf("The argument #3 (output_type) is missing.\n");
         }
-        if (argc > 4) {
+        if (argc < 5) {
+            printf("The argument #4 (print_description) is missing.\n");
+        }
+        if (argc > 5) {
             printf("Too many arguments supplied.\n");
         }
         printf("Exiting...\n");
@@ -204,7 +223,6 @@ int main(int argc, char *argv[]) {
     struct Multiplication multiplication;
 
     output_type = argv[3];
-
     printf("Content-Type: text/%s;charset=UTF-8\n\n", output_type);
 
     char *end_ptr;
@@ -220,6 +238,10 @@ int main(int argc, char *argv[]) {
     multiplication.result = multiplication.multiplier * multiplication.multiplicand;
     sprintf(result_str, "%llu", multiplication.result);
     multiplication.result_size = strlen(result_str);
+
+    if (argv[4][0] == 'n' || argv[4][0] == 'N') {
+        multiplication.is_printing_description = 0;
+    }
 
     generate_operations(&multiplication);
 
