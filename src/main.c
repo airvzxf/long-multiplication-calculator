@@ -239,6 +239,7 @@ int main(int argc, char *argv[]) {
     sprintf(result_str, "%llu", multiplication.result);
     multiplication.result_size = strlen(result_str);
 
+    multiplication.is_printing_description = 1;
     if (argv[4][0] == 'n' || argv[4][0] == 'N') {
         multiplication.is_printing_description = 0;
     }
