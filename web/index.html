@@ -1,0 +1,84 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>Calculator: Long Multiplication</title>
+    <meta content="Display the multiplication process including the carry numbers and the sums." name="description">
+    <meta content="Israel Roldan" name="author">
+
+    <link href="/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180">
+    <link href="/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png">
+    <link href="/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png">
+    <link href="/site.webmanifest" rel="manifest">
+
+    <link href="asset/css/styles.css?v=1.0" rel="stylesheet">
+</head>
+
+<body>
+<div class="container">
+    <header class="text-center">
+        <h1>Calculator: Long Multiplication</h1>
+    </header>
+
+    <section>
+        <p>
+            The long multiplication is the same as you did in the school when you was a kid. The intention is show all
+            the process of the multiplication including the carry numbers and the sums.
+        </p>
+
+        <p>
+            Note: The maximum value supported for the result is 8,999,999,999,999,999,999.
+        </p>
+
+        <p>
+            <label for="multiplier">Multiplier:</label>
+            <input id="multiplier" onkeydown="enter_emulation()" placeholder="51" size="5" type="number">
+
+            <label for="multiplicand">Multiplicand:</label>
+            <input id="multiplicand" onkeydown="enter_emulation()" placeholder="3416" size="5" type="number">
+
+            <button onclick="calculate()">Calculate</button>
+        </p>
+
+        <div class="hidden" id="error-message">
+            Warning:<br>
+            <span id="error-text"> The multiplier is required.</span>
+        </div>
+
+        <div>
+            <hr class="line-top"/>
+        </div>
+
+        <p>
+            Answer: <span id="answer"></span>
+        </p>
+
+        <div>
+            <hr class="line-top">
+        </div>
+
+        <p>
+            Solution:
+        </p>
+
+        <pre id="solution"></pre>
+    </section>
+
+    <footer>
+        <br>
+        <br>
+        <br>
+        <hr>
+        <p>
+            This project is under the GPL-3.0 License.<br>
+            The source code is in the GitHub repository
+            <a href="https://github.com/airvzxf/calculator-long-multiplication" target="_blank">airvzxf/calculator-long-multiplication</a>.
+        </p>
+    </footer>
+</div>
+
+<script src="asset/js/scripts.js"></script>
+</body>
+</html>
