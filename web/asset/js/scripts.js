@@ -15,6 +15,14 @@ class Warning {
     }
 }
 
+function warning_clean_up() {
+    const answer = document.getElementById('answer')
+    const solution = document.getElementById('solution')
+
+    answer.innerText = ""
+    solution.innerText = ""
+}
+
 function calculate() {
     Warning.hide()
     const multiplier_element = document.getElementById('multiplier')
@@ -30,6 +38,7 @@ function calculate() {
     if (isNaN(multiplier)) {
         error_text.innerText = "The multiplier is required. Please, fill the field."
         Warning.show()
+        warning_clean_up()
         multiplier_element.focus()
         return
     }
@@ -37,6 +46,7 @@ function calculate() {
     if (isNaN(multiplicand)) {
         error_text.innerText = "The multiplicand is required. Please, fill the field."
         Warning.show()
+        warning_clean_up()
         multiplicand_element.focus()
         return
     }
@@ -48,20 +58,28 @@ function calculate() {
         }
     }
 
-    const result = multiplier * multiplicand
-    answer.innerText = result.toLocaleString('en')
+    const url = "asset/bash/init.sh?" +
+        multiplier + "," +
+        multiplicand +
+        ",plain," +
+        is_print_description + "," +
+        new Date().getTime()
 
-    const url = "asset/bash/init.sh?" + multiplier + "," + multiplicand + ",plain," + is_print_description
     let xml_http_request = new XMLHttpRequest()
     xml_http_request.open("GET", url, true)
     xml_http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
     xml_http_request.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
+            const result = multiplier * multiplicand
+            answer.innerText = result.toLocaleString('en')
+
             solution.innerText = this.responseText
         }
         if (this.status !== 200) {
             error_text.innerText = "Fatal Error in the Ajax request. Failed trying to call the `asset/bash/init.sh`."
             Warning.show()
+            warning_clean_up()
+
         }
     }
     xml_http_request.send()
