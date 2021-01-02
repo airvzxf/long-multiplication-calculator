@@ -107,7 +107,7 @@ void print_text(struct Multiplication *m) {
         set_text_fill(&spaces_str, ' ', spaces_inner_left);
         printf("  %s%llu", spaces_str, m->operations[i]);
         if (m->is_printing_description) {
-            printf(" %s---> First digit: b%llu * a[x]", description_str, actual_multiplier);
+            printf(" %s---> Multiplication of b%llu * a", description_str, actual_multiplier);
         }
         printf("\n");
 
@@ -115,7 +115,7 @@ void print_text(struct Multiplication *m) {
         set_text_fill(&spaces_str, ' ', spaces_inner_left);
         printf("+ %s%llu", spaces_str, m->operations[i + 1]);
         if (m->is_printing_description) {
-            printf(" %s---> Carry: b%llu * a[x]", description_str, actual_multiplier);
+            printf(" %s---> Carry of b%llu * a", description_str, actual_multiplier);
         }
         printf("\n");
 
@@ -139,7 +139,7 @@ void print_text(struct Multiplication *m) {
         set_text_fill(&spaces_str, ' ', spaces_inner_left);
         set_text_fill(&zeros_str, '0', (i / 3));
         printf("+ %s%llu%s", spaces_str, m->operations[i], zeros_str);
-        if (m->is_printing_description) printf(" ---> Result: b%llu * a", actual_multiplier);
+        if (m->is_printing_description) printf(" ---> Result of b%llu * a", actual_multiplier);
         printf("\n");
     }
 
