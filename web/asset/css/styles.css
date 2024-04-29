@@ -30,10 +30,13 @@ header, section, footer {
     display: flow-root;
     border-left-width: 5px;
     border-right-width: 5px;
+    border-bottom-width: 5px;
     border-left-style: solid;
     border-right-style: solid;
+    border-bottom-style: solid;
     border-left-color: dimgrey;
     border-right-color: dimgrey;
+    border-bottom-color: dimgrey;
 }
 
 .text-center {
