@@ -26,8 +26,8 @@ use std::ops::Index;
 ///                       \n";
 /// let mut text: String = String::from("");
 ///
-/// use long_multiplication_command_line::display;
-/// display::symbols(&mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::symbols(&mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -63,8 +63,8 @@ pub fn symbols(text: &mut String) {
 /// let mut text: String = String::from("");
 /// let expected: &str = "┏━━━━━━━┓\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::top_border(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::top_border(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -76,8 +76,8 @@ pub fn symbols(text: &mut String) {
 /// let mut text: String = String::from("");
 /// let expected: &str = "┏━━━━━━━━━━━┓\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::top_border(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::top_border(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -108,8 +108,8 @@ pub fn top_border(multiplicand: usize, multiplier: usize, text: &mut String) {
 /// let mut text: String = String::from("");
 /// let expected: &str = "┗━━━┷━━━┛\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::bottom_border(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::bottom_border(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -121,8 +121,8 @@ pub fn top_border(multiplicand: usize, multiplier: usize, text: &mut String) {
 /// let mut text: String = String::from("");
 /// let expected: &str = "┗━━━┷━━━┷━━━┷━━━┛\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::bottom_border(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::bottom_border(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -160,8 +160,8 @@ pub fn bottom_border(multiplicand: usize, multiplier: usize, text: &mut String) 
 ///                       ┃ 2 │ 1 ┃\n\
 ///                       ┣━━━┷━━━┫\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::position_title(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::position_title(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -176,8 +176,8 @@ pub fn bottom_border(multiplicand: usize, multiplier: usize, text: &mut String) 
 ///                       ┃ 6 │ 5 │ 4 │ 3 │ 2 │ 1 ┃\n\
 ///                       ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::position_title(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::position_title(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -252,8 +252,8 @@ pub fn position_title(multiplicand: usize, multiplier: usize, text: &mut String)
 /// let expected: &str = "┃Ops.       ┃\n\
 ///                       ┣━━━┯━━━┯━━━┫\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::operation_title(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::operation_title(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -266,8 +266,8 @@ pub fn position_title(multiplicand: usize, multiplier: usize, text: &mut String)
 /// let expected: &str = "┃Ops.               ┃\n\
 ///                       ┣━━━┯━━━┯━━━┯━━━┯━━━┫\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::operation_title(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::operation_title(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -312,8 +312,8 @@ pub fn operation_title(multiplicand: usize, multiplier: usize, text: &mut String
 ///                       ┃ x │ 5 ┃\n\
 ///                       ┣━━━┿━━━┫\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::multiplication(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::multiplication(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -327,8 +327,8 @@ pub fn operation_title(multiplicand: usize, multiplier: usize, text: &mut String
 ///                       ┃ x │   │ 3 │ 4 │ 5 ┃\n\
 ///                       ┣━━━┿━━━┿━━━┿━━━┿━━━┫\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::multiplication(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::multiplication(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -407,8 +407,8 @@ pub fn multiplication(multiplicand: usize, multiplier: usize, text: &mut String)
 ///                       ┃   │ 7 ┃ 1 R\n\
 ///                       ┣━━━┷━━━┫\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::operations(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::operations(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -427,8 +427,8 @@ pub fn multiplication(multiplicand: usize, multiplier: usize, text: &mut String)
 ///                       ┃   │ 0 │ 8 │ 6 │   ┃ 2 R\n\
 ///                       ┣━━━┷━━━┷━━━┷━━━┷━━━┫\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::operations(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::operations(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -562,8 +562,8 @@ pub fn operations(multiplicand: usize, multiplier: usize, text: &mut String) {
 /// let expected: &str = "┃Sum.       ┃\n\
 ///                       ┣━━━┯━━━┯━━━┫\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::sum_title(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::sum_title(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -576,8 +576,8 @@ pub fn operations(multiplicand: usize, multiplier: usize, text: &mut String) {
 /// let expected: &str = "┃Sum.               ┃\n\
 ///                       ┣━━━┯━━━┯━━━┯━━━┯━━━┫\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::sum_title(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::sum_title(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -629,8 +629,8 @@ pub fn sum_title(multiplicand: usize, multiplier: usize, text: &mut String) {
 ///                       ┃ 0 │ 6 ┃ P\n\
 ///                       ┠───┼───┨\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::long_sum(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::long_sum(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -653,8 +653,8 @@ pub fn sum_title(multiplicand: usize, multiplier: usize, text: &mut String) {
 ///                       ┃ 0 │ 3 │ 3 │ 8 ┃ P\n\
 ///                       ┠───┼───┼───┼───┨\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::long_sum(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::long_sum(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -803,8 +803,8 @@ pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃   │ 6 ┃ V\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::product_validation(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::product_validation(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -816,8 +816,8 @@ pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃   │ 3 │ 3 │ 8 ┃ V\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::product_validation(multiplicand, multiplier, &mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::product_validation(multiplicand, multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -862,8 +862,8 @@ pub fn product_validation(multiplicand: usize, multiplier: usize, text: &mut Str
 ///                       License: GPL-3.0\n\
 ///                       Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 ///
-/// use long_multiplication_command_line::display;
-/// display::author(&mut text);
+/// use long_multiplication_command_line::generate;
+/// generate::author(&mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
