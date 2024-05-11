@@ -750,8 +750,11 @@ pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
     // Create first row for product
     let mut sum: usize = 0;
     let mut iteration: u32 = 0;
-    for row in &additions {
-        let expo = 10usize.pow(iteration);
+    let last_digit: usize = additions[additions.len() - 1];
+    let range: usize = if last_digit == 0 { additions.len() - 1 } else { additions.len() };
+    for index in 0..range {
+        let expo: usize = 10usize.pow(iteration);
+        let row: &usize = &additions[index];
         sum += row * expo;
         iteration += 1;
     }
