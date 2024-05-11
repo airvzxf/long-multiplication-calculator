@@ -17,7 +17,7 @@ use crate::generate;
 ///                       Ops. = Operations of the long multiplication.\n\
 ///                       Sum. = Sum of each column of the multiplication.\n\
 ///                       Pro. = Product of the multiplication.\n\
-///                       ^ = Carry-over.\n\
+///                       n ^ = Carry-over.\n\
 ///                       n R = The row number.\n\
 ///                       n C = The column number of the sum of the rows.\n\
 ///                       * Replace 'n' for a number.\n\
@@ -34,7 +34,7 @@ use crate::generate;
 ///                       ┃   │ 5 ┃\n\
 ///                       ┃ x │ 7 ┃\n\
 ///                       ┣━━━┿━━━┫\n\
-///                       ┃ 3 │   ┃ ^\n\
+///                       ┃ 3 │   ┃ 1 ^\n\
 ///                       ┠┈┈┈┼┈┈┈┨\n\
 ///                       ┃   │ 5 ┃ 1 R\n\
 ///                       ┣━━━┷━━━┫\n\
@@ -72,7 +72,7 @@ use crate::generate;
 ///                       Ops. = Operations of the long multiplication.\n\
 ///                       Sum. = Sum of each column of the multiplication.\n\
 ///                       Pro. = Product of the multiplication.\n\
-///                       ^ = Carry-over.\n\
+///                       n ^ = Carry-over.\n\
 ///                       n R = The row number.\n\
 ///                       n C = The column number of the sum of the rows.\n\
 ///                       * Replace 'n' for a number.\n\
@@ -89,19 +89,19 @@ use crate::generate;
 ///                       ┃   │   │   │   │ 1 │ 3 │ 5 │ 9 │ 7 ┃\n\
 ///                       ┃ x │   │   │   │   │ 8 │ 6 │ 4 │ 2 ┃\n\
 ///                       ┣━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┫\n\
-///                       ┃   │   │   │ 0 │ 0 │ 1 │ 1 │ 1 │   ┃ ^\n\
+///                       ┃   │   │   │ 0 │ 0 │ 1 │ 1 │ 1 │   ┃ 1 ^\n\
 ///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
 ///                       ┃   │   │   │   │ 2 │ 6 │ 0 │ 8 │ 4 ┃ 1 R\n\
 ///                       ┠───┼───┼───┼───┼───┼───┼───┼───┼───┨\n\
-///                       ┃   │   │ 0 │ 1 │ 2 │ 3 │ 2 │   │   ┃ ^\n\
+///                       ┃   │   │ 0 │ 1 │ 2 │ 3 │ 2 │   │   ┃ 2 ^\n\
 ///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
 ///                       ┃   │   │   │ 4 │ 2 │ 0 │ 6 │ 8 │   ┃ 2 R\n\
 ///                       ┠───┼───┼───┼───┼───┼───┼───┼───┼───┨\n\
-///                       ┃   │ 0 │ 1 │ 3 │ 5 │ 4 │   │   │   ┃ ^\n\
+///                       ┃   │ 0 │ 1 │ 3 │ 5 │ 4 │   │   │   ┃ 3 ^\n\
 ///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
 ///                       ┃   │   │ 6 │ 8 │ 0 │ 4 │ 2 │   │   ┃ 3 R\n\
 ///                       ┠───┼───┼───┼───┼───┼───┼───┼───┼───┨\n\
-///                       ┃ 0 │ 2 │ 4 │ 7 │ 5 │   │   │   │   ┃ ^\n\
+///                       ┃ 0 │ 2 │ 4 │ 7 │ 5 │   │   │   │   ┃ 4 ^\n\
 ///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
 ///                       ┃   │ 8 │ 4 │ 0 │ 2 │ 6 │   │   │   ┃ 4 R\n\
 ///                       ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n\
@@ -199,7 +199,7 @@ mod tests {
                               Ops. = Operations of the long multiplication.\n\
                               Sum. = Sum of each column of the multiplication.\n\
                               Pro. = Product of the multiplication.\n\
-                              ^ = Carry-over.\n\
+                              n ^ = Carry-over.\n\
                               n R = The row number.\n\
                               n C = The column number of the sum of the rows.\n\
                               * Replace 'n' for a number.\n\
@@ -216,7 +216,7 @@ mod tests {
                               ┃   │ 3 ┃\n\
                               ┃ x │ 2 ┃\n\
                               ┣━━━┿━━━┫\n\
-                              ┃ 0 │   ┃ ^\n\
+                              ┃ 0 │   ┃ 1 ^\n\
                               ┠┈┈┈┼┈┈┈┨\n\
                               ┃   │ 6 ┃ 1 R\n\
                               ┣━━━┷━━━┫\n\
@@ -258,7 +258,7 @@ mod tests {
                               Ops. = Operations of the long multiplication.\n\
                               Sum. = Sum of each column of the multiplication.\n\
                               Pro. = Product of the multiplication.\n\
-                              ^ = Carry-over.\n\
+                              n ^ = Carry-over.\n\
                               n R = The row number.\n\
                               n C = The column number of the sum of the rows.\n\
                               * Replace 'n' for a number.\n\
@@ -275,7 +275,7 @@ mod tests {
                               ┃   │ 5 ┃\n\
                               ┃ x │ 7 ┃\n\
                               ┣━━━┿━━━┫\n\
-                              ┃ 3 │   ┃ ^\n\
+                              ┃ 3 │   ┃ 1 ^\n\
                               ┠┈┈┈┼┈┈┈┨\n\
                               ┃   │ 5 ┃ 1 R\n\
                               ┣━━━┷━━━┫\n\
@@ -317,7 +317,7 @@ mod tests {
                               Ops. = Operations of the long multiplication.\n\
                               Sum. = Sum of each column of the multiplication.\n\
                               Pro. = Product of the multiplication.\n\
-                              ^ = Carry-over.\n\
+                              n ^ = Carry-over.\n\
                               n R = The row number.\n\
                               n C = The column number of the sum of the rows.\n\
                               * Replace 'n' for a number.\n\
@@ -334,19 +334,19 @@ mod tests {
                               ┃   │   │   │   │ 1 │ 3 │ 5 │ 9 │ 7 ┃\n\
                               ┃ x │   │   │   │   │ 8 │ 6 │ 4 │ 2 ┃\n\
                               ┣━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┫\n\
-                              ┃   │   │   │ 0 │ 0 │ 1 │ 1 │ 1 │   ┃ ^\n\
+                              ┃   │   │   │ 0 │ 0 │ 1 │ 1 │ 1 │   ┃ 1 ^\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
                               ┃   │   │   │   │ 2 │ 6 │ 0 │ 8 │ 4 ┃ 1 R\n\
                               ┠───┼───┼───┼───┼───┼───┼───┼───┼───┨\n\
-                              ┃   │   │ 0 │ 1 │ 2 │ 3 │ 2 │   │   ┃ ^\n\
+                              ┃   │   │ 0 │ 1 │ 2 │ 3 │ 2 │   │   ┃ 2 ^\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
                               ┃   │   │   │ 4 │ 2 │ 0 │ 6 │ 8 │   ┃ 2 R\n\
                               ┠───┼───┼───┼───┼───┼───┼───┼───┼───┨\n\
-                              ┃   │ 0 │ 1 │ 3 │ 5 │ 4 │   │   │   ┃ ^\n\
+                              ┃   │ 0 │ 1 │ 3 │ 5 │ 4 │   │   │   ┃ 3 ^\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
                               ┃   │   │ 6 │ 8 │ 0 │ 4 │ 2 │   │   ┃ 3 R\n\
                               ┠───┼───┼───┼───┼───┼───┼───┼───┼───┨\n\
-                              ┃ 0 │ 2 │ 4 │ 7 │ 5 │   │   │   │   ┃ ^\n\
+                              ┃ 0 │ 2 │ 4 │ 7 │ 5 │   │   │   │   ┃ 4 ^\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
                               ┃   │ 8 │ 4 │ 0 │ 2 │ 6 │   │   │   ┃ 4 R\n\
                               ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n\
