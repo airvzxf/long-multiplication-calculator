@@ -535,7 +535,7 @@ pub fn operations(multiplicand: usize, multiplier: usize, text: &mut String) {
         iteration += 1;
     }
 
-    // Create final row
+    // Create the final row
     text.push('┣');
     for n in 1..length + 1 {
         text.push_str("━━━");

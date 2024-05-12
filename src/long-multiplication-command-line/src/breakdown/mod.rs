@@ -1,6 +1,6 @@
 use crate::length::{get_number_length, get_numbers_length};
 
-/// Get a list of the sum of the rows for each column.
+/// Get a list of the sum for the rows in each column.
 ///
 /// Given two numbers that are multiplied, it gets the
 /// multiplication result (units and carriers) for each
@@ -8,8 +8,8 @@ use crate::length::{get_number_length, get_numbers_length};
 /// This method sums each row for each column and returns
 /// a list with these sums split by columns.
 ///
-/// The size of the list of the sums is the maximum possible
-/// number of columns of the product for the number of digits
+/// The size of the list for the sums is the maximum possible
+/// number of columns to the product for the number of digits
 /// for multiplicand plus multiplier.
 ///
 /// This starts from left to right; on the right, we have
@@ -76,14 +76,17 @@ pub fn break_down_addition(multiplicand: usize, multiplier: usize) -> Vec<usize>
     return addition;
 }
 
-/// Break down the multiplication to get information of the long multiplication.
+/// Break down the multiplication to get information of the
+/// long multiplication.
 ///
-/// Using the long multiplication method we get the information for each digit
-/// of the multiplicand by each digit of the multiplier. The information is
-/// the sub-product and the carriers for each multiplicand by multiplier.
+/// Using the long multiplication method, we get the information
+/// for each digit of the multiplicand by each digit of the
+/// multiplier.
+/// The information is the result of the products and the carriers
+/// for each multiplicand by multiplier.
 ///
-/// This information (sub-product and the carriers) is returned as a collection
-/// of vectors.
+/// This information (result of the products and the carriers) is
+/// returned as a collection of vectors.
 ///
 /// Examples
 /// --------
