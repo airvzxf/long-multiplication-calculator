@@ -13,10 +13,11 @@
 /// Example #1
 /// ```rust
 /// let number: usize = 3;
+/// let length: usize;
 /// let expected: usize = 1;
 ///
 /// use long_multiplication_command_line::length::get_number_length;
-/// let length: usize = get_number_length(number);
+/// length = get_number_length(number);
 ///
 /// assert_eq!(expected, length);
 /// ```
@@ -24,10 +25,11 @@
 /// Example #2
 /// ```rust
 /// let number: usize = 1234567890;
+/// let length: usize;
 /// let expected: usize = 10;
 ///
 /// use long_multiplication_command_line::length::get_number_length;
-/// let length: usize = get_number_length(number);
+/// length = get_number_length(number);
 ///
 /// assert_eq!(expected, length);
 /// ```
@@ -51,10 +53,11 @@ pub fn get_number_length(number: usize) -> usize {
 /// ```rust
 /// let number_a: usize = 6;
 /// let number_b: usize = 8;
+/// let length: usize;
 /// let expected: usize = 2;
 ///
 /// use long_multiplication_command_line::length::get_numbers_length;
-/// let length: usize = get_numbers_length(number_a, number_b);
+/// length = get_numbers_length(number_a, number_b);
 ///
 /// assert_eq!(expected, length);
 /// ```
@@ -63,10 +66,11 @@ pub fn get_number_length(number: usize) -> usize {
 /// ```rust
 /// let number_a: usize = 1234567890;
 /// let number_b: usize = 12345;
+/// let length: usize;
 /// let expected: usize = 15;
 ///
 /// use long_multiplication_command_line::length::get_numbers_length;
-/// let length: usize = get_numbers_length(number_a, number_b);
+/// length = get_numbers_length(number_a, number_b);
 ///
 /// assert_eq!(expected, length);
 /// ```
@@ -89,10 +93,11 @@ mod tests {
     fn test_get_number_length_for_one_digit() {
         // Arrange
         let number: usize = 5;
+        let length: usize;
         let expected: usize = 1;
 
         // Action
-        let length: usize = get_number_length(number);
+        length = get_number_length(number);
 
         // Assert
         assert_eq!(expected, length);
@@ -102,10 +107,11 @@ mod tests {
     fn test_get_number_length_for_two_digit() {
         // Arrange
         let number: usize = 38;
+        let length: usize;
         let expected: usize = 2;
 
         // Action
-        let length: usize = get_number_length(number);
+        length = get_number_length(number);
 
         // Assert
         assert_eq!(expected, length);
@@ -115,10 +121,11 @@ mod tests {
     fn test_get_number_length_for_three_digit() {
         // Arrange
         let number: usize = 376;
+        let length: usize;
         let expected: usize = 3;
 
         // Action
-        let length: usize = get_number_length(number);
+        length = get_number_length(number);
 
         // Assert
         assert_eq!(expected, length);
@@ -128,10 +135,11 @@ mod tests {
     fn test_get_number_length_for_five_digit() {
         // Arrange
         let number: usize = 95173;
+        let length: usize;
         let expected: usize = 5;
 
         // Action
-        let length: usize = get_number_length(number);
+        length = get_number_length(number);
 
         // Assert
         assert_eq!(expected, length);
@@ -141,10 +149,11 @@ mod tests {
     fn test_get_number_length_for_eleven_digit() {
         // Arrange
         let number: usize = 12345678901;
+        let length: usize;
         let expected: usize = 11;
 
         // Action
-        let length: usize = get_number_length(number);
+        length = get_number_length(number);
 
         // Assert
         assert_eq!(expected, length);
@@ -158,10 +167,11 @@ mod tests {
         // Arrange
         let number_a: usize = 7;
         let number_b: usize = 9;
+        let length: usize;
         let expected: usize = 2;
 
         // Action
-        let length: usize = get_numbers_length(number_a, number_b);
+        length = get_numbers_length(number_a, number_b);
 
         // Assert
         assert_eq!(expected, length);
@@ -172,10 +182,11 @@ mod tests {
         // Arrange
         let number_a: usize = 59;
         let number_b: usize = 7;
+        let length: usize;
         let expected: usize = 3;
 
         // Action
-        let length: usize = get_numbers_length(number_a, number_b);
+        length = get_numbers_length(number_a, number_b);
 
         // Assert
         assert_eq!(expected, length);
@@ -186,10 +197,11 @@ mod tests {
         // Arrange
         let number_a: usize = 53;
         let number_b: usize = 824;
+        let length: usize;
         let expected: usize = 5;
 
         // Action
-        let length: usize = get_numbers_length(number_a, number_b);
+        length = get_numbers_length(number_a, number_b);
 
         // Assert
         assert_eq!(expected, length);
@@ -200,10 +212,11 @@ mod tests {
         // Arrange
         let number_a: usize = 123456;
         let number_b: usize = 54321;
+        let length: usize;
         let expected: usize = 11;
 
         // Action
-        let length: usize = get_numbers_length(number_a, number_b);
+        length = get_numbers_length(number_a, number_b);
 
         // Assert
         assert_eq!(expected, length);

@@ -208,7 +208,7 @@ pub fn position_title(multiplicand: usize, multiplier: usize, text: &mut String)
     // Create third row
     text.push('┃');
     for n in 1..length + 1 {
-        let number = length + 1 - n;
+        let number: usize = length + 1 - n;
         if number < 100 {
             text.push(' ');
         }
@@ -442,19 +442,16 @@ pub fn operations(multiplicand: usize, multiplier: usize, text: &mut String) {
     (operation_unit, operation_carry) = break_down_multiplication(multiplicand, multiplier);
 
     let step: usize = multiplicand_len;
-
-    let max_group_rows = operation_unit.len() / step;
-
+    let max_group_rows: usize = operation_unit.len() / step;
     let mut iteration: usize = 1;
     for start in (0..operation_unit.len()).step_by(step) {
         let start: usize = start;
         let end: usize = start + step;
-
-        let slice = &operation_carry[start..end];
+        let slice: &[usize] = &operation_carry[start..end];
 
         // Create first row
         text.push('┃');
-        let start_spaces = length - step - iteration;
+        let start_spaces: usize = length - step - iteration;
         for _ in 0..start_spaces {
             text.push_str("   │");
         }
@@ -464,7 +461,7 @@ pub fn operations(multiplicand: usize, multiplier: usize, text: &mut String) {
             text.push(' ');
             text.push('│');
         }
-        let end_spaces = iteration;
+        let end_spaces: usize = iteration;
         for n in 0..end_spaces {
             text.push_str("   ");
             if n < end_spaces - 1 {
@@ -488,11 +485,10 @@ pub fn operations(multiplicand: usize, multiplier: usize, text: &mut String) {
         text.push('┨');
         text.push('\n');
 
-        let slice = &operation_unit[start..end];
-
         // Create third row
+        let slice: &[usize] = &operation_unit[start..end];
+        let start_spaces: usize = length - step - iteration + 1;
         text.push('┃');
-        let start_spaces = length - step - iteration + 1;
         for _ in 0..start_spaces {
             text.push_str("   │");
         }
@@ -502,7 +498,7 @@ pub fn operations(multiplicand: usize, multiplier: usize, text: &mut String) {
             text.push(' ');
             text.push('│');
         }
-        let end_spaces = iteration - 1;
+        let end_spaces: usize = iteration - 1;
         if end_spaces == 0 {
             text.pop();
         }

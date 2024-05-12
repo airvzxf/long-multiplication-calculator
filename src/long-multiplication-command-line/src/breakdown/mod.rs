@@ -59,14 +59,14 @@ pub fn break_down_addition(multiplicand: usize, multiplier: usize) -> Vec<usize>
     }
 
     let mut iteration: usize = 0;
-    let total_units = units.len();
+    let total_units: usize = units.len();
     for start in (0..total_units).step_by(step) {
         for sub_index in start..start + step {
-            let carry_index = start + step + iteration - sub_index;
-            let carry = carriers[sub_index];
+            let carry_index: usize = start + step + iteration - sub_index;
+            let carry: usize = carriers[sub_index];
             addition[carry_index] += carry;
-            let unit_index = carry_index - 1;
-            let unit = units[sub_index];
+            let unit_index: usize = carry_index - 1;
+            let unit: usize = units[sub_index];
             addition[unit_index] += unit;
         }
         iteration += 1;
@@ -169,14 +169,14 @@ pub fn break_down_multiplication(multiplicand: usize, multiplier: usize) -> (Vec
     let mut operation_carry: Vec<usize> = Vec::new();
 
     for a in multiplier.to_string().chars().rev() {
-        let mut units = Vec::new();
-        let mut carriers = Vec::new();
+        let mut units: Vec<usize> = Vec::new();
+        let mut carriers: Vec<usize> = Vec::new();
         for b in multiplicand.to_string().chars().rev() {
-            let multiplicand_digit = a as usize - 0x30;
-            let multiplier_digit = b as usize - 0x30;
-            let product = multiplicand_digit * multiplier_digit;
-            let unit = product % 10;
-            let carry = product / 10;
+            let multiplicand_digit: usize = a as usize - 0x30;
+            let multiplier_digit: usize = b as usize - 0x30;
+            let product: usize = multiplicand_digit * multiplier_digit;
+            let unit: usize = product % 10;
+            let carry: usize = product / 10;
             units.push(unit);
             carriers.push(carry);
         }
