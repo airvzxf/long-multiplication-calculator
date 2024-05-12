@@ -662,56 +662,7 @@ pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
     let additions: Vec<usize> = break_down_addition(multiplicand, multiplier);
 
     let length: usize = get_numbers_length(multiplicand, multiplier);
-    let mut iteration: usize = 0;
-
-    for row in &additions {
-        // Create first row
-        let row_size: usize = get_number_length(*row);
-        text.push('┃');
-        for _ in 0..(length - iteration - row_size) {
-            text.push_str("   ");
-            text.push('│');
-        }
-
-        for i in row.to_string().chars() {
-            text.push(' ');
-            text.push(i);
-            text.push_str(" │");
-        }
-        text.pop();
-
-        if iteration > 0 {
-            text.push('│');
-        }
-        for n in 0..iteration {
-            text.push_str("   ");
-            if n == iteration - 1 {
-                break;
-            }
-            text.push('│');
-        }
-        iteration += 1;
-        text.push_str("┃ ");
-        let row: String = iteration.to_string();
-        text.push_str(&*row);
-        text.push_str(" C");
-        text.push('\n');
-
-        // Create second row
-        if iteration == length {
-            break;
-        }
-        text.push('┠');
-        for n in 1..length + 1 {
-            text.push_str("┈┈┈");
-            if n == length {
-                break;
-            }
-            text.push('┼');
-        }
-        text.push('┨');
-        text.push('\n');
-    }
+    generate_rows_with_numbers(&additions, length, text);
 
     let mut sub_addition: Vec<usize> = break_down_subtotal(&additions);
     let mut sub_index: usize = 0;
@@ -764,56 +715,7 @@ pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
         text.push('\n');
 
         // Create the sum of columns
-        let mut iteration: usize = 0;
-        for row in &sub_addition {
-            // Create first row
-            let row_size: usize = get_number_length(*row);
-            text.push('┃');
-            for _ in 0..(length - iteration - row_size) {
-                text.push_str("   ");
-                text.push('│');
-            }
-
-            for i in row.to_string().chars() {
-                text.push(' ');
-                text.push(i);
-                text.push_str(" │");
-            }
-            text.pop();
-
-            if iteration > 0 {
-                text.push('│');
-            }
-            for n in 0..iteration {
-                text.push_str("   ");
-                if n == iteration - 1 {
-                    break;
-                }
-                text.push('│');
-            }
-            iteration += 1;
-            text.push_str("┃ ");
-            let row: String = iteration.to_string();
-            text.push_str(&*row);
-            text.push_str(" C");
-            text.push('\n');
-
-            // Create second row
-            if iteration == length {
-                break;
-            }
-            text.push('┠');
-            for n in 1..length + 1 {
-                text.push_str("┈┈┈");
-                if n == length {
-                    break;
-                }
-                text.push('┼');
-            }
-            text.push('┨');
-            text.push('\n');
-        }
-
+        generate_rows_with_numbers(&sub_addition, length, text);
         sub_addition = break_down_subtotal(&sub_addition);
     }
 
@@ -893,6 +795,59 @@ pub fn author(text: &mut String) {
     text.push_str("E-mail: israel.alberto.rv@gmail.com\n");
     text.push_str("License: GPL-3.0\n");
     text.push_str("Project: https://github.com/airvzxf/long-multiplication-calculator\n");
+}
+
+fn generate_rows_with_numbers(numbers: &Vec<usize>, length: usize, text: &mut String) {
+    let mut iteration: usize = 0;
+
+    for row in numbers {
+        // Create first row
+        let row_size: usize = get_number_length(*row);
+        text.push('┃');
+        for _ in 0..(length - iteration - row_size) {
+            text.push_str("   ");
+            text.push('│');
+        }
+
+        for i in row.to_string().chars() {
+            text.push(' ');
+            text.push(i);
+            text.push_str(" │");
+        }
+        text.pop();
+
+        if iteration > 0 {
+            text.push('│');
+        }
+        for n in 0..iteration {
+            text.push_str("   ");
+            if n == iteration - 1 {
+                break;
+            }
+            text.push('│');
+        }
+        iteration += 1;
+        text.push_str("┃ ");
+        let row: String = iteration.to_string();
+        text.push_str(&*row);
+        text.push_str(" C");
+        text.push('\n');
+
+        // Create second row
+        if iteration == length {
+            break;
+        }
+        text.push('┠');
+        for n in 1..length + 1 {
+            text.push_str("┈┈┈");
+            if n == length {
+                break;
+            }
+            text.push('┼');
+        }
+        text.push('┨');
+        text.push('\n');
+    }
 }
 
 #[cfg(test)]
