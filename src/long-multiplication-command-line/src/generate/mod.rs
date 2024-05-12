@@ -1,4 +1,5 @@
-use crate::breakdown::{break_down_addition, break_down_multiplication, break_down_subtotal, get_number_length, get_numbers_length};
+use crate::breakdown::{break_down_addition, break_down_multiplication, break_down_subtotal};
+use crate::length::{get_number_length, get_numbers_length};
 
 /// Store the symbol description of the long multiplication.
 ///
