@@ -658,7 +658,7 @@ pub fn sum_title(multiplicand: usize, multiplier: usize, text: &mut String) {
 /// assert_eq!(expected, text);
 /// ```
 pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
-    let additions: Vec<usize> = break_down_addition_of_multiplication(multiplicand, multiplier);
+    let additions: Vec<usize> = break_down_addition(multiplicand, multiplier);
 
     let length: usize = get_numbers_length(multiplicand, multiplier);
     let mut iteration: usize = 0;
@@ -712,7 +712,7 @@ pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
         text.push('\n');
     }
 
-    let mut sub_addition: Vec<usize> = break_down_addition(&additions);
+    let mut sub_addition: Vec<usize> = break_down_subtotal(&additions);
     let mut sub_index: usize = 0;
     loop {
         let mut decimals: bool = false;
@@ -813,7 +813,7 @@ pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
             text.push('\n');
         }
 
-        sub_addition = break_down_addition(&sub_addition);
+        sub_addition = break_down_subtotal(&sub_addition);
     }
 
     // Create last row
@@ -920,7 +920,7 @@ pub fn author(text: &mut String) {
 /// let addition: Vec<usize>;
 /// let expected_addition: Vec<usize> = vec![0, 6];
 ///
-/// addition = break_down_addition_of_multiplication(multiplicand, multiplier);
+/// addition = break_down_addition(multiplicand, multiplier);
 ///
 /// assert_eq!(expected_addition, addition);
 /// ```
@@ -932,13 +932,12 @@ pub fn author(text: &mut String) {
 /// let addition: Vec<usize>;
 /// let expected_addition: Vec<usize> = vec![0, 2, 13, 8];
 ///
-/// addition = break_down_addition_of_multiplication(multiplicand, multiplier);
+/// addition = break_down_addition(multiplicand, multiplier);
 ///
 /// assert_eq!(expected_addition, addition);
 /// ```
 // TODO: Extract this private functions in other modules. Then make them public and call here.
-// TODO: Rename break_down_addition_of_multiplication to break_down_addition
-fn break_down_addition_of_multiplication(multiplicand: usize, multiplier: usize) -> Vec<usize> {
+fn break_down_addition(multiplicand: usize, multiplier: usize) -> Vec<usize> {
     let multiplicand_len: usize = get_number_length(multiplicand);
     let length: usize = get_numbers_length(multiplicand, multiplier);
     let step: usize = multiplicand_len;
@@ -1047,7 +1046,7 @@ fn get_numbers_length(number_a: usize, number_b: usize) -> usize {
     return number_a_len + number_b_len;
 }
 
-/// Breakdown the multiplication to get information of the long multiplication.
+/// Break down the multiplication to get information of the long multiplication.
 ///
 /// Using the long multiplication method we get the information for each digit
 /// of the multiplicand by each digit of the multiplier. The information is
@@ -1179,7 +1178,7 @@ fn break_down_multiplication(multiplicand: usize, multiplier: usize) -> (Vec<usi
 /// let value: Vec<usize> = vec![6, 0];
 /// let expected: Vec<usize> = vec![6, 0];
 ///
-/// let result: Vec<usize> = break_down_addition(&value);
+/// let result: Vec<usize> = break_down_subtotal(&value);
 ///
 /// assert_eq!(expected, result);
 /// ```
@@ -1189,13 +1188,12 @@ fn break_down_multiplication(multiplicand: usize, multiplier: usize) -> (Vec<usi
 /// let value: Vec<usize> = vec![1, 10, 19, 27, 27, 27, 26, 17, 8];
 /// let expected: Vec<usize> = vec![1, 0, 10, 8, 9, 9, 8, 9, 9];
 ///
-/// let result: Vec<usize> = break_down_addition(&value);
+/// let result: Vec<usize> = break_down_subtotal(&value);
 ///
 /// assert_eq!(expected, result);
 /// ```
 // TODO: Extract this private functions in other modules. Then make them public and call here.
-// TODO: Rename break_down_addition to break_down_subtotal
-fn break_down_addition(addition: &Vec<usize>) -> Vec<usize> {
+fn break_down_subtotal(addition: &Vec<usize>) -> Vec<usize> {
     let mut new_addition: Vec<usize> = Vec::new();
     for _ in 0..addition.len() {
         new_addition.push(0);
@@ -1961,7 +1959,7 @@ mod tests {
     // # Function: break_down_multiplication
     // # -----------------------------------------------------------------------
     #[test]
-    fn test_breakdown_multiplication_with_three_digits_multiplicand_is_greater() {
+    fn test_break_down_multiplication_with_three_digits_multiplicand_is_greater() {
         // Arrange
         let multiplicand: usize = 25;
         let multiplier: usize = 3;
@@ -1982,7 +1980,7 @@ mod tests {
     }
 
     #[test]
-    fn test_breakdown_multiplication_with_three_digits_multiplier_is_greater() {
+    fn test_break_down_multiplication_with_three_digits_multiplier_is_greater() {
         // Arrange
         let multiplicand: usize = 3;
         let multiplier: usize = 25;
@@ -2003,7 +2001,7 @@ mod tests {
     }
 
     #[test]
-    fn test_breakdown_multiplication_with_four_digit() {
+    fn test_break_down_multiplication_with_four_digit() {
         // Arrange
         let multiplicand: usize = 13;
         let multiplier: usize = 26;
@@ -2024,7 +2022,7 @@ mod tests {
     }
 
     #[test]
-    fn test_breakdown_multiplication_with_six_digit() {
+    fn test_break_down_multiplication_with_six_digit() {
         // Arrange
         let multiplicand: usize = 123;
         let multiplier: usize = 456;
@@ -2112,10 +2110,10 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: break_down_addition_of_multiplication
+    // # Function: break_down_addition
     // # -----------------------------------------------------------------------
     #[test]
-    fn test_breakdown_addition_of_multiplication_product_one_digit() {
+    fn test_break_down_addition_product_one_digit() {
         // Arrange
         let multiplicand: usize = 2;
         let multiplier: usize = 3;
@@ -2123,14 +2121,14 @@ mod tests {
         let expected_addition: Vec<usize> = vec![6, 0];
 
         // Action
-        addition = break_down_addition_of_multiplication(multiplicand, multiplier);
+        addition = break_down_addition(multiplicand, multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
     }
 
     #[test]
-    fn test_breakdown_addition_of_multiplication_product_two_digits() {
+    fn test_break_down_addition_product_two_digits() {
         // Arrange
         let multiplicand: usize = 9;
         let multiplier: usize = 8;
@@ -2138,14 +2136,14 @@ mod tests {
         let expected_addition: Vec<usize> = vec![2, 7];
 
         // Action
-        addition = break_down_addition_of_multiplication(multiplicand, multiplier);
+        addition = break_down_addition(multiplicand, multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
     }
 
     #[test]
-    fn test_breakdown_addition_of_multiplication_with_three_digits() {
+    fn test_break_down_addition_with_three_digits() {
         // Arrange
         let multiplicand: usize = 37;
         let multiplier: usize = 8;
@@ -2153,14 +2151,14 @@ mod tests {
         let expected_addition: Vec<usize> = vec![6, 9, 2];
 
         // Action
-        addition = break_down_addition_of_multiplication(multiplicand, multiplier);
+        addition = break_down_addition(multiplicand, multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
     }
 
     #[test]
-    fn test_breakdown_addition_of_multiplication_with_three_digits_switch() {
+    fn test_break_down_addition_with_three_digits_switch() {
         // Arrange
         let multiplicand: usize = 8;
         let multiplier: usize = 37;
@@ -2168,14 +2166,14 @@ mod tests {
         let expected_addition: Vec<usize> = vec![6, 9, 2];
 
         // Action
-        addition = break_down_addition_of_multiplication(multiplicand, multiplier);
+        addition = break_down_addition(multiplicand, multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
     }
 
     #[test]
-    fn test_breakdown_addition_of_multiplication_with_four_digit() {
+    fn test_break_down_addition_with_four_digit() {
         // Arrange
         let multiplicand: usize = 13;
         let multiplier: usize = 26;
@@ -2183,14 +2181,14 @@ mod tests {
         let expected_addition: Vec<usize> = vec![8, 13, 2, 0];
 
         // Action
-        addition = break_down_addition_of_multiplication(multiplicand, multiplier);
+        addition = break_down_addition(multiplicand, multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
     }
 
     #[test]
-    fn test_breakdown_addition_of_multiplication_with_six_digit() {
+    fn test_break_down_addition_with_six_digit() {
         // Arrange
         let multiplicand: usize = 123;
         let multiplier: usize = 456;
@@ -2198,14 +2196,14 @@ mod tests {
         let expected_addition: Vec<usize> = vec![8, 8, 10, 15, 4, 0];
 
         // Action
-        addition = break_down_addition_of_multiplication(multiplicand, multiplier);
+        addition = break_down_addition(multiplicand, multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
     }
 
     #[test]
-    fn test_breakdown_addition_of_multiplication_with_eleven_digits_multiplier_is_greater() {
+    fn test_break_down_addition_with_eleven_digits_multiplier_is_greater() {
         // Arrange
         let multiplicand: usize = 78924358;
         let multiplier: usize = 357;
@@ -2213,14 +2211,14 @@ mod tests {
         let expected_addition: Vec<usize> = vec![6, 10, 17, 24, 17, 8, 25, 25, 19, 6, 2];
 
         // Action
-        addition = break_down_addition_of_multiplication(multiplicand, multiplier);
+        addition = break_down_addition(multiplicand, multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
     }
 
     #[test]
-    fn test_breakdown_addition_of_multiplication_with_eleven_digits_multiplier_is_less() {
+    fn test_break_down_addition_with_eleven_digits_multiplier_is_less() {
         // Arrange
         let multiplicand: usize = 357;
         let multiplier: usize = 78924358;
@@ -2228,7 +2226,7 @@ mod tests {
         let expected_addition: Vec<usize> = vec![6, 10, 17, 24, 17, 8, 25, 25, 19, 6, 2];
 
         // Action
-        addition = break_down_addition_of_multiplication(multiplicand, multiplier);
+        addition = break_down_addition(multiplicand, multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
@@ -2483,133 +2481,133 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: break_down_addition
+    // # Function: break_down_subtotal
     // # -----------------------------------------------------------------------
     #[test]
-    fn test_break_down_addition_result_two_digits_with_zero() {
+    fn test_break_down_subtotal_result_two_digits_with_zero() {
         // Arrange
         let value: Vec<usize> = vec![6, 0];
         let expected: Vec<usize> = vec![6, 0];
 
         // Action
-        let result: Vec<usize> = break_down_addition(&value);
+        let result: Vec<usize> = break_down_subtotal(&value);
 
         // Assert
         assert_eq!(expected, result);
     }
 
     #[test]
-    fn test_break_down_addition_result_two_digits_without_zero() {
+    fn test_break_down_subtotal_result_two_digits_without_zero() {
         // Arrange
         let value: Vec<usize> = vec![2, 4];
         let expected: Vec<usize> = vec![2, 4];
 
         // Action
-        let result: Vec<usize> = break_down_addition(&value);
+        let result: Vec<usize> = break_down_subtotal(&value);
 
         // Assert
         assert_eq!(expected, result);
     }
 
     #[test]
-    fn test_break_down_addition_result_three_digits_with_zero() {
+    fn test_break_down_subtotal_result_three_digits_with_zero() {
         // Arrange
         let value: Vec<usize> = vec![2, 9, 0];
         let expected: Vec<usize> = vec![2, 9, 0];
 
         // Action
-        let result: Vec<usize> = break_down_addition(&value);
+        let result: Vec<usize> = break_down_subtotal(&value);
 
         // Assert
         assert_eq!(expected, result);
     }
 
     #[test]
-    fn test_break_down_addition_result_three_digits_without_zero() {
+    fn test_break_down_subtotal_result_three_digits_without_zero() {
         // Arrange
         let value: Vec<usize> = vec![5, 8, 2];
         let expected: Vec<usize> = vec![5, 8, 2];
 
         // Action
-        let result: Vec<usize> = break_down_addition(&value);
+        let result: Vec<usize> = break_down_subtotal(&value);
 
         // Assert
         assert_eq!(expected, result);
     }
 
     #[test]
-    fn test_break_down_addition_result_four_digits_with_zero() {
+    fn test_break_down_subtotal_result_four_digits_with_zero() {
         // Arrange
         let value: Vec<usize> = vec![4, 8, 4, 0];
         let expected: Vec<usize> = vec![4, 8, 4, 0];
 
         // Action
-        let result: Vec<usize> = break_down_addition(&value);
+        let result: Vec<usize> = break_down_subtotal(&value);
 
         // Assert
         assert_eq!(expected, result);
     }
 
     #[test]
-    fn test_break_down_addition_result_four_digits_with_zero_and_carry() {
+    fn test_break_down_subtotal_result_four_digits_with_zero_and_carry() {
         // Arrange
         let value: Vec<usize> = vec![4, 11, 6, 0];
         let expected: Vec<usize> = vec![4, 1, 7, 0];
 
         // Action
-        let result: Vec<usize> = break_down_addition(&value);
+        let result: Vec<usize> = break_down_subtotal(&value);
 
         // Assert
         assert_eq!(expected, result);
     }
 
     #[test]
-    fn test_break_down_addition_result_four_digits_without_zero_and_carry() {
+    fn test_break_down_subtotal_result_four_digits_without_zero_and_carry() {
         // Arrange
         let value: Vec<usize> = vec![6, 12, 6, 2];
         let expected: Vec<usize> = vec![6, 2, 7, 2];
 
         // Action
-        let result: Vec<usize> = break_down_addition(&value);
+        let result: Vec<usize> = break_down_subtotal(&value);
 
         // Assert
         assert_eq!(expected, result);
     }
 
     #[test]
-    fn test_break_down_addition_result_nine_digits_with_zero_and_carry() {
+    fn test_break_down_subtotal_result_nine_digits_with_zero_and_carry() {
         // Arrange
         let value: Vec<usize> = vec![1, 10, 19, 27, 27, 27, 26, 17, 8];
         let expected: Vec<usize> = vec![1, 0, 10, 8, 9, 9, 8, 9, 9];
 
         // Action
-        let result: Vec<usize> = break_down_addition(&value);
+        let result: Vec<usize> = break_down_subtotal(&value);
 
         // Assert
         assert_eq!(expected, result);
     }
 
     #[test]
-    fn test_break_down_addition_result_nine_digits_without_zero_and_carry() {
+    fn test_break_down_subtotal_result_nine_digits_without_zero_and_carry() {
         // Arrange
         let value: Vec<usize> = vec![5, 10, 10, 10, 5, 16, 4, 0];
         let expected: Vec<usize> = vec![5, 0, 1, 1, 6, 6, 5, 0];
 
         // Action
-        let result: Vec<usize> = break_down_addition(&value);
+        let result: Vec<usize> = break_down_subtotal(&value);
 
         // Assert
         assert_eq!(expected, result);
     }
 
     #[test]
-    fn test_break_down_addition_result_eleven_digits_without_zero_and_carry() {
+    fn test_break_down_subtotal_result_eleven_digits_without_zero_and_carry() {
         // Arrange
         let value: Vec<usize> = vec![5, 12, 17, 14, 13, 8, 11, 26, 12, 10, 1];
         let expected: Vec<usize> = vec![5, 2, 8, 5, 4, 9, 1, 7, 4, 1, 2];
 
         // Action
-        let result: Vec<usize> = break_down_addition(&value);
+        let result: Vec<usize> = break_down_subtotal(&value);
 
         // Assert
         assert_eq!(expected, result);
