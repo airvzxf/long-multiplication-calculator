@@ -16,13 +16,13 @@ use crate::generate;
 ///                       Pos. = Position.\n\
 ///                       Ops. = Operations of the long multiplication.\n\
 ///                       Sum. = Sum of each column of the multiplication.\n\
+///                       Sub n. = Subtotal of the last sum.\n\
 ///                       Pro. = Product of the multiplication.\n\
 ///                       n ^ = Carry-over.\n\
 ///                       n R = The row number.\n\
 ///                       n C = The column number of the sum of the rows.\n\
 ///                       * Replace 'n' for a number.\n\
 ///                       P = The product of multiplication.\n\
-///                       V = Validate the product of multiplication.\n\
 ///                       \n\
 ///                       ┏━━━━━━━┓\n\
 ///                       ┃Pos.   ┃\n\
@@ -47,8 +47,6 @@ use crate::generate;
 ///                       ┃Pro.   ┃\n\
 ///                       ┣━━━┯━━━┫\n\
 ///                       ┃ 3 │ 5 ┃ P\n\
-///                       ┠───┼───┨\n\
-///                       ┃ 3 │ 5 ┃ V\n\
 ///                       ┗━━━┷━━━┛\n\
 ///                       \n\
 ///                       ---\n\
@@ -71,13 +69,13 @@ use crate::generate;
 ///                       Pos. = Position.\n\
 ///                       Ops. = Operations of the long multiplication.\n\
 ///                       Sum. = Sum of each column of the multiplication.\n\
+///                       Sub n. = Subtotal of the last sum.\n\
 ///                       Pro. = Product of the multiplication.\n\
 ///                       n ^ = Carry-over.\n\
 ///                       n R = The row number.\n\
 ///                       n C = The column number of the sum of the rows.\n\
 ///                       * Replace 'n' for a number.\n\
 ///                       P = The product of multiplication.\n\
-///                       V = Validate the product of multiplication.\n\
 ///                       \n\
 ///                       ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n\
 ///                       ┃Pos.                               ┃\n\
@@ -125,11 +123,29 @@ use crate::generate;
 ///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
 ///                       ┃ 0 │   │   │   │   │   │   │   │   ┃ 9 C\n\
 ///                       ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n\
+///                       ┃Sub 1.                             ┃\n\
+///                       ┣━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┫\n\
+///                       ┃   │   │   │   │   │   │   │   │ 4 ┃ 1 C\n\
+///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+///                       ┃   │   │   │   │   │   │   │ 7 │   ┃ 2 C\n\
+///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+///                       ┃   │   │   │   │   │   │ 2 │   │   ┃ 3 C\n\
+///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+///                       ┃   │   │   │   │   │ 5 │   │   │   ┃ 4 C\n\
+///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+///                       ┃   │   │   │ 1 │ 0 │   │   │   │   ┃ 5 C\n\
+///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+///                       ┃   │   │   │ 4 │   │   │   │   │   ┃ 6 C\n\
+///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+///                       ┃   │   │ 7 │   │   │   │   │   │   ┃ 7 C\n\
+///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+///                       ┃   │ 1 │   │   │   │   │   │   │   ┃ 8 C\n\
+///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+///                       ┃ 1 │   │   │   │   │   │   │   │   ┃ 9 C\n\
+///                       ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n\
 ///                       ┃Pro.                               ┃\n\
 ///                       ┣━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┫\n\
 ///                       ┃ 1 │ 1 │ 7 │ 5 │ 0 │ 5 │ 2 │ 7 │ 4 ┃ P\n\
-///                       ┠───┼───┼───┼───┼───┼───┼───┼───┼───┨\n\
-///                       ┃ 1 │ 1 │ 7 │ 5 │ 0 │ 5 │ 2 │ 7 │ 4 ┃ V\n\
 ///                       ┗━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┛\n\
 ///                       \n\
 ///                       ---\n\
@@ -154,7 +170,6 @@ pub fn get_table(multiplicand: usize, multiplier: usize) -> String {
     generate::operations(multiplicand, multiplier, &mut content);
     generate::sum_title(multiplicand, multiplier, &mut content);
     generate::long_sum(multiplicand, multiplier, &mut content);
-    generate::product_validation(multiplicand, multiplier, &mut content);
     generate::bottom_border(multiplicand, multiplier, &mut content);
     generate::author(&mut content);
 
@@ -198,13 +213,13 @@ mod tests {
                               Pos. = Position.\n\
                               Ops. = Operations of the long multiplication.\n\
                               Sum. = Sum of each column of the multiplication.\n\
+                              Sub n. = Subtotal of the last sum.\n\
                               Pro. = Product of the multiplication.\n\
                               n ^ = Carry-over.\n\
                               n R = The row number.\n\
                               n C = The column number of the sum of the rows.\n\
                               * Replace 'n' for a number.\n\
                               P = The product of multiplication.\n\
-                              V = Validate the product of multiplication.\n\
                               \n\
                               ┏━━━━━━━┓\n\
                               ┃Pos.   ┃\n\
@@ -229,8 +244,6 @@ mod tests {
                               ┃Pro.   ┃\n\
                               ┣━━━┯━━━┫\n\
                               ┃ 0 │ 6 ┃ P\n\
-                              ┠───┼───┨\n\
-                              ┃   │ 6 ┃ V\n\
                               ┗━━━┷━━━┛\n\
                               \n\
                               ---\n\
@@ -257,13 +270,13 @@ mod tests {
                               Pos. = Position.\n\
                               Ops. = Operations of the long multiplication.\n\
                               Sum. = Sum of each column of the multiplication.\n\
+                              Sub n. = Subtotal of the last sum.\n\
                               Pro. = Product of the multiplication.\n\
                               n ^ = Carry-over.\n\
                               n R = The row number.\n\
                               n C = The column number of the sum of the rows.\n\
                               * Replace 'n' for a number.\n\
                               P = The product of multiplication.\n\
-                              V = Validate the product of multiplication.\n\
                               \n\
                               ┏━━━━━━━┓\n\
                               ┃Pos.   ┃\n\
@@ -288,8 +301,6 @@ mod tests {
                               ┃Pro.   ┃\n\
                               ┣━━━┯━━━┫\n\
                               ┃ 3 │ 5 ┃ P\n\
-                              ┠───┼───┨\n\
-                              ┃ 3 │ 5 ┃ V\n\
                               ┗━━━┷━━━┛\n\
                               \n\
                               ---\n\
@@ -316,13 +327,13 @@ mod tests {
                               Pos. = Position.\n\
                               Ops. = Operations of the long multiplication.\n\
                               Sum. = Sum of each column of the multiplication.\n\
+                              Sub n. = Subtotal of the last sum.\n\
                               Pro. = Product of the multiplication.\n\
                               n ^ = Carry-over.\n\
                               n R = The row number.\n\
                               n C = The column number of the sum of the rows.\n\
                               * Replace 'n' for a number.\n\
                               P = The product of multiplication.\n\
-                              V = Validate the product of multiplication.\n\
                               \n\
                               ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n\
                               ┃Pos.                               ┃\n\
@@ -370,11 +381,29 @@ mod tests {
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
                               ┃ 0 │   │   │   │   │   │   │   │   ┃ 9 C\n\
                               ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n\
+                              ┃Sub 1.                             ┃\n\
+                              ┣━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┫\n\
+                              ┃   │   │   │   │   │   │   │   │ 4 ┃ 1 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │   │   │ 7 │   ┃ 2 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │   │ 2 │   │   ┃ 3 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │ 5 │   │   │   ┃ 4 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │ 1 │ 0 │   │   │   │   ┃ 5 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │ 4 │   │   │   │   │   ┃ 6 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │ 7 │   │   │   │   │   │   ┃ 7 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │ 1 │   │   │   │   │   │   │   ┃ 8 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃ 1 │   │   │   │   │   │   │   │   ┃ 9 C\n\
+                              ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n\
                               ┃Pro.                               ┃\n\
                               ┣━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┫\n\
                               ┃ 1 │ 1 │ 7 │ 5 │ 0 │ 5 │ 2 │ 7 │ 4 ┃ P\n\
-                              ┠───┼───┼───┼───┼───┼───┼───┼───┼───┨\n\
-                              ┃ 1 │ 1 │ 7 │ 5 │ 0 │ 5 │ 2 │ 7 │ 4 ┃ V\n\
                               ┗━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┛\n\
                               \n\
                               ---\n\

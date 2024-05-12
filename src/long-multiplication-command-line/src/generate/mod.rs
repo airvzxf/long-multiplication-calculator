@@ -16,13 +16,13 @@ use std::ops::Index;
 ///                       Pos. = Position.\n\
 ///                       Ops. = Operations of the long multiplication.\n\
 ///                       Sum. = Sum of each column of the multiplication.\n\
+///                       Sub n. = Subtotal of the last sum.\n\
 ///                       Pro. = Product of the multiplication.\n\
 ///                       n ^ = Carry-over.\n\
 ///                       n R = The row number.\n\
 ///                       n C = The column number of the sum of the rows.\n\
 ///                       * Replace 'n' for a number.\n\
 ///                       P = The product of multiplication.\n\
-///                       V = Validate the product of multiplication.\n\
 ///                       \n";
 /// let mut text: String = String::from("");
 ///
@@ -38,13 +38,13 @@ pub fn symbols(text: &mut String) {
     text.push_str("Pos. = Position.\n");
     text.push_str("Ops. = Operations of the long multiplication.\n");
     text.push_str("Sum. = Sum of each column of the multiplication.\n");
+    text.push_str("Sub n. = Subtotal of the last sum.\n");
     text.push_str("Pro. = Product of the multiplication.\n");
     text.push_str("n ^ = Carry-over.\n");
     text.push_str("n R = The row number.\n");
     text.push_str("n C = The column number of the sum of the rows.\n");
     text.push_str("* Replace 'n' for a number.\n");
     text.push_str("P = The product of multiplication.\n");
-    text.push_str("V = Validate the product of multiplication.\n");
     text.push('\n');
 }
 
@@ -627,8 +627,7 @@ pub fn sum_title(multiplicand: usize, multiplier: usize, text: &mut String) {
 ///                       ┣━━━┷━━━┫\n\
 ///                       ┃Pro.   ┃\n\
 ///                       ┣━━━┯━━━┫\n\
-///                       ┃ 0 │ 6 ┃ P\n\
-///                       ┠───┼───┨\n";
+///                       ┃ 0 │ 6 ┃ P\n";
 ///
 /// use long_multiplication_command_line::generate;
 /// generate::long_sum(multiplicand, multiplier, &mut text);
@@ -651,8 +650,7 @@ pub fn sum_title(multiplicand: usize, multiplier: usize, text: &mut String) {
 ///                       ┣━━━┷━━━┷━━━┷━━━┫\n\
 ///                       ┃Pro.           ┃\n\
 ///                       ┣━━━┯━━━┯━━━┯━━━┫\n\
-///                       ┃ 0 │ 3 │ 3 │ 8 ┃ P\n\
-///                       ┠───┼───┼───┼───┨\n";
+///                       ┃ 0 │ 3 │ 3 │ 8 ┃ P\n";
 ///
 /// use long_multiplication_command_line::generate;
 /// generate::long_sum(multiplicand, multiplier, &mut text);
@@ -660,8 +658,7 @@ pub fn sum_title(multiplicand: usize, multiplier: usize, text: &mut String) {
 /// assert_eq!(expected, text);
 /// ```
 pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
-    let mut additions: Vec<usize> = break_down_addition_of_multiplication(multiplicand, multiplier);
-    additions.reverse();
+    let additions: Vec<usize> = break_down_addition_of_multiplication(multiplicand, multiplier);
 
     let length: usize = get_numbers_length(multiplicand, multiplier);
     let mut iteration: usize = 0;
@@ -715,6 +712,110 @@ pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
         text.push('\n');
     }
 
+    let mut sub_addition: Vec<usize> = break_down_addition(&additions);
+    let mut sub_index: usize = 0;
+    loop {
+        let mut decimals: bool = false;
+        for number in &sub_addition {
+            if number > &9 {
+                decimals = true;
+                break;
+            }
+        }
+
+        if !decimals {
+            break;
+        }
+
+        // Create the first row of the sub-addition
+        text.push('┣');
+        for n in 1..length + 1 {
+            text.push_str("━━━");
+            if n == length {
+                break;
+            }
+            text.push('┷');
+        }
+        text.push('┫');
+        text.push('\n');
+
+        // Create the second row of the sub-addition
+        text.push_str("┃Sub ");
+        sub_index += 1;
+        text.push_str(&*sub_index.to_string());
+        text.push('.');
+        for _ in 1..(length * 3) + length - 6 {
+            text.push(' ');
+        }
+        text.push('┃');
+        text.push('\n');
+
+        // Create the third row of the sub-addition
+        text.push('┣');
+        for n in 1..length + 1 {
+            text.push_str("━━━");
+            if n == length {
+                break;
+            }
+            text.push('┯');
+        }
+        text.push('┫');
+        text.push('\n');
+
+        // Create the sum of columns
+        let mut iteration: usize = 0;
+        for row in &sub_addition {
+            // Create first row
+            let row_size: usize = get_number_length(*row);
+            text.push('┃');
+            for _ in 0..(length - iteration - row_size) {
+                text.push_str("   ");
+                text.push('│');
+            }
+
+            for i in row.to_string().chars() {
+                text.push(' ');
+                text.push(i);
+                text.push_str(" │");
+            }
+            text.pop();
+
+            if iteration > 0 {
+                text.push('│');
+            }
+            for n in 0..iteration {
+                text.push_str("   ");
+                if n == iteration - 1 {
+                    break;
+                }
+                text.push('│');
+            }
+            iteration += 1;
+            text.push_str("┃ ");
+            let row: String = iteration.to_string();
+            text.push_str(&*row);
+            text.push_str(" C");
+            text.push('\n');
+
+            // Create second row
+            if iteration == length {
+                break;
+            }
+            text.push('┠');
+            for n in 1..length + 1 {
+                text.push_str("┈┈┈");
+                if n == length {
+                    break;
+                }
+                text.push('┼');
+            }
+            text.push('┨');
+            text.push('\n');
+        }
+
+        sub_addition = break_down_addition(&sub_addition);
+    }
+
     // Create last row
     text.push('┣');
     for n in 1..length + 1 {
@@ -748,103 +849,16 @@ pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
     text.push('\n');
 
     // Create first row for product
-    let mut sum: usize = 0;
-    let mut iteration: u32 = 0;
-    let last_digit: usize = additions[additions.len() - 1];
-    let range: usize = if last_digit == 0 { additions.len() - 1 } else { additions.len() };
-    for index in 0..range {
-        let expo: usize = 10usize.pow(iteration);
-        let row: &usize = &additions[index];
-        sum += row * expo;
-        iteration += 1;
-    }
-
-    let sum_size: usize = get_number_length(sum);
+    sub_addition.reverse();
     text.push('┃');
-    for _ in 0..(length - sum_size) {
-        text.push_str(" 0 ");
-        text.push('│');
-    }
-
-    for i in sum.to_string().chars() {
+    for i in sub_addition {
         text.push(' ');
-        text.push(i);
+        text.push_str(&*i.to_string());
         text.push_str(" │");
     }
     text.pop();
 
     text.push_str("┃ P");
-    text.push('\n');
-
-    // Create second row for product
-    text.push('┠');
-    for n in 1..length + 1 {
-        text.push_str("───");
-        if n == length {
-            break;
-        }
-        text.push('┼');
-    }
-    text.push('┨');
-    text.push('\n');
-}
-
-/// Store the product-validation section of the long multiplication.
-///
-/// It generates the table product-validation-section for the
-/// long multiplication and stores it in a text variable.
-///
-/// It does the math operation for the multiplication and shows
-/// the verification product.
-///
-/// Examples
-/// --------
-///
-/// Example #1
-/// ```rust
-/// let multiplicand: usize = 3;
-/// let multiplier: usize = 2;
-/// let mut text: String = String::from("");
-/// let expected: &str = "┃   │ 6 ┃ V\n";
-///
-/// use long_multiplication_command_line::generate;
-/// generate::product_validation(multiplicand, multiplier, &mut text);
-///
-/// assert_eq!(expected, text);
-/// ```
-///
-/// Example #2
-/// ```rust
-/// let multiplicand: usize = 13;
-/// let multiplier: usize = 26;
-/// let mut text: String = String::from("");
-/// let expected: &str = "┃   │ 3 │ 3 │ 8 ┃ V\n";
-///
-/// use long_multiplication_command_line::generate;
-/// generate::product_validation(multiplicand, multiplier, &mut text);
-///
-/// assert_eq!(expected, text);
-/// ```
-pub fn product_validation(multiplicand: usize, multiplier: usize, text: &mut String) {
-    let length: usize = get_numbers_length(multiplicand, multiplier);
-    let product: usize = multiplicand * multiplier;
-    let product_size: usize = get_number_length(product);
-
-    // Create first row for product
-    text.push('┃');
-    for _ in 0..(length - product_size) {
-        text.push_str("   ");
-        text.push('│');
-    }
-
-    for i in product.to_string().chars() {
-        text.push(' ');
-        text.push(i);
-        text.push_str(" │");
-    }
-    text.pop();
-
-    text.push_str("┃ V");
     text.push('\n');
 }
 
@@ -923,6 +937,7 @@ pub fn author(text: &mut String) {
 /// assert_eq!(expected_addition, addition);
 /// ```
 // TODO: Extract this private functions in other modules. Then make them public and call here.
+// TODO: Rename break_down_addition_of_multiplication to break_down_addition
 fn break_down_addition_of_multiplication(multiplicand: usize, multiplier: usize) -> Vec<usize> {
     let multiplicand_len: usize = get_number_length(multiplicand);
     let length: usize = get_numbers_length(multiplicand, multiplier);
@@ -951,9 +966,7 @@ fn break_down_addition_of_multiplication(multiplicand: usize, multiplier: usize)
         iteration += 1;
     }
 
-    addition.reverse();
     let addition: Vec<usize> = addition;
-
     return addition;
 }
 
@@ -988,6 +1001,7 @@ fn break_down_addition_of_multiplication(multiplicand: usize, multiplier: usize)
 ///
 /// assert_eq!(expected, length);
 /// ```
+// TODO: Extract this private functions in other modules. Then make them public and call here.
 fn get_number_length(number: usize) -> usize {
     return (number.checked_ilog10().unwrap_or(0) + 1) as usize;
 }
@@ -1025,6 +1039,7 @@ fn get_number_length(number: usize) -> usize {
 ///
 /// assert_eq!(expected, length);
 /// ```
+// TODO: Extract this private functions in other modules. Then make them public and call here.
 fn get_numbers_length(number_a: usize, number_b: usize) -> usize {
     let number_a_len: usize = get_number_length(number_a);
     let number_b_len: usize = get_number_length(number_b);
@@ -1115,6 +1130,7 @@ fn get_numbers_length(number_a: usize, number_b: usize) -> usize {
 /// assert_eq!(expected_unit, operation_unit);
 /// assert_eq!(expected_carry, operation_carry);
 /// ```
+// TODO: Extract this private functions in other modules. Then make them public and call here.
 fn break_down_multiplication(multiplicand: usize, multiplier: usize) -> (Vec<usize>, Vec<usize>) {
     let mut operation_unit: Vec<usize> = Vec::new();
     let mut operation_carry: Vec<usize> = Vec::new();
@@ -1146,12 +1162,67 @@ fn break_down_multiplication(multiplicand: usize, multiplier: usize) -> (Vec<usi
     return (operation_unit, operation_carry);
 }
 
+/// Get a list of the last sum and sum again removing
+/// the decimals.
+///
+/// Given a list of the numbers which are the result
+/// for the last sum.
+/// They are re-sum, but this time
+/// it correctly joins the decimals and units for
+/// different columns.
+///
+/// Examples
+/// --------
+///
+/// Example #1
+/// ```text
+/// let value: Vec<usize> = vec![6, 0];
+/// let expected: Vec<usize> = vec![6, 0];
+///
+/// let result: Vec<usize> = break_down_addition(&value);
+///
+/// assert_eq!(expected, result);
+/// ```
+///
+/// Example #2
+/// ```text
+/// let value: Vec<usize> = vec![1, 10, 19, 27, 27, 27, 26, 17, 8];
+/// let expected: Vec<usize> = vec![1, 0, 10, 8, 9, 9, 8, 9, 9];
+///
+/// let result: Vec<usize> = break_down_addition(&value);
+///
+/// assert_eq!(expected, result);
+/// ```
+// TODO: Extract this private functions in other modules. Then make them public and call here.
+// TODO: Rename break_down_addition to break_down_subtotal
+fn break_down_addition(addition: &Vec<usize>) -> Vec<usize> {
+    let mut new_addition: Vec<usize> = Vec::new();
+    for _ in 0..addition.len() {
+        new_addition.push(0);
+    }
+
+    for index in 0..addition.len() {
+        let number: usize = addition[index];
+        if number < 10 {
+            new_addition[index] += number;
+        } else {
+            let decimal: usize = number / 10;
+            let unit: usize = number % 10;
+            new_addition[index + 1] += decimal;
+            new_addition[index] += unit;
+        }
+    }
+
+    let new_addition: Vec<usize> = new_addition;
+    return new_addition;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     // # -----------------------------------------------------------------------
-    // # Function: get number length
+    // # Function: get_number_length
     // # -----------------------------------------------------------------------
     #[test]
     fn test_get_number_length_for_one_digit() {
@@ -1219,7 +1290,7 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: get numbers length
+    // # Function: get_numbers_length
     // # -----------------------------------------------------------------------
     #[test]
     fn test_get_numbers_length_for_two_digit() {
@@ -1290,13 +1361,13 @@ mod tests {
                               Pos. = Position.\n\
                               Ops. = Operations of the long multiplication.\n\
                               Sum. = Sum of each column of the multiplication.\n\
+                              Sub n. = Subtotal of the last sum.\n\
                               Pro. = Product of the multiplication.\n\
                               n ^ = Carry-over.\n\
                               n R = The row number.\n\
                               n C = The column number of the sum of the rows.\n\
                               * Replace 'n' for a number.\n\
                               P = The product of multiplication.\n\
-                              V = Validate the product of multiplication.\n\
                               \n";
 
         // Action
@@ -1307,7 +1378,7 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: top border
+    // # Function: top_border
     // # -----------------------------------------------------------------------
     #[test]
     fn test_top_border_size_two_digits() {
@@ -1370,7 +1441,7 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: bottom border
+    // # Function: bottom_border
     // # -----------------------------------------------------------------------
     #[test]
     fn test_bottom_border_size_two_digits() {
@@ -1433,7 +1504,7 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: operation title
+    // # Function: position_title
     // # -----------------------------------------------------------------------
     #[test]
     fn test_position_title_size_two_digits() {
@@ -1508,7 +1579,7 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: operation title
+    // # Function: operation_title
     // # -----------------------------------------------------------------------
     #[test]
     fn test_operation_title_size_two_digits() {
@@ -1680,7 +1751,7 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: multiplication
+    // # Function: operations
     // # -----------------------------------------------------------------------
     #[test]
     fn test_operations_with_three_digits_multiplicand_is_greater() {
@@ -1887,7 +1958,7 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: breakdown the multiplication
+    // # Function: break_down_multiplication
     // # -----------------------------------------------------------------------
     #[test]
     fn test_breakdown_multiplication_with_three_digits_multiplicand_is_greater() {
@@ -1974,7 +2045,7 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: sum title
+    // # Function: sum_title
     // # -----------------------------------------------------------------------
     #[test]
     fn test_sum_title_size_two_digits() {
@@ -2041,7 +2112,7 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: breakdown the addition of the multiplication
+    // # Function: break_down_addition_of_multiplication
     // # -----------------------------------------------------------------------
     #[test]
     fn test_breakdown_addition_of_multiplication_product_one_digit() {
@@ -2049,7 +2120,7 @@ mod tests {
         let multiplicand: usize = 2;
         let multiplier: usize = 3;
         let addition: Vec<usize>;
-        let expected_addition: Vec<usize> = vec![0, 6];
+        let expected_addition: Vec<usize> = vec![6, 0];
 
         // Action
         addition = break_down_addition_of_multiplication(multiplicand, multiplier);
@@ -2064,7 +2135,7 @@ mod tests {
         let multiplicand: usize = 9;
         let multiplier: usize = 8;
         let addition: Vec<usize>;
-        let expected_addition: Vec<usize> = vec![7, 2];
+        let expected_addition: Vec<usize> = vec![2, 7];
 
         // Action
         addition = break_down_addition_of_multiplication(multiplicand, multiplier);
@@ -2079,7 +2150,7 @@ mod tests {
         let multiplicand: usize = 37;
         let multiplier: usize = 8;
         let addition: Vec<usize>;
-        let expected_addition: Vec<usize> = vec![2, 9, 6];
+        let expected_addition: Vec<usize> = vec![6, 9, 2];
 
         // Action
         addition = break_down_addition_of_multiplication(multiplicand, multiplier);
@@ -2094,7 +2165,7 @@ mod tests {
         let multiplicand: usize = 8;
         let multiplier: usize = 37;
         let addition: Vec<usize>;
-        let expected_addition: Vec<usize> = vec![2, 9, 6];
+        let expected_addition: Vec<usize> = vec![6, 9, 2];
 
         // Action
         addition = break_down_addition_of_multiplication(multiplicand, multiplier);
@@ -2109,7 +2180,7 @@ mod tests {
         let multiplicand: usize = 13;
         let multiplier: usize = 26;
         let addition: Vec<usize>;
-        let expected_addition: Vec<usize> = vec![0, 2, 13, 8];
+        let expected_addition: Vec<usize> = vec![8, 13, 2, 0];
 
         // Action
         addition = break_down_addition_of_multiplication(multiplicand, multiplier);
@@ -2124,7 +2195,7 @@ mod tests {
         let multiplicand: usize = 123;
         let multiplier: usize = 456;
         let addition: Vec<usize>;
-        let expected_addition: Vec<usize> = vec![0, 4, 15, 10, 8, 8];
+        let expected_addition: Vec<usize> = vec![8, 8, 10, 15, 4, 0];
 
         // Action
         addition = break_down_addition_of_multiplication(multiplicand, multiplier);
@@ -2139,7 +2210,7 @@ mod tests {
         let multiplicand: usize = 78924358;
         let multiplier: usize = 357;
         let addition: Vec<usize>;
-        let expected_addition: Vec<usize> = vec![2, 6, 19, 25, 25, 8, 17, 24, 17, 10, 6];
+        let expected_addition: Vec<usize> = vec![6, 10, 17, 24, 17, 8, 25, 25, 19, 6, 2];
 
         // Action
         addition = break_down_addition_of_multiplication(multiplicand, multiplier);
@@ -2154,7 +2225,7 @@ mod tests {
         let multiplicand: usize = 357;
         let multiplier: usize = 78924358;
         let addition: Vec<usize>;
-        let expected_addition: Vec<usize> = vec![2, 6, 19, 25, 25, 8, 17, 24, 17, 10, 6];
+        let expected_addition: Vec<usize> = vec![6, 10, 17, 24, 17, 8, 25, 25, 19, 6, 2];
 
         // Action
         addition = break_down_addition_of_multiplication(multiplicand, multiplier);
@@ -2164,7 +2235,7 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: long sum
+    // # Function: long_sum
     // # -----------------------------------------------------------------------
     #[test]
     fn test_long_sum_with_one_digit() {
@@ -2178,8 +2249,7 @@ mod tests {
                               ┣━━━┷━━━┫\n\
                               ┃Pro.   ┃\n\
                               ┣━━━┯━━━┫\n\
-                              ┃ 0 │ 6 ┃ P\n\
-                              ┠───┼───┨\n";
+                              ┃ 0 │ 6 ┃ P\n";
 
         // Action
         long_sum(multiplicand, multiplier, &mut text);
@@ -2200,8 +2270,7 @@ mod tests {
                               ┣━━━┷━━━┫\n\
                               ┃Pro.   ┃\n\
                               ┣━━━┯━━━┫\n\
-                              ┃ 8 │ 1 ┃ P\n\
-                              ┠───┼───┨\n";
+                              ┃ 8 │ 1 ┃ P\n";
 
         // Action
         long_sum(multiplicand, multiplier, &mut text);
@@ -2224,8 +2293,7 @@ mod tests {
                               ┣━━━┷━━━┷━━━┫\n\
                               ┃Pro.       ┃\n\
                               ┣━━━┯━━━┯━━━┫\n\
-                              ┃ 1 │ 8 │ 5 ┃ P\n\
-                              ┠───┼───┼───┨\n";
+                              ┃ 1 │ 8 │ 5 ┃ P\n";
 
         // Action
         long_sum(multiplicand, multiplier, &mut text);
@@ -2250,8 +2318,7 @@ mod tests {
                               ┣━━━┷━━━┷━━━┷━━━┫\n\
                               ┃Pro.           ┃\n\
                               ┣━━━┯━━━┯━━━┯━━━┫\n\
-                              ┃ 0 │ 3 │ 3 │ 8 ┃ P\n\
-                              ┠───┼───┼───┼───┨\n";
+                              ┃ 0 │ 3 │ 3 │ 8 ┃ P\n";
 
         // Action
         long_sum(multiplicand, multiplier, &mut text);
@@ -2290,10 +2357,35 @@ mod tests {
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
                               ┃ 0 │   │   │   │   │   │   │   │   │   │   │   ┃ 12 C\n\
                               ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n\
+                              ┃Sub 1.                                         ┃\n\
+                              ┣━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┫\n\
+                              ┃   │   │   │   │   │   │   │   │   │   │   │ 6 ┃ 1 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │   │   │   │   │   │ 7 │   ┃ 2 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │   │   │   │   │ 0 │   │   ┃ 3 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │   │   │ 1 │ 1 │   │   │   ┃ 4 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │   │   │ 7 │   │   │   │   ┃ 5 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │   │ 4 │   │   │   │   │   ┃ 6 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │ 8 │   │   │   │   │   │   ┃ 7 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │ 0 │   │   │   │   │   │   │   ┃ 8 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │ 1 │ 1 │   │   │   │   │   │   │   │   ┃ 9 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │ 7 │   │   │   │   │   │   │   │   │   ┃ 10 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │ 8 │   │   │   │   │   │   │   │   │   │   ┃ 11 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃ 0 │   │   │   │   │   │   │   │   │   │   │   ┃ 12 C\n\
+                              ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n\
                               ┃Pro.                                           ┃\n\
                               ┣━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┫\n\
-                              ┃ 0 │ 8 │ 8 │ 1 │ 0 │ 8 │ 4 │ 8 │ 1 │ 0 │ 7 │ 6 ┃ P\n\
-                              ┠───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┨\n";
+                              ┃ 0 │ 8 │ 8 │ 1 │ 0 │ 8 │ 4 │ 8 │ 1 │ 0 │ 7 │ 6 ┃ P\n";
 
         // Action
         long_sum(multiplicand, multiplier, &mut text);
@@ -2332,10 +2424,35 @@ mod tests {
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
                               ┃ 0 │   │   │   │   │   │   │   │   │   │   │   ┃ 12 C\n\
                               ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n\
+                              ┃Sub 1.                                         ┃\n\
+                              ┣━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┫\n\
+                              ┃   │   │   │   │   │   │   │   │   │   │   │ 6 ┃ 1 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │   │   │   │   │   │ 7 │   ┃ 2 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │   │   │   │   │ 0 │   │   ┃ 3 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │   │   │ 1 │ 1 │   │   │   ┃ 4 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │   │   │ 7 │   │   │   │   ┃ 5 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │   │ 4 │   │   │   │   │   ┃ 6 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │   │ 8 │   │   │   │   │   │   ┃ 7 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │   │   │ 0 │   │   │   │   │   │   │   ┃ 8 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │ 1 │ 1 │   │   │   │   │   │   │   │   ┃ 9 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │   │ 7 │   │   │   │   │   │   │   │   │   ┃ 10 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃   │ 8 │   │   │   │   │   │   │   │   │   │   ┃ 11 C\n\
+                              ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
+                              ┃ 0 │   │   │   │   │   │   │   │   │   │   │   ┃ 12 C\n\
+                              ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n\
                               ┃Pro.                                           ┃\n\
                               ┣━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┫\n\
-                              ┃ 0 │ 8 │ 8 │ 1 │ 0 │ 8 │ 4 │ 8 │ 1 │ 0 │ 7 │ 6 ┃ P\n\
-                              ┠───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┨\n";
+                              ┃ 0 │ 8 │ 8 │ 1 │ 0 │ 8 │ 4 │ 8 │ 1 │ 0 │ 7 │ 6 ┃ P\n";
 
         // Action
         long_sum(multiplicand, multiplier, &mut text);
@@ -2345,100 +2462,7 @@ mod tests {
     }
 
     // # -----------------------------------------------------------------------
-    // # Function: product validation
-    // # -----------------------------------------------------------------------
-    #[test]
-    fn test_product_validation_with_one_digit() {
-        // Arrange
-        let multiplicand: usize = 3;
-        let multiplier: usize = 2;
-        let mut text: String = String::from("");
-        let expected: &str = "┃   │ 6 ┃ V\n";
-
-        // Action
-        product_validation(multiplicand, multiplier, &mut text);
-
-        // Assert
-        assert_eq!(expected, text);
-    }
-
-    #[test]
-    fn test_product_validation_with_two_digits() {
-        // Arrange
-        let multiplicand: usize = 9;
-        let multiplier: usize = 9;
-        let mut text: String = String::from("");
-        let expected: &str = "┃ 8 │ 1 ┃ V\n";
-
-        // Action
-        product_validation(multiplicand, multiplier, &mut text);
-
-        // Assert
-        assert_eq!(expected, text);
-    }
-
-    #[test]
-    fn test_product_validation_with_three_digits() {
-        // Arrange
-        let multiplicand: usize = 37;
-        let multiplier: usize = 5;
-        let mut text: String = String::from("");
-        let expected: &str = "┃ 1 │ 8 │ 5 ┃ V\n";
-
-        // Action
-        product_validation(multiplicand, multiplier, &mut text);
-
-        // Assert
-        assert_eq!(expected, text);
-    }
-
-    #[test]
-    fn test_product_validation_with_four_digit() {
-        // Arrange
-        let multiplicand: usize = 13;
-        let multiplier: usize = 26;
-        let mut text: String = String::from("");
-        let expected: &str = "┃   │ 3 │ 3 │ 8 ┃ V\n";
-
-        // Action
-        product_validation(multiplicand, multiplier, &mut text);
-
-        // Assert
-        assert_eq!(expected, text);
-    }
-
-    #[test]
-    fn test_product_validation_with_eleven_digits_multiplicand_is_greater() {
-        // Arrange
-        let multiplicand: usize = 246802468;
-        let multiplier: usize = 357;
-        let mut text: String = String::from("");
-        let expected: &str = "┃   │ 8 │ 8 │ 1 │ 0 │ 8 │ 4 │ 8 │ 1 │ 0 │ 7 │ 6 ┃ V\n";
-
-        // Action
-        product_validation(multiplicand, multiplier, &mut text);
-
-        // Assert
-        assert_eq!(expected, text);
-    }
-
-    #[test]
-    fn test_product_validation_with_eleven_digits_multiplicand_is_less() {
-        // Arrange
-        let multiplicand: usize = 357;
-        let multiplier: usize = 246802468;
-        let mut text: String = String::from("");
-        let expected: &str = "┃   │ 8 │ 8 │ 1 │ 0 │ 8 │ 4 │ 8 │ 1 │ 0 │ 7 │ 6 ┃ V\n";
-
-        // Action
-        product_validation(multiplicand, multiplier, &mut text);
-
-        // Assert
-        assert_eq!(expected, text);
-    }
-
-    // # -----------------------------------------------------------------------
-    // # Function: symbols
+    // # Function: author
     // # -----------------------------------------------------------------------
     #[test]
     fn test_author_information() {
@@ -2456,5 +2480,138 @@ mod tests {
 
         // Assert
         assert_eq!(expected, text);
+    }
+
+    // # -----------------------------------------------------------------------
+    // # Function: break_down_addition
+    // # -----------------------------------------------------------------------
+    #[test]
+    fn test_break_down_addition_result_two_digits_with_zero() {
+        // Arrange
+        let value: Vec<usize> = vec![6, 0];
+        let expected: Vec<usize> = vec![6, 0];
+
+        // Action
+        let result: Vec<usize> = break_down_addition(&value);
+
+        // Assert
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_break_down_addition_result_two_digits_without_zero() {
+        // Arrange
+        let value: Vec<usize> = vec![2, 4];
+        let expected: Vec<usize> = vec![2, 4];
+
+        // Action
+        let result: Vec<usize> = break_down_addition(&value);
+
+        // Assert
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_break_down_addition_result_three_digits_with_zero() {
+        // Arrange
+        let value: Vec<usize> = vec![2, 9, 0];
+        let expected: Vec<usize> = vec![2, 9, 0];
+
+        // Action
+        let result: Vec<usize> = break_down_addition(&value);
+
+        // Assert
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_break_down_addition_result_three_digits_without_zero() {
+        // Arrange
+        let value: Vec<usize> = vec![5, 8, 2];
+        let expected: Vec<usize> = vec![5, 8, 2];
+
+        // Action
+        let result: Vec<usize> = break_down_addition(&value);
+
+        // Assert
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_break_down_addition_result_four_digits_with_zero() {
+        // Arrange
+        let value: Vec<usize> = vec![4, 8, 4, 0];
+        let expected: Vec<usize> = vec![4, 8, 4, 0];
+
+        // Action
+        let result: Vec<usize> = break_down_addition(&value);
+
+        // Assert
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_break_down_addition_result_four_digits_with_zero_and_carry() {
+        // Arrange
+        let value: Vec<usize> = vec![4, 11, 6, 0];
+        let expected: Vec<usize> = vec![4, 1, 7, 0];
+
+        // Action
+        let result: Vec<usize> = break_down_addition(&value);
+
+        // Assert
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_break_down_addition_result_four_digits_without_zero_and_carry() {
+        // Arrange
+        let value: Vec<usize> = vec![6, 12, 6, 2];
+        let expected: Vec<usize> = vec![6, 2, 7, 2];
+
+        // Action
+        let result: Vec<usize> = break_down_addition(&value);
+
+        // Assert
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_break_down_addition_result_nine_digits_with_zero_and_carry() {
+        // Arrange
+        let value: Vec<usize> = vec![1, 10, 19, 27, 27, 27, 26, 17, 8];
+        let expected: Vec<usize> = vec![1, 0, 10, 8, 9, 9, 8, 9, 9];
+
+        // Action
+        let result: Vec<usize> = break_down_addition(&value);
+
+        // Assert
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_break_down_addition_result_nine_digits_without_zero_and_carry() {
+        // Arrange
+        let value: Vec<usize> = vec![5, 10, 10, 10, 5, 16, 4, 0];
+        let expected: Vec<usize> = vec![5, 0, 1, 1, 6, 6, 5, 0];
+
+        // Action
+        let result: Vec<usize> = break_down_addition(&value);
+
+        // Assert
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_break_down_addition_result_eleven_digits_without_zero_and_carry() {
+        // Arrange
+        let value: Vec<usize> = vec![5, 12, 17, 14, 13, 8, 11, 26, 12, 10, 1];
+        let expected: Vec<usize> = vec![5, 2, 8, 5, 4, 9, 1, 7, 4, 1, 2];
+
+        // Action
+        let result: Vec<usize> = break_down_addition(&value);
+
+        // Assert
+        assert_eq!(expected, result);
     }
 }
