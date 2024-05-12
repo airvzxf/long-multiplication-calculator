@@ -55,7 +55,7 @@ use crate::generate;
 ///                       License: GPL-3.0\n\
 ///                       Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 ///
-/// use long_multiplication_command_line::long_multiplication::get_table;
+/// use long_multiplication_command_line::multiplication::get_table;
 /// let text: String = get_table(5, 7);
 ///
 /// assert_eq!(expected, text);
@@ -154,7 +154,7 @@ use crate::generate;
 ///                       License: GPL-3.0\n\
 ///                       Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 ///
-/// use long_multiplication_command_line::long_multiplication::get_table;
+/// use long_multiplication_command_line::multiplication::get_table;
 /// let text: String = get_table(13597, 8642);
 ///
 /// assert_eq!(expected, text);
@@ -187,7 +187,7 @@ pub fn get_table(multiplicand: usize, multiplier: usize) -> String {
 ///
 /// Example #1
 /// ```rust
-/// use long_multiplication_command_line::long_multiplication::display;
+/// use long_multiplication_command_line::multiplication::display;
 /// display(5, 7);
 /// ```
 pub fn display(multiplicand: usize, multiplier: usize) {
