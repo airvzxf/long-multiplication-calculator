@@ -439,7 +439,9 @@ pub fn operations(multiplicand: usize, multiplier: usize, text: &mut String) {
 
     let operation_unit: Vec<usize>;
     let operation_carry: Vec<usize>;
-    (operation_unit, operation_carry) = break_down_multiplication(multiplicand, multiplier);
+    let multiplicand_str: String = multiplicand.to_string();
+    let multiplier_str: String = multiplier.to_string();
+    (operation_unit, operation_carry) = break_down_multiplication(&multiplicand_str, &multiplier_str);
 
     let step: usize = multiplicand_len;
     let max_group_rows: usize = operation_unit.len() / step;

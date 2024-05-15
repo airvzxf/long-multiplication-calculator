@@ -51,7 +51,9 @@ pub fn break_down_addition(multiplicand: usize, multiplier: usize) -> Vec<usize>
 
     let units: Vec<usize>;
     let carriers: Vec<usize>;
-    (units, carriers) = break_down_multiplication(multiplicand, multiplier);
+    let multiplicand_str: String = multiplicand.to_string();
+    let multiplier_str: String = multiplier.to_string();
+    (units, carriers) = break_down_multiplication(&multiplicand_str, &multiplier_str);
 
     let mut addition: Vec<usize> = Vec::new();
     for _ in 0..length {
@@ -109,8 +111,8 @@ pub fn break_down_addition(multiplicand: usize, multiplier: usize) -> Vec<usize>
 ///
 /// Code:
 /// ```rust
-/// let multiplicand: usize = 25;
-/// let multiplier: usize = 3;
+/// let multiplicand: String = String::from("25");
+/// let multiplier: String = String::from("3");
 /// let operation_unit: Vec<usize>;
 /// let operation_carry: Vec<usize>;
 /// let expected_unit: Vec<usize> = vec![6, 5];
@@ -120,7 +122,7 @@ pub fn break_down_addition(multiplicand: usize, multiplier: usize) -> Vec<usize>
 /// (
 ///     operation_unit,
 ///     operation_carry
-/// ) = break_down_multiplication(multiplicand, multiplier);
+/// ) = break_down_multiplication(&multiplicand, &multiplier);
 ///
 /// assert_eq!(expected_unit, operation_unit);
 /// assert_eq!(expected_carry, operation_carry);
@@ -148,8 +150,8 @@ pub fn break_down_addition(multiplicand: usize, multiplier: usize) -> Vec<usize>
 ///
 /// Code:
 /// ```rust
-/// let multiplicand: usize = 13;
-/// let multiplier: usize = 26;
+/// let multiplicand: String = String::from("13");
+/// let multiplier: String = String::from("26");
 /// let operation_unit: Vec<usize>;
 /// let operation_carry: Vec<usize>;
 /// let expected_unit: Vec<usize> = vec![6, 8, 2, 6];
@@ -159,19 +161,19 @@ pub fn break_down_addition(multiplicand: usize, multiplier: usize) -> Vec<usize>
 /// (
 ///     operation_unit,
 ///     operation_carry
-/// ) = break_down_multiplication(multiplicand, multiplier);
+/// ) = break_down_multiplication(&multiplicand, &multiplier);
 ///
 /// assert_eq!(expected_unit, operation_unit);
 /// assert_eq!(expected_carry, operation_carry);
 /// ```
-pub fn break_down_multiplication(multiplicand: usize, multiplier: usize) -> (Vec<usize>, Vec<usize>) {
+pub fn break_down_multiplication(multiplicand: &String, multiplier: &String) -> (Vec<usize>, Vec<usize>) {
     let mut operation_unit: Vec<usize> = Vec::new();
     let mut operation_carry: Vec<usize> = Vec::new();
 
-    for a in multiplier.to_string().chars().rev() {
+    for a in multiplier.chars().rev() {
         let mut units: Vec<usize> = Vec::new();
         let mut carriers: Vec<usize> = Vec::new();
-        for b in multiplicand.to_string().chars().rev() {
+        for b in multiplicand.chars().rev() {
             let multiplicand_digit: usize = a as usize - 0x30;
             let multiplier_digit: usize = b as usize - 0x30;
             let product: usize = multiplicand_digit * multiplier_digit;
@@ -260,8 +262,8 @@ mod tests {
     #[test]
     fn test_break_down_multiplication_with_three_digits_multiplicand_is_greater() {
         // Arrange
-        let multiplicand: usize = 25;
-        let multiplier: usize = 3;
+        let multiplicand: String = String::from("25");
+        let multiplier: String = String::from("3");
         let operation_unit: Vec<usize>;
         let operation_carry: Vec<usize>;
         let expected_unit: Vec<usize> = vec![6, 5];
@@ -271,7 +273,7 @@ mod tests {
         (
             operation_unit,
             operation_carry
-        ) = break_down_multiplication(multiplicand, multiplier);
+        ) = break_down_multiplication(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected_unit, operation_unit);
@@ -281,8 +283,8 @@ mod tests {
     #[test]
     fn test_break_down_multiplication_with_three_digits_multiplier_is_greater() {
         // Arrange
-        let multiplicand: usize = 3;
-        let multiplier: usize = 25;
+        let multiplicand: String = String::from("3");
+        let multiplier: String = String::from("25");
         let operation_unit: Vec<usize>;
         let operation_carry: Vec<usize>;
         let expected_unit: Vec<usize> = vec![5, 6];
@@ -292,7 +294,7 @@ mod tests {
         (
             operation_unit,
             operation_carry
-        ) = break_down_multiplication(multiplicand, multiplier);
+        ) = break_down_multiplication(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected_unit, operation_unit);
@@ -302,8 +304,8 @@ mod tests {
     #[test]
     fn test_break_down_multiplication_with_four_digit() {
         // Arrange
-        let multiplicand: usize = 13;
-        let multiplier: usize = 26;
+        let multiplicand: String = String::from("13");
+        let multiplier: String = String::from("26");
         let operation_unit: Vec<usize>;
         let operation_carry: Vec<usize>;
         let expected_unit: Vec<usize> = vec![6, 8, 2, 6];
@@ -313,7 +315,7 @@ mod tests {
         (
             operation_unit,
             operation_carry
-        ) = break_down_multiplication(multiplicand, multiplier);
+        ) = break_down_multiplication(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected_unit, operation_unit);
@@ -323,8 +325,8 @@ mod tests {
     #[test]
     fn test_break_down_multiplication_with_six_digit() {
         // Arrange
-        let multiplicand: usize = 123;
-        let multiplier: usize = 456;
+        let multiplicand: String = String::from("123");
+        let multiplier: String = String::from("456");
         let operation_unit: Vec<usize>;
         let operation_carry: Vec<usize>;
         let expected_unit: Vec<usize> = vec![6, 2, 8, 5, 0, 5, 4, 8, 2];
@@ -334,7 +336,7 @@ mod tests {
         (
             operation_unit,
             operation_carry
-        ) = break_down_multiplication(multiplicand, multiplier);
+        ) = break_down_multiplication(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected_unit, operation_unit);
