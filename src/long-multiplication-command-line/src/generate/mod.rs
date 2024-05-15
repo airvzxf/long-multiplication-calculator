@@ -1,5 +1,5 @@
 use crate::breakdown::{break_down_addition, break_down_multiplication, break_down_subtotal};
-use crate::length::{get_number_length, get_numbers_length};
+use crate::length::{get_number_length, get_numbers_length, get_strings_length};
 
 /// Store the symbol description of the long multiplication.
 ///
@@ -59,31 +59,31 @@ pub fn symbols(text: &mut String) {
 ///
 /// Example #1
 /// ```rust
-/// let multiplicand: usize = 2;
-/// let multiplier: usize = 5;
+/// let multiplicand: String = String::from("2");
+/// let multiplier: String = String::from("5");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┏━━━━━━━┓\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::top_border(multiplicand, multiplier, &mut text);
+/// generate::top_border(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
 ///
 /// Example #2
 /// ```rust
-/// let multiplicand: usize = 2;
-/// let multiplier: usize = 75;
+/// let multiplicand: String = String::from("2");
+/// let multiplier: String = String::from("75");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┏━━━━━━━━━━━┓\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::top_border(multiplicand, multiplier, &mut text);
+/// generate::top_border(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
-pub fn top_border(multiplicand: usize, multiplier: usize, text: &mut String) {
-    let length: usize = get_numbers_length(multiplicand, multiplier);
+pub fn top_border(multiplicand: &String, multiplier: &String, text: &mut String) {
+    let length: usize = get_strings_length(multiplicand, multiplier);
 
     // Create first row
     text.push('┏');
@@ -885,13 +885,13 @@ mod tests {
     #[test]
     fn test_top_border_size_two_digits() {
         // Arrange
-        let multiplicand: usize = 2;
-        let multiplier: usize = 4;
+        let multiplicand: String = String::from("2");
+        let multiplier: String = String::from("4");
         let mut text: String = String::from("");
         let expected: &str = "┏━━━━━━━┓\n";
 
         // Action
-        top_border(multiplicand, multiplier, &mut text);
+        top_border(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -900,13 +900,13 @@ mod tests {
     #[test]
     fn test_top_border_size_three_digits() {
         // Arrange
-        let multiplicand: usize = 12;
-        let multiplier: usize = 3;
+        let multiplicand: String = String::from("12");
+        let multiplier: String = String::from("3");
         let mut text: String = String::from("");
         let expected: &str = "┏━━━━━━━━━━━┓\n";
 
         // Action
-        top_border(multiplicand, multiplier, &mut text);
+        top_border(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -915,13 +915,13 @@ mod tests {
     #[test]
     fn test_top_border_size_five_digits() {
         // Arrange
-        let multiplicand: usize = 345;
-        let multiplier: usize = 12;
+        let multiplicand: String = String::from("345");
+        let multiplier: String = String::from("12");
         let mut text: String = String::from("");
         let expected: &str = "┏━━━━━━━━━━━━━━━━━━━┓\n";
 
         // Action
-        top_border(multiplicand, multiplier, &mut text);
+        top_border(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -930,13 +930,13 @@ mod tests {
     #[test]
     fn test_top_border_size_twelve_digits() {
         // Arrange
-        let multiplicand: usize = 123456;
-        let multiplier: usize = 123456;
+        let multiplicand: String = String::from("123456");
+        let multiplier: String = String::from("123456");
         let mut text: String = String::from("");
         let expected: &str = "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n";
 
         // Action
-        top_border(multiplicand, multiplier, &mut text);
+        top_border(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
