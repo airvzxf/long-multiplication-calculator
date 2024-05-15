@@ -247,33 +247,33 @@ pub fn position_title(multiplicand: &String, multiplier: &String, text: &mut Str
 ///
 /// Example #1
 /// ```rust
-/// let multiplicand: usize = 73;
-/// let multiplier: usize = 4;
+/// let multiplicand: String = String::from("73");
+/// let multiplier: String = String::from("4");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃Ops.       ┃\n\
 ///                       ┣━━━┯━━━┯━━━┫\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::operation_title(multiplicand, multiplier, &mut text);
+/// generate::operation_title(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
 ///
 /// Example #2
 /// ```rust
-/// let multiplicand: usize = 123;
-/// let multiplier: usize = 45;
+/// let multiplicand: String = String::from("123");
+/// let multiplier: String = String::from("45");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃Ops.               ┃\n\
 ///                       ┣━━━┯━━━┯━━━┯━━━┯━━━┫\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::operation_title(multiplicand, multiplier, &mut text);
+/// generate::operation_title(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
-pub fn operation_title(multiplicand: usize, multiplier: usize, text: &mut String) {
-    let length: usize = get_numbers_length(multiplicand, multiplier);
+pub fn operation_title(multiplicand: &String, multiplier: &String, text: &mut String) {
+    let length: usize = get_strings_length(&multiplicand, &multiplier);
 
     // Create first row
     text.push_str("┃Ops.");
@@ -1086,14 +1086,14 @@ mod tests {
     #[test]
     fn test_operation_title_size_two_digits() {
         // Arrange
-        let multiplicand: usize = 9;
-        let multiplier: usize = 1;
+        let multiplicand: String = String::from("9");
+        let multiplier: String = String::from("1");
         let mut text: String = String::from("");
         let expected: &str = "┃Ops.   ┃\n\
                               ┣━━━┯━━━┫\n";
 
         // Action
-        operation_title(multiplicand, multiplier, &mut text);
+        operation_title(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1102,14 +1102,14 @@ mod tests {
     #[test]
     fn test_operation_title_size_three_digits() {
         // Arrange
-        let multiplicand: usize = 53;
-        let multiplier: usize = 4;
+        let multiplicand: String = String::from("53");
+        let multiplier: String = String::from("4");
         let mut text: String = String::from("");
         let expected: &str = "┃Ops.       ┃\n\
                               ┣━━━┯━━━┯━━━┫\n";
 
         // Action
-        operation_title(multiplicand, multiplier, &mut text);
+        operation_title(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1118,14 +1118,14 @@ mod tests {
     #[test]
     fn test_operation_title_size_five_digits() {
         // Arrange
-        let multiplicand: usize = 53;
-        let multiplier: usize = 618;
+        let multiplicand: String = String::from("53");
+        let multiplier: String = String::from("618");
         let mut text: String = String::from("");
         let expected: &str = "┃Ops.               ┃\n\
                               ┣━━━┯━━━┯━━━┯━━━┯━━━┫\n";
 
         // Action
-        operation_title(multiplicand, multiplier, &mut text);
+        operation_title(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1134,14 +1134,14 @@ mod tests {
     #[test]
     fn test_operation_title_size_eleven_digits() {
         // Arrange
-        let multiplicand: usize = 654321;
-        let multiplier: usize = 12345;
+        let multiplicand: String = String::from("654321");
+        let multiplier: String = String::from("12345");
         let mut text: String = String::from("");
         let expected: &str = "┃Ops.                                       ┃\n\
                               ┣━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┫\n";
 
         // Action
-        operation_title(multiplicand, multiplier, &mut text);
+        operation_title(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
