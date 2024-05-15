@@ -104,31 +104,31 @@ pub fn top_border(multiplicand: &String, multiplier: &String, text: &mut String)
 ///
 /// Example #1
 /// ```rust
-/// let multiplicand: usize = 2;
-/// let multiplier: usize = 5;
+/// let multiplicand: String = String::from("2");
+/// let multiplier: String = String::from("5");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┗━━━┷━━━┛\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::bottom_border(multiplicand, multiplier, &mut text);
+/// generate::bottom_border(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
 ///
 /// Example #2
 /// ```rust
-/// let multiplicand: usize = 12;
-/// let multiplier: usize = 57;
+/// let multiplicand: String = String::from("12");
+/// let multiplier: String = String::from("57");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┗━━━┷━━━┷━━━┷━━━┛\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::bottom_border(multiplicand, multiplier, &mut text);
+/// generate::bottom_border(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
-pub fn bottom_border(multiplicand: usize, multiplier: usize, text: &mut String) {
-    let length: usize = get_numbers_length(multiplicand, multiplier);
+pub fn bottom_border(multiplicand: &String, multiplier: &String, text: &mut String) {
+    let length: usize = get_strings_length(&multiplicand, &multiplier);
 
     // Create first row
     text.push('┗');
@@ -948,13 +948,13 @@ mod tests {
     #[test]
     fn test_bottom_border_size_two_digits() {
         // Arrange
-        let multiplicand: usize = 7;
-        let multiplier: usize = 3;
+        let multiplicand: String = String::from("7");
+        let multiplier: String = String::from("3");
         let mut text: String = String::from("");
         let expected: &str = "┗━━━┷━━━┛\n";
 
         // Action
-        bottom_border(multiplicand, multiplier, &mut text);
+        bottom_border(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -963,13 +963,13 @@ mod tests {
     #[test]
     fn test_bottom_border_size_three_digits() {
         // Arrange
-        let multiplicand: usize = 8;
-        let multiplier: usize = 43;
+        let multiplicand: String = String::from("8");
+        let multiplier: String = String::from("43");
         let mut text: String = String::from("");
         let expected: &str = "┗━━━┷━━━┷━━━┛\n";
 
         // Action
-        bottom_border(multiplicand, multiplier, &mut text);
+        bottom_border(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -978,13 +978,13 @@ mod tests {
     #[test]
     fn test_bottom_border_size_five_digits() {
         // Arrange
-        let multiplicand: usize = 519;
-        let multiplier: usize = 43;
+        let multiplicand: String = String::from("519");
+        let multiplier: String = String::from("43");
         let mut text: String = String::from("");
         let expected: &str = "┗━━━┷━━━┷━━━┷━━━┷━━━┛\n";
 
         // Action
-        bottom_border(multiplicand, multiplier, &mut text);
+        bottom_border(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -993,13 +993,13 @@ mod tests {
     #[test]
     fn test_bottom_border_size_twelve_digits() {
         // Arrange
-        let multiplicand: usize = 12;
-        let multiplier: usize = 1234567890;
+        let multiplicand: String = String::from("12");
+        let multiplier: String = String::from("1234567890");
         let mut text: String = String::from("");
         let expected: &str = "┗━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┛\n";
 
         // Action
-        bottom_border(multiplicand, multiplier, &mut text);
+        bottom_border(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);

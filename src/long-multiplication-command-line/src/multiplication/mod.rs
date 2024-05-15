@@ -176,7 +176,7 @@ pub fn get_table(multiplicand: String, multiplier: String) -> String {
     generate::operations(multiplicand_usize, multiplier_usize, &mut content);
     generate::sum_title(multiplicand_usize, multiplier_usize, &mut content);
     generate::long_sum(multiplicand_usize, multiplier_usize, &mut content);
-    generate::bottom_border(multiplicand_usize, multiplier_usize, &mut content);
+    generate::bottom_border(&multiplicand, &multiplier, &mut content);
     generate::author(&mut content);
 
     let content: String = content;
