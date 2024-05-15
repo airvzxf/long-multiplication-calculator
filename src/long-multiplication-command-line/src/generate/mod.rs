@@ -400,24 +400,25 @@ pub fn multiplication(multiplicand: &String, multiplier: &String, text: &mut Str
 ///
 /// Example #1
 /// ```rust
-/// let multiplicand: usize = 9;
-/// let multiplier: usize = 3;
+/// let multiplicand: String = String::from("9");
+/// let multiplier: String = String::from("3");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃ 2 │   ┃ 1 ^\n\
 ///                       ┠┈┈┈┼┈┈┈┨\n\
 ///                       ┃   │ 7 ┃ 1 R\n\
 ///                       ┣━━━┷━━━┫\n";
 ///
+/// use clap::builder::Str;
 /// use long_multiplication_command_line::generate;
-/// generate::operations(multiplicand, multiplier, &mut text);
+/// generate::operations(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
 ///
 /// Example #2
 /// ```rust
-/// let multiplicand: usize = 579;
-/// let multiplier: usize = 48;
+/// let multiplicand: String = String::from("579");
+/// let multiplier: String = String::from("48");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃   │ 4 │ 5 │ 7 │   ┃ 1 ^\n\
 ///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
@@ -428,20 +429,19 @@ pub fn multiplication(multiplicand: &String, multiplier: &String, text: &mut Str
 ///                       ┃   │ 0 │ 8 │ 6 │   ┃ 2 R\n\
 ///                       ┣━━━┷━━━┷━━━┷━━━┷━━━┫\n";
 ///
+/// use clap::builder::Str;
 /// use long_multiplication_command_line::generate;
-/// generate::operations(multiplicand, multiplier, &mut text);
+/// generate::operations(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
-pub fn operations(multiplicand: usize, multiplier: usize, text: &mut String) {
-    let multiplicand_len: usize = get_number_length(multiplicand);
-    let length: usize = get_numbers_length(multiplicand, multiplier);
+pub fn operations(multiplicand: &String, multiplier: &String, text: &mut String) {
+    let multiplicand_len: usize = get_string_length(multiplicand);
+    let length: usize = get_strings_length(multiplicand, multiplier);
 
     let operation_unit: Vec<usize>;
     let operation_carry: Vec<usize>;
-    let multiplicand_str: String = multiplicand.to_string();
-    let multiplier_str: String = multiplier.to_string();
-    (operation_unit, operation_carry) = break_down_multiplication(&multiplicand_str, &multiplier_str);
+    (operation_unit, operation_carry) = break_down_multiplication(multiplicand, multiplier);
 
     let step: usize = multiplicand_len;
     let max_group_rows: usize = operation_unit.len() / step;
@@ -1260,8 +1260,8 @@ mod tests {
     #[test]
     fn test_operations_with_three_digits_multiplicand_is_greater() {
         // Arrange
-        let multiplicand: usize = 25;
-        let multiplier: usize = 3;
+        let multiplicand: String = String::from("25");
+        let multiplier: String = String::from("3");
         let mut text: String = String::from("");
         let expected: &str = "┃ 0 │ 1 │   ┃ 1 ^\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┨\n\
@@ -1269,7 +1269,7 @@ mod tests {
                               ┣━━━┷━━━┷━━━┫\n";
 
         // Action
-        operations(multiplicand, multiplier, &mut text);
+        operations(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1278,8 +1278,8 @@ mod tests {
     #[test]
     fn test_operations_with_three_digits_multiplicand_is_less() {
         // Arrange
-        let multiplicand: usize = 3;
-        let multiplier: usize = 25;
+        let multiplicand: String = String::from("3");
+        let multiplier: String = String::from("25");
         let mut text: String = String::from("");
         let expected: &str = "┃   │ 1 │   ┃ 1 ^\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┨\n\
@@ -1291,7 +1291,7 @@ mod tests {
                               ┣━━━┷━━━┷━━━┫\n";
 
         // Action
-        operations(multiplicand, multiplier, &mut text);
+        operations(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1300,8 +1300,8 @@ mod tests {
     #[test]
     fn test_operations_with_four_digit() {
         // Arrange
-        let multiplicand: usize = 13;
-        let multiplier: usize = 26;
+        let multiplicand: String = String::from("13");
+        let multiplier: String = String::from("26");
         let mut text: String = String::from("");
         let expected: &str = "┃   │ 0 │ 1 │   ┃ 1 ^\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
@@ -1313,7 +1313,7 @@ mod tests {
                               ┣━━━┷━━━┷━━━┷━━━┫\n";
 
         // Action
-        operations(multiplicand, multiplier, &mut text);
+        operations(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1322,8 +1322,8 @@ mod tests {
     #[test]
     fn test_operations_with_eleven_digits_multiplicand_is_greater() {
         // Arrange
-        let multiplicand: usize = 246802468;
-        let multiplier: usize = 357;
+        let multiplicand: String = String::from("246802468");
+        let multiplier: String = String::from("357");
         let mut text: String = String::from("");
         let expected: &str = "┃   │   │ 1 │ 2 │ 4 │ 5 │ 0 │ 1 │ 2 │ 4 │ 5 │   ┃ 1 ^\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
@@ -1339,7 +1339,7 @@ mod tests {
                               ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n";
 
         // Action
-        operations(multiplicand, multiplier, &mut text);
+        operations(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1348,8 +1348,8 @@ mod tests {
     #[test]
     fn test_operations_with_eleven_digits_multiplicand_is_less() {
         // Arrange
-        let multiplicand: usize = 357;
-        let multiplier: usize = 246802468;
+        let multiplicand: String = String::from("357");
+        let multiplier: String = String::from("246802468");
         let mut text: String = String::from("");
         let expected: &str = "┃   │   │   │   │   │   │   │   │ 2 │ 4 │ 5 │   ┃ 1 ^\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
@@ -1389,7 +1389,7 @@ mod tests {
                               ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n";
 
         // Action
-        operations(multiplicand, multiplier, &mut text);
+        operations(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1398,8 +1398,8 @@ mod tests {
     #[test]
     fn test_operations_with_thirteen_rows() {
         // Arrange
-        let multiplicand: usize = 7;
-        let multiplier: usize = 9876543210123;
+        let multiplicand: String = String::from("7");
+        let multiplier: String = String::from("9876543210123");
         let mut text: String = String::from("");
         let expected: &str = "┃   │   │   │   │   │   │   │   │   │   │   │   │ 2 │   ┃ 1 ^\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
@@ -1455,7 +1455,7 @@ mod tests {
                               ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n";
 
         // Action
-        operations(multiplicand, multiplier, &mut text);
+        operations(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
