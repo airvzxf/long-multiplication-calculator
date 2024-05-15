@@ -153,8 +153,8 @@ pub fn bottom_border(multiplicand: usize, multiplier: usize, text: &mut String) 
 ///
 /// Example #1
 /// ```rust
-/// let multiplicand: usize = 7;
-/// let multiplier: usize = 8;
+/// let multiplicand: String = String::from("7");
+/// let multiplier: String = String::from("8");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃Pos.   ┃\n\
 ///                       ┠┄┄┄┬┄┄┄┨\n\
@@ -162,15 +162,15 @@ pub fn bottom_border(multiplicand: usize, multiplier: usize, text: &mut String) 
 ///                       ┣━━━┷━━━┫\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::position_title(multiplicand, multiplier, &mut text);
+/// generate::position_title(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
 ///
 /// Example #2
 /// ```rust
-/// let multiplicand: usize = 123;
-/// let multiplier: usize = 456;
+/// let multiplicand: String = String::from("123");
+/// let multiplier: String = String::from("456");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃Pos.                   ┃\n\
 ///                       ┠┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┨\n\
@@ -178,12 +178,12 @@ pub fn bottom_border(multiplicand: usize, multiplier: usize, text: &mut String) 
 ///                       ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::position_title(multiplicand, multiplier, &mut text);
+/// generate::position_title(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
-pub fn position_title(multiplicand: usize, multiplier: usize, text: &mut String) {
-    let length: usize = get_numbers_length(multiplicand, multiplier);
+pub fn position_title(multiplicand: &String, multiplier: &String, text: &mut String) {
+    let length: usize = get_strings_length(&multiplicand, &multiplier);
 
     // Create first row
     text.push_str("┃Pos.");
@@ -1011,8 +1011,8 @@ mod tests {
     #[test]
     fn test_position_title_size_two_digits() {
         // Arrange
-        let multiplicand: usize = 6;
-        let multiplier: usize = 3;
+        let multiplicand: String = String::from("6");
+        let multiplier: String = String::from("3");
         let mut text: String = String::from("");
         let expected: &str = "┃Pos.   ┃\n\
                               ┠┄┄┄┬┄┄┄┨\n\
@@ -1020,7 +1020,7 @@ mod tests {
                               ┣━━━┷━━━┫\n";
 
         // Action
-        position_title(multiplicand, multiplier, &mut text);
+        position_title(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1029,8 +1029,8 @@ mod tests {
     #[test]
     fn test_position_title_size_three_digits() {
         // Arrange
-        let multiplicand: usize = 18;
-        let multiplier: usize = 6;
+        let multiplicand: String = String::from("18");
+        let multiplier: String = String::from("6");
         let mut text: String = String::from("");
         let expected: &str = "┃Pos.       ┃\n\
                               ┠┄┄┄┬┄┄┄┬┄┄┄┨\n\
@@ -1038,7 +1038,7 @@ mod tests {
                               ┣━━━┷━━━┷━━━┫\n";
 
         // Action
-        position_title(multiplicand, multiplier, &mut text);
+        position_title(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1047,8 +1047,8 @@ mod tests {
     #[test]
     fn test_position_title_size_five_digits() {
         // Arrange
-        let multiplicand: usize = 78;
-        let multiplier: usize = 327;
+        let multiplicand: String = String::from("78");
+        let multiplier: String = String::from("327");
         let mut text: String = String::from("");
         let expected: &str = "┃Pos.               ┃\n\
                               ┠┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┨\n\
@@ -1056,7 +1056,7 @@ mod tests {
                               ┣━━━┷━━━┷━━━┷━━━┷━━━┫\n";
 
         // Action
-        position_title(multiplicand, multiplier, &mut text);
+        position_title(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1065,8 +1065,8 @@ mod tests {
     #[test]
     fn test_position_title_size_eleven_digits() {
         // Arrange
-        let multiplicand: usize = 123456;
-        let multiplier: usize = 54321;
+        let multiplicand: String = String::from("123456");
+        let multiplier: String = String::from("54321");
         let mut text: String = String::from("");
         let expected: &str = "┃Pos.                                       ┃\n\
                               ┠┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┬┄┄┄┨\n\
@@ -1074,7 +1074,7 @@ mod tests {
                               ┣━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┷━━━┫\n";
 
         // Action
-        position_title(multiplicand, multiplier, &mut text);
+        position_title(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
