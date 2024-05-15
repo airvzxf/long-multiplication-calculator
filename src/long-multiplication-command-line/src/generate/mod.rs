@@ -657,7 +657,9 @@ pub fn sum_title(multiplicand: &String, multiplier: &String, text: &mut String) 
 /// assert_eq!(expected, text);
 /// ```
 pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
-    let additions: Vec<usize> = break_down_addition(multiplicand, multiplier);
+    let multiplicand_str: String = multiplicand.to_string();
+    let multiplier_str: String = multiplier.to_string();
+    let additions: Vec<usize> = break_down_addition(&multiplicand_str, &multiplier_str);
 
     let length: usize = get_numbers_length(multiplicand, multiplier);
     generate_rows_with_numbers(&additions, length, text);

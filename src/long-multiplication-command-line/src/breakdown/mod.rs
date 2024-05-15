@@ -1,4 +1,4 @@
-use crate::length::{get_number_length, get_numbers_length};
+use crate::length::{get_string_length, get_strings_length};
 
 /// Get a list of the sum for the rows in each column.
 ///
@@ -21,32 +21,32 @@ use crate::length::{get_number_length, get_numbers_length};
 ///
 /// Example #1
 /// ```rust
-/// let multiplicand: usize = 2;
-/// let multiplier: usize = 3;
+/// let multiplicand: String = String::from("2");
+/// let multiplier: String = String::from("3");
 /// let addition: Vec<usize>;
 /// let expected_addition: Vec<usize> = vec![6, 0];
 ///
 /// use long_multiplication_command_line::breakdown::break_down_addition;
-/// addition = break_down_addition(multiplicand, multiplier);
+/// addition = break_down_addition(&multiplicand, &multiplier);
 ///
 /// assert_eq!(expected_addition, addition);
 /// ```
 ///
 /// Example #2
 /// ```rust
-/// let multiplicand: usize = 13;
-/// let multiplier: usize = 26;
+/// let multiplicand: String = String::from("13");
+/// let multiplier: String = String::from("26");
 /// let addition: Vec<usize>;
 /// let expected_addition: Vec<usize> = vec![8, 13, 2, 0];
 ///
 /// use long_multiplication_command_line::breakdown::break_down_addition;
-/// addition = break_down_addition(multiplicand, multiplier);
+/// addition = break_down_addition(&multiplicand, &multiplier);
 ///
 /// assert_eq!(expected_addition, addition);
 /// ```
-pub fn break_down_addition(multiplicand: usize, multiplier: usize) -> Vec<usize> {
-    let multiplicand_len: usize = get_number_length(multiplicand);
-    let length: usize = get_numbers_length(multiplicand, multiplier);
+pub fn break_down_addition(multiplicand: &String, multiplier: &String) -> Vec<usize> {
+    let multiplicand_len: usize = get_string_length(multiplicand);
+    let length: usize = get_strings_length(multiplicand, multiplier);
     let step: usize = multiplicand_len;
 
     let units: Vec<usize>;
@@ -349,13 +349,13 @@ mod tests {
     #[test]
     fn test_break_down_addition_product_one_digit() {
         // Arrange
-        let multiplicand: usize = 2;
-        let multiplier: usize = 3;
+        let multiplicand: String = String::from("2");
+        let multiplier: String = String::from("3");
         let addition: Vec<usize>;
         let expected_addition: Vec<usize> = vec![6, 0];
 
         // Action
-        addition = break_down_addition(multiplicand, multiplier);
+        addition = break_down_addition(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
@@ -364,13 +364,13 @@ mod tests {
     #[test]
     fn test_break_down_addition_product_two_digits() {
         // Arrange
-        let multiplicand: usize = 9;
-        let multiplier: usize = 8;
+        let multiplicand: String = String::from("9");
+        let multiplier: String = String::from("8");
         let addition: Vec<usize>;
         let expected_addition: Vec<usize> = vec![2, 7];
 
         // Action
-        addition = break_down_addition(multiplicand, multiplier);
+        addition = break_down_addition(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
@@ -379,13 +379,13 @@ mod tests {
     #[test]
     fn test_break_down_addition_with_three_digits() {
         // Arrange
-        let multiplicand: usize = 37;
-        let multiplier: usize = 8;
+        let multiplicand: String = String::from("37");
+        let multiplier: String = String::from("8");
         let addition: Vec<usize>;
         let expected_addition: Vec<usize> = vec![6, 9, 2];
 
         // Action
-        addition = break_down_addition(multiplicand, multiplier);
+        addition = break_down_addition(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
@@ -394,13 +394,13 @@ mod tests {
     #[test]
     fn test_break_down_addition_with_three_digits_switch() {
         // Arrange
-        let multiplicand: usize = 8;
-        let multiplier: usize = 37;
+        let multiplicand: String = String::from("8");
+        let multiplier: String = String::from("37");
         let addition: Vec<usize>;
         let expected_addition: Vec<usize> = vec![6, 9, 2];
 
         // Action
-        addition = break_down_addition(multiplicand, multiplier);
+        addition = break_down_addition(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
@@ -409,13 +409,13 @@ mod tests {
     #[test]
     fn test_break_down_addition_with_four_digit() {
         // Arrange
-        let multiplicand: usize = 13;
-        let multiplier: usize = 26;
+        let multiplicand: String = String::from("13");
+        let multiplier: String = String::from("26");
         let addition: Vec<usize>;
         let expected_addition: Vec<usize> = vec![8, 13, 2, 0];
 
         // Action
-        addition = break_down_addition(multiplicand, multiplier);
+        addition = break_down_addition(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
@@ -424,13 +424,13 @@ mod tests {
     #[test]
     fn test_break_down_addition_with_six_digit() {
         // Arrange
-        let multiplicand: usize = 123;
-        let multiplier: usize = 456;
+        let multiplicand: String = String::from("123");
+        let multiplier: String = String::from("456");
         let addition: Vec<usize>;
         let expected_addition: Vec<usize> = vec![8, 8, 10, 15, 4, 0];
 
         // Action
-        addition = break_down_addition(multiplicand, multiplier);
+        addition = break_down_addition(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
@@ -439,13 +439,13 @@ mod tests {
     #[test]
     fn test_break_down_addition_with_eleven_digits_multiplier_is_greater() {
         // Arrange
-        let multiplicand: usize = 78924358;
-        let multiplier: usize = 357;
+        let multiplicand: String = String::from("78924358");
+        let multiplier: String = String::from("357");
         let addition: Vec<usize>;
         let expected_addition: Vec<usize> = vec![6, 10, 17, 24, 17, 8, 25, 25, 19, 6, 2];
 
         // Action
-        addition = break_down_addition(multiplicand, multiplier);
+        addition = break_down_addition(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
@@ -454,13 +454,13 @@ mod tests {
     #[test]
     fn test_break_down_addition_with_eleven_digits_multiplier_is_less() {
         // Arrange
-        let multiplicand: usize = 357;
-        let multiplier: usize = 78924358;
+        let multiplicand: String = String::from("357");
+        let multiplier: String = String::from("78924358");
         let addition: Vec<usize>;
         let expected_addition: Vec<usize> = vec![6, 10, 17, 24, 17, 8, 25, 25, 19, 6, 2];
 
         // Action
-        addition = break_down_addition(multiplicand, multiplier);
+        addition = break_down_addition(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected_addition, addition);
