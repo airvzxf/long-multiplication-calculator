@@ -10,6 +10,8 @@ use crate::generate;
 ///
 /// Example #1
 /// ```rust
+/// let multiplicand: String = String::from("5");
+/// let multiplier: String = String::from("7");
 /// let expected: &str = "\n\
 ///                       Symbols\n\
 ///                       =======\n\
@@ -56,13 +58,15 @@ use crate::generate;
 ///                       Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 ///
 /// use long_multiplication_command_line::multiplication::get_table;
-/// let text: String = get_table(5, 7);
+/// let text: String = get_table(multiplicand, multiplier);
 ///
 /// assert_eq!(expected, text);
 /// ```
 ///
 /// Example #2
 /// ```rust
+/// let multiplicand: String = String::from("13597");
+/// let multiplier: String = String::from("8642");
 /// let expected: &str = "\n\
 ///                       Symbols\n\
 ///                       =======\n\
@@ -155,11 +159,13 @@ use crate::generate;
 ///                       Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 ///
 /// use long_multiplication_command_line::multiplication::get_table;
-/// let text: String = get_table(13597, 8642);
+/// let text: String = get_table(multiplicand, multiplier);
 ///
 /// assert_eq!(expected, text);
 /// ```
-pub fn get_table(multiplicand: usize, multiplier: usize) -> String {
+pub fn get_table(multiplicand: String, multiplier: String) -> String {
+    let multiplicand: usize = multiplicand.parse().unwrap();
+    let multiplier: usize = multiplier.parse().unwrap();
     let mut content: String = String::from("");
 
     generate::symbols(&mut content);
@@ -187,10 +193,13 @@ pub fn get_table(multiplicand: usize, multiplier: usize) -> String {
 ///
 /// Example #1
 /// ```rust
+/// let multiplicand: String = String::from("5");
+/// let multiplier: String = String::from("7");
+///
 /// use long_multiplication_command_line::multiplication::display;
-/// display(5, 7);
+/// display(multiplicand, multiplier);
 /// ```
-pub fn display(multiplicand: usize, multiplier: usize) {
+pub fn display(multiplicand: String, multiplier: String) {
     let content: String = get_table(multiplicand, multiplier);
     println!("{content}");
 }
@@ -205,8 +214,8 @@ mod tests {
     #[test]
     fn test_get_table_product_one_digits() {
         // Arrange
-        let multiplicand: usize = 3;
-        let multiplier: usize = 2;
+        let multiplicand: String = String::from("3");
+        let multiplier: String = String::from("2");
         let expected: &str = "\n\
                               Symbols\n\
                               =======\n\
@@ -262,8 +271,8 @@ mod tests {
     #[test]
     fn test_get_table_product_two_digits() {
         // Arrange
-        let multiplicand: usize = 5;
-        let multiplier: usize = 7;
+        let multiplicand: String = String::from("5");
+        let multiplier: String = String::from("7");
         let expected: &str = "\n\
                               Symbols\n\
                               =======\n\
@@ -319,8 +328,8 @@ mod tests {
     #[test]
     fn test_get_table_product_nine_digits() {
         // Arrange
-        let multiplicand: usize = 13597;
-        let multiplier: usize = 8642;
+        let multiplicand: String = String::from("13597");
+        let multiplier: String = String::from("8642");
         let expected: &str = "\n\
                               Symbols\n\
                               =======\n\
