@@ -556,33 +556,33 @@ pub fn operations(multiplicand: &String, multiplier: &String, text: &mut String)
 ///
 /// Example #1
 /// ```rust
-/// let multiplicand: usize = 13;
-/// let multiplier: usize = 8;
+/// let multiplicand: String = String::from("13");
+/// let multiplier: String = String::from("8");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃Sum.       ┃\n\
 ///                       ┣━━━┯━━━┯━━━┫\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::sum_title(multiplicand, multiplier, &mut text);
+/// generate::sum_title(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
 ///
 /// Example #2
 /// ```rust
-/// let multiplicand: usize = 951;
-/// let multiplier: usize = 46;
+/// let multiplicand: String = String::from("951");
+/// let multiplier: String = String::from("46");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃Sum.               ┃\n\
 ///                       ┣━━━┯━━━┯━━━┯━━━┯━━━┫\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::sum_title(multiplicand, multiplier, &mut text);
+/// generate::sum_title(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
-pub fn sum_title(multiplicand: usize, multiplier: usize, text: &mut String) {
-    let length: usize = get_numbers_length(multiplicand, multiplier);
+pub fn sum_title(multiplicand: &String, multiplier: &String, text: &mut String) {
+    let length: usize = get_strings_length(multiplicand, multiplier);
 
     // Create first row
     text.push_str("┃Sum.");
@@ -1467,14 +1467,14 @@ mod tests {
     #[test]
     fn test_sum_title_size_two_digits() {
         // Arrange
-        let multiplicand: usize = 4;
-        let multiplier: usize = 2;
+        let multiplicand: String = String::from("4");
+        let multiplier: String = String::from("2");
         let mut text: String = String::from("");
         let expected: &str = "┃Sum.   ┃\n\
                               ┣━━━┯━━━┫\n";
 
         // Action
-        sum_title(multiplicand, multiplier, &mut text);
+        sum_title(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1483,14 +1483,14 @@ mod tests {
     #[test]
     fn test_sum_title_size_three_digits() {
         // Arrange
-        let multiplicand: usize = 19;
-        let multiplier: usize = 5;
+        let multiplicand: String = String::from("19");
+        let multiplier: String = String::from("5");
         let mut text: String = String::from("");
         let expected: &str = "┃Sum.       ┃\n\
                               ┣━━━┯━━━┯━━━┫\n";
 
         // Action
-        sum_title(multiplicand, multiplier, &mut text);
+        sum_title(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1499,14 +1499,14 @@ mod tests {
     #[test]
     fn test_sum_title_size_five_digits() {
         // Arrange
-        let multiplicand: usize = 73;
-        let multiplier: usize = 438;
+        let multiplicand: String = String::from("73");
+        let multiplier: String = String::from("438");
         let mut text: String = String::from("");
         let expected: &str = "┃Sum.               ┃\n\
                               ┣━━━┯━━━┯━━━┯━━━┯━━━┫\n";
 
         // Action
-        sum_title(multiplicand, multiplier, &mut text);
+        sum_title(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1515,14 +1515,14 @@ mod tests {
     #[test]
     fn test_sum_title_size_eleven_digits() {
         // Arrange
-        let multiplicand: usize = 123456;
-        let multiplier: usize = 54321;
+        let multiplicand: String = String::from("123456");
+        let multiplier: String = String::from("54321");
         let mut text: String = String::from("");
         let expected: &str = "┃Sum.                                       ┃\n\
                               ┣━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┯━━━┫\n";
 
         // Action
-        sum_title(multiplicand, multiplier, &mut text);
+        sum_title(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);

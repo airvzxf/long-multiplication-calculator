@@ -174,7 +174,7 @@ pub fn get_table(multiplicand: String, multiplier: String) -> String {
     generate::operation_title(&multiplicand, &multiplier, &mut content);
     generate::multiplication(&multiplicand, &multiplier, &mut content);
     generate::operations(&multiplicand, &multiplier, &mut content);
-    generate::sum_title(multiplicand_usize, multiplier_usize, &mut content);
+    generate::sum_title(&multiplicand, &multiplier, &mut content);
     generate::long_sum(multiplicand_usize, multiplier_usize, &mut content);
     generate::bottom_border(&multiplicand, &multiplier, &mut content);
     generate::author(&mut content);
