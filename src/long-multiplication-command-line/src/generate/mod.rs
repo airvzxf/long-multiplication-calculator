@@ -128,7 +128,7 @@ pub fn top_border(multiplicand: &String, multiplier: &String, text: &mut String)
 /// assert_eq!(expected, text);
 /// ```
 pub fn bottom_border(multiplicand: &String, multiplier: &String, text: &mut String) {
-    let length: usize = get_strings_length(&multiplicand, &multiplier);
+    let length: usize = get_strings_length(multiplicand, multiplier);
 
     // Create first row
     text.push('┗');
@@ -183,7 +183,7 @@ pub fn bottom_border(multiplicand: &String, multiplier: &String, text: &mut Stri
 /// assert_eq!(expected, text);
 /// ```
 pub fn position_title(multiplicand: &String, multiplier: &String, text: &mut String) {
-    let length: usize = get_strings_length(&multiplicand, &multiplier);
+    let length: usize = get_strings_length(multiplicand, multiplier);
 
     // Create first row
     text.push_str("┃Pos.");
@@ -273,7 +273,7 @@ pub fn position_title(multiplicand: &String, multiplier: &String, text: &mut Str
 /// assert_eq!(expected, text);
 /// ```
 pub fn operation_title(multiplicand: &String, multiplier: &String, text: &mut String) {
-    let length: usize = get_strings_length(&multiplicand, &multiplier);
+    let length: usize = get_strings_length(multiplicand, multiplier);
 
     // Create first row
     text.push_str("┃Ops.");
@@ -334,8 +334,8 @@ pub fn operation_title(multiplicand: &String, multiplier: &String, text: &mut St
 /// assert_eq!(expected, text);
 /// ```
 pub fn multiplication(multiplicand: &String, multiplier: &String, text: &mut String) {
-    let multiplicand_len: usize = get_string_length(&multiplicand);
-    let multiplier_len: usize = get_string_length(&multiplier);
+    let multiplicand_len: usize = get_string_length(multiplicand);
+    let multiplier_len: usize = get_string_length(multiplier);
     let length: usize = multiplicand_len + multiplier_len;
 
     // Create first row
