@@ -164,8 +164,6 @@ use crate::generate;
 /// assert_eq!(expected, text);
 /// ```
 pub fn get_table(multiplicand: String, multiplier: String) -> String {
-    let multiplicand_usize: usize = multiplicand.parse().unwrap();
-    let multiplier_usize: usize = multiplier.parse().unwrap();
     let mut content: String = String::from("");
 
     generate::symbols(&mut content);
@@ -175,7 +173,7 @@ pub fn get_table(multiplicand: String, multiplier: String) -> String {
     generate::multiplication(&multiplicand, &multiplier, &mut content);
     generate::operations(&multiplicand, &multiplier, &mut content);
     generate::sum_title(&multiplicand, &multiplier, &mut content);
-    generate::long_sum(multiplicand_usize, multiplier_usize, &mut content);
+    generate::long_sum(&multiplicand, &multiplier, &mut content);
     generate::bottom_border(&multiplicand, &multiplier, &mut content);
     generate::author(&mut content);
 

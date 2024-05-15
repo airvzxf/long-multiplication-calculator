@@ -1,5 +1,5 @@
 use crate::breakdown::{break_down_addition, break_down_multiplication, break_down_subtotal};
-use crate::length::{get_number_length, get_numbers_length, get_string_length, get_strings_length};
+use crate::length::{get_number_length, get_string_length, get_strings_length};
 
 /// Store the symbol description of the long multiplication.
 ///
@@ -617,8 +617,8 @@ pub fn sum_title(multiplicand: &String, multiplier: &String, text: &mut String) 
 ///
 /// Example #1
 /// ```rust
-/// let multiplicand: usize = 3;
-/// let multiplier: usize = 2;
+/// let multiplicand: String = String::from("3");
+/// let multiplier: String = String::from("2");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃   │ 6 ┃ 1 C\n\
 ///                       ┠┈┈┈┼┈┈┈┨\n\
@@ -629,15 +629,15 @@ pub fn sum_title(multiplicand: &String, multiplier: &String, text: &mut String) 
 ///                       ┃ 0 │ 6 ┃ P\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::long_sum(multiplicand, multiplier, &mut text);
+/// generate::long_sum(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
 ///
 /// Example #2
 /// ```rust
-/// let multiplicand: usize = 13;
-/// let multiplier: usize = 26;
+/// let multiplicand: String = String::from("13");
+/// let multiplier: String = String::from("26");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃   │   │   │ 8 ┃ 1 C\n\
 ///                       ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
@@ -652,16 +652,14 @@ pub fn sum_title(multiplicand: &String, multiplier: &String, text: &mut String) 
 ///                       ┃ 0 │ 3 │ 3 │ 8 ┃ P\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::long_sum(multiplicand, multiplier, &mut text);
+/// generate::long_sum(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
-pub fn long_sum(multiplicand: usize, multiplier: usize, text: &mut String) {
-    let multiplicand_str: String = multiplicand.to_string();
-    let multiplier_str: String = multiplier.to_string();
-    let additions: Vec<usize> = break_down_addition(&multiplicand_str, &multiplier_str);
+pub fn long_sum(multiplicand: &String, multiplier: &String, text: &mut String) {
+    let additions: Vec<usize> = break_down_addition(multiplicand, multiplier);
 
-    let length: usize = get_numbers_length(multiplicand, multiplier);
+    let length: usize = get_strings_length(multiplicand, multiplier);
     generate_rows_with_numbers(&additions, length, text);
 
     let mut sub_addition: Vec<usize> = break_down_subtotal(&additions);
@@ -1536,8 +1534,8 @@ mod tests {
     #[test]
     fn test_long_sum_with_one_digit() {
         // Arrange
-        let multiplicand: usize = 3;
-        let multiplier: usize = 2;
+        let multiplicand: String = String::from("3");
+        let multiplier: String = String::from("2");
         let mut text: String = String::from("");
         let expected: &str = "┃   │ 6 ┃ 1 C\n\
                               ┠┈┈┈┼┈┈┈┨\n\
@@ -1548,7 +1546,7 @@ mod tests {
                               ┃ 0 │ 6 ┃ P\n";
 
         // Action
-        long_sum(multiplicand, multiplier, &mut text);
+        long_sum(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1557,8 +1555,8 @@ mod tests {
     #[test]
     fn test_long_sum_with_two_digits() {
         // Arrange
-        let multiplicand: usize = 9;
-        let multiplier: usize = 9;
+        let multiplicand: String = String::from("9");
+        let multiplier: String = String::from("9");
         let mut text: String = String::from("");
         let expected: &str = "┃   │ 1 ┃ 1 C\n\
                               ┠┈┈┈┼┈┈┈┨\n\
@@ -1569,7 +1567,7 @@ mod tests {
                               ┃ 8 │ 1 ┃ P\n";
 
         // Action
-        long_sum(multiplicand, multiplier, &mut text);
+        long_sum(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1578,8 +1576,8 @@ mod tests {
     #[test]
     fn test_long_sum_with_three_digits() {
         // Arrange
-        let multiplicand: usize = 37;
-        let multiplier: usize = 5;
+        let multiplicand: String = String::from("37");
+        let multiplier: String = String::from("5");
         let mut text: String = String::from("");
         let expected: &str = "┃   │   │ 5 ┃ 1 C\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┨\n\
@@ -1592,7 +1590,7 @@ mod tests {
                               ┃ 1 │ 8 │ 5 ┃ P\n";
 
         // Action
-        long_sum(multiplicand, multiplier, &mut text);
+        long_sum(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1601,8 +1599,8 @@ mod tests {
     #[test]
     fn test_long_sum_with_four_digit() {
         // Arrange
-        let multiplicand: usize = 13;
-        let multiplier: usize = 26;
+        let multiplicand: String = String::from("13");
+        let multiplier: String = String::from("26");
         let mut text: String = String::from("");
         let expected: &str = "┃   │   │   │ 8 ┃ 1 C\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
@@ -1617,7 +1615,7 @@ mod tests {
                               ┃ 0 │ 3 │ 3 │ 8 ┃ P\n";
 
         // Action
-        long_sum(multiplicand, multiplier, &mut text);
+        long_sum(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1626,8 +1624,8 @@ mod tests {
     #[test]
     fn test_long_sum_with_eleven_digits_multiplicand_is_greater() {
         // Arrange
-        let multiplicand: usize = 246802468;
-        let multiplier: usize = 357;
+        let multiplicand: String = String::from("246802468");
+        let multiplier: String = String::from("357");
         let mut text: String = String::from("");
         let expected: &str = "┃   │   │   │   │   │   │   │   │   │   │   │ 6 ┃ 1 C\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
@@ -1684,7 +1682,7 @@ mod tests {
                               ┃ 0 │ 8 │ 8 │ 1 │ 0 │ 8 │ 4 │ 8 │ 1 │ 0 │ 7 │ 6 ┃ P\n";
 
         // Action
-        long_sum(multiplicand, multiplier, &mut text);
+        long_sum(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1693,8 +1691,8 @@ mod tests {
     #[test]
     fn test_long_sum_with_eleven_digits_multiplicand_is_less() {
         // Arrange
-        let multiplicand: usize = 357;
-        let multiplier: usize = 246802468;
+        let multiplicand: String = String::from("357");
+        let multiplier: String = String::from("246802468");
         let mut text: String = String::from("");
         let expected: &str = "┃   │   │   │   │   │   │   │   │   │   │   │ 6 ┃ 1 C\n\
                               ┠┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┼┈┈┈┨\n\
@@ -1751,7 +1749,7 @@ mod tests {
                               ┃ 0 │ 8 │ 8 │ 1 │ 0 │ 8 │ 4 │ 8 │ 1 │ 0 │ 7 │ 6 ┃ P\n";
 
         // Action
-        long_sum(multiplicand, multiplier, &mut text);
+        long_sum(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
