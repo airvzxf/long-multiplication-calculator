@@ -1,5 +1,5 @@
 use crate::breakdown::{break_down_addition, break_down_multiplication, break_down_subtotal};
-use crate::length::{get_number_length, get_numbers_length, get_strings_length};
+use crate::length::{get_number_length, get_numbers_length, get_string_length, get_strings_length};
 
 /// Store the symbol description of the long multiplication.
 ///
@@ -306,36 +306,36 @@ pub fn operation_title(multiplicand: &String, multiplier: &String, text: &mut St
 ///
 /// Example #1
 /// ```rust
-/// let multiplicand: usize = 3;
-/// let multiplier: usize = 5;
+/// let multiplicand: String = String::from("3");
+/// let multiplier: String = String::from("5");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃   │ 3 ┃\n\
 ///                       ┃ x │ 5 ┃\n\
 ///                       ┣━━━┿━━━┫\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::multiplication(multiplicand, multiplier, &mut text);
+/// generate::multiplication(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
 ///
 /// Example #2
 /// ```rust
-/// let multiplicand: usize = 12;
-/// let multiplier: usize = 345;
+/// let multiplicand: String = String::from("12");
+/// let multiplier: String = String::from("345");
 /// let mut text: String = String::from("");
 /// let expected: &str = "┃   │   │   │ 1 │ 2 ┃\n\
 ///                       ┃ x │   │ 3 │ 4 │ 5 ┃\n\
 ///                       ┣━━━┿━━━┿━━━┿━━━┿━━━┫\n";
 ///
 /// use long_multiplication_command_line::generate;
-/// generate::multiplication(multiplicand, multiplier, &mut text);
+/// generate::multiplication(&multiplicand, &multiplier, &mut text);
 ///
 /// assert_eq!(expected, text);
 /// ```
-pub fn multiplication(multiplicand: usize, multiplier: usize, text: &mut String) {
-    let multiplicand_len: usize = get_number_length(multiplicand);
-    let multiplier_len: usize = get_number_length(multiplier);
+pub fn multiplication(multiplicand: &String, multiplier: &String, text: &mut String) {
+    let multiplicand_len: usize = get_string_length(&multiplicand);
+    let multiplier_len: usize = get_string_length(&multiplier);
     let length: usize = multiplicand_len + multiplier_len;
 
     // Create first row
@@ -348,7 +348,7 @@ pub fn multiplication(multiplicand: usize, multiplier: usize, text: &mut String)
         text.push('│');
     }
 
-    for i in multiplicand.to_string().chars() {
+    for i in multiplicand.chars() {
         text.push(' ');
         text.push(i);
         text.push_str(" │");
@@ -368,7 +368,7 @@ pub fn multiplication(multiplicand: usize, multiplier: usize, text: &mut String)
         text.push('│');
     }
 
-    for i in multiplier.to_string().chars() {
+    for i in multiplier.chars() {
         text.push(' ');
         text.push(i);
         text.push_str(" │");
@@ -1153,15 +1153,15 @@ mod tests {
     #[test]
     fn test_multiplication_size_two_digits() {
         // Arrange
-        let multiplicand: usize = 8;
-        let multiplier: usize = 4;
+        let multiplicand: String = String::from("8");
+        let multiplier: String = String::from("4");
         let mut text: String = String::from("");
         let expected: &str = "┃   │ 8 ┃\n\
                               ┃ x │ 4 ┃\n\
                               ┣━━━┿━━━┫\n";
 
         // Action
-        multiplication(multiplicand, multiplier, &mut text);
+        multiplication(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1170,15 +1170,15 @@ mod tests {
     #[test]
     fn test_multiplication_size_three_digits() {
         // Arrange
-        let multiplicand: usize = 2;
-        let multiplier: usize = 37;
+        let multiplicand: String = String::from("2");
+        let multiplier: String = String::from("37");
         let mut text: String = String::from("");
         let expected: &str = "┃   │   │ 2 ┃\n\
                               ┃ x │ 3 │ 7 ┃\n\
                               ┣━━━┿━━━┿━━━┫\n";
 
         // Action
-        multiplication(multiplicand, multiplier, &mut text);
+        multiplication(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1187,15 +1187,15 @@ mod tests {
     #[test]
     fn test_multiplication_size_five_digits() {
         // Arrange
-        let multiplicand: usize = 81;
-        let multiplier: usize = 925;
+        let multiplicand: String = String::from("81");
+        let multiplier: String = String::from("925");
         let mut text: String = String::from("");
         let expected: &str = "┃   │   │   │ 8 │ 1 ┃\n\
                               ┃ x │   │ 9 │ 2 │ 5 ┃\n\
                               ┣━━━┿━━━┿━━━┿━━━┿━━━┫\n";
 
         // Action
-        multiplication(multiplicand, multiplier, &mut text);
+        multiplication(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1204,15 +1204,15 @@ mod tests {
     #[test]
     fn test_multiplication_size_eleven_digits() {
         // Arrange
-        let multiplicand: usize = 12345;
-        let multiplier: usize = 654321;
+        let multiplicand: String = String::from("12345");
+        let multiplier: String = String::from("654321");
         let mut text: String = String::from("");
         let expected: &str = "┃   │   │   │   │   │   │ 1 │ 2 │ 3 │ 4 │ 5 ┃\n\
                               ┃ x │   │   │   │   │ 6 │ 5 │ 4 │ 3 │ 2 │ 1 ┃\n\
                               ┣━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┫\n";
 
         // Action
-        multiplication(multiplicand, multiplier, &mut text);
+        multiplication(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1221,15 +1221,15 @@ mod tests {
     #[test]
     fn test_multiplication_multiplicand_bigger_than_a_multiplier() {
         // Arrange
-        let multiplicand: usize = 1234;
-        let multiplier: usize = 5;
+        let multiplicand: String = String::from("1234");
+        let multiplier: String = String::from("5");
         let mut text: String = String::from("");
         let expected: &str = "┃   │ 1 │ 2 │ 3 │ 4 ┃\n\
                               ┃ x │   │   │   │ 5 ┃\n\
                               ┣━━━┿━━━┿━━━┿━━━┿━━━┫\n";
 
         // Action
-        multiplication(multiplicand, multiplier, &mut text);
+        multiplication(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
@@ -1238,15 +1238,15 @@ mod tests {
     #[test]
     fn test_multiplication_multiplier_bigger_than_a_multiplicand() {
         // Arrange
-        let multiplicand: usize = 8765;
-        let multiplier: usize = 1234;
+        let multiplicand: String = String::from("8765");
+        let multiplier: String = String::from("1234");
         let mut text: String = String::from("");
         let expected: &str = "┃   │   │   │   │ 8 │ 7 │ 6 │ 5 ┃\n\
                               ┃ x │   │   │   │ 1 │ 2 │ 3 │ 4 ┃\n\
                               ┣━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┿━━━┫\n";
 
         // Action
-        multiplication(multiplicand, multiplier, &mut text);
+        multiplication(&multiplicand, &multiplier, &mut text);
 
         // Assert
         assert_eq!(expected, text);
