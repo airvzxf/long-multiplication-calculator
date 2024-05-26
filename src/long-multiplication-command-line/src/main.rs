@@ -14,4 +14,9 @@ fn main() {
     if output == "display" || output == "both" {
         multiplication::display(&content);
     }
+
+    if output == "store" || output == "both" {
+        let file_path: String = "long-multiplication-output.txt".to_string();
+        multiplication::store(&content, &file_path);
+    }
 }

@@ -1,3 +1,6 @@
+use std::fs::File;
+use std::io::Write;
+
 use crate::generate;
 
 /// Return the table of the long multiplication.
@@ -200,8 +203,35 @@ pub fn display(content: &String) {
     println!("{content}");
 }
 
+/// Store the table of the long multiplication.
+///
+/// It stores the complete table for the
+/// long multiplication as a file in your local machine.
+///
+/// Examples
+/// --------
+///
+/// Example #1
+/// ```text
+/// let content: String = String::from("This text will be stored.");
+/// let file_path: String = String::from("/home/USER_NAME/test-store-doc-01.txt");
+///
+/// use long_multiplication_command_line::multiplication::store;
+/// store(&content, &file_path);
+/// ```
+pub fn store(content: &String, file_path: &String) {
+    match File::create(file_path) {
+        Ok(mut file) => {
+            file.write_all(content.as_bytes())
+        }
+        Err(_err) => panic!("ERROR: the file '{file_path}' cannot be created.\nDetails: {_err:?}"),
+    }.expect("ERROR: trying to write the content in the file.");
+}
+
 #[cfg(test)]
 mod tests {
+    use std::io::Read;
+
     use super::*;
 
     // # -----------------------------------------------------------------------
@@ -423,4 +453,42 @@ mod tests {
         // Assert
         assert_eq!(expected, text);
     }
+
+    // # -----------------------------------------------------------------------
+    // # Function: store
+    // # -----------------------------------------------------------------------
+    #[test]
+    fn test_store_successful() {
+        // Arrange
+        let expected: String = String::from("This is a text for the content.");
+        let file_path: String = String::from("/tmp/test-storage-01.txt");
+        let mut file: File;
+        let mut content: String = String::new();
+
+        // Action
+        store(&expected, &file_path);
+
+        // Assert
+        file = File::open(file_path).expect("Unable to open the file.");
+        file.read_to_string(&mut content).expect("Unable to read the file.");
+        assert_eq!(expected, content);
+    }
+
+    #[test]
+    #[should_panic(expected = "ERROR: the file \
+    '/tmp/USER_NAME/test-storage-02.txt' cannot be created.\n\
+    Details: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }")]
+    fn test_store_panic_file() {
+        // Arrange
+        let expected: String = String::from("This is a text for the content.");
+        let file_path: String = String::from("/tmp/USER_NAME/test-storage-02.txt");
+
+        // Action
+        store(&expected, &file_path);
+    }
+
+    // #[test]
+    // TODO: Find a way to test the error when write the content.
+    // fn test_store_panic_write_content() {
+    // }
 }
