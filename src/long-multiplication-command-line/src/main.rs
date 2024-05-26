@@ -8,6 +8,10 @@ fn main() {
     let args: Args = get_args();
     let multiplicand: String = args.multiplicand;
     let multiplier: String = args.multiplier;
+    let output: String = args.output;
+    let content: String = multiplication::get_table(&multiplicand, &multiplier);
 
-    multiplication::display(multiplicand, multiplier);
+    if output == "display" || output == "both" {
+        multiplication::display(&content);
+    }
 }

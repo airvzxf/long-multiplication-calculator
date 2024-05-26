@@ -58,7 +58,7 @@ use crate::generate;
 ///                       Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 ///
 /// use long_multiplication_command_line::multiplication::get_table;
-/// let text: String = get_table(multiplicand, multiplier);
+/// let text: String = get_table(&multiplicand, &multiplier);
 ///
 /// assert_eq!(expected, text);
 /// ```
@@ -159,11 +159,11 @@ use crate::generate;
 ///                       Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 ///
 /// use long_multiplication_command_line::multiplication::get_table;
-/// let text: String = get_table(multiplicand, multiplier);
+/// let text: String = get_table(&multiplicand, &multiplier);
 ///
 /// assert_eq!(expected, text);
 /// ```
-pub fn get_table(multiplicand: String, multiplier: String) -> String {
+pub fn get_table(multiplicand: &String, multiplier: &String) -> String {
     let mut content: String = String::from("");
 
     generate::symbols(&mut content);
@@ -191,14 +191,12 @@ pub fn get_table(multiplicand: String, multiplier: String) -> String {
 ///
 /// Example #1
 /// ```rust
-/// let multiplicand: String = String::from("5");
-/// let multiplier: String = String::from("7");
+/// let content: String = String::from("This is a text for test.");
 ///
 /// use long_multiplication_command_line::multiplication::display;
-/// display(multiplicand, multiplier);
+/// display(&content);
 /// ```
-pub fn display(multiplicand: String, multiplier: String) {
-    let content: String = get_table(multiplicand, multiplier);
+pub fn display(content: &String) {
     println!("{content}");
 }
 
@@ -260,7 +258,7 @@ mod tests {
                               Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 
         // Action
-        let text: String = get_table(multiplicand, multiplier);
+        let text: String = get_table(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected, text);
@@ -317,7 +315,7 @@ mod tests {
                               Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 
         // Action
-        let text: String = get_table(multiplicand, multiplier);
+        let text: String = get_table(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected, text);
@@ -420,7 +418,7 @@ mod tests {
                               Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 
         // Action
-        let text: String = get_table(multiplicand, multiplier);
+        let text: String = get_table(&multiplicand, &multiplier);
 
         // Assert
         assert_eq!(expected, text);
