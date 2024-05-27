@@ -15,8 +15,7 @@ use crate::generate;
 /// ```rust
 /// let multiplicand: String = String::from("5");
 /// let multiplier: String = String::from("7");
-/// let expected: &str = "\n\
-///                       Symbols\n\
+/// let expected: &str = "Symbols\n\
 ///                       =======\n\
 ///                       Pos. = Position.\n\
 ///                       Ops. = Operations of the long multiplication.\n\
@@ -70,8 +69,7 @@ use crate::generate;
 /// ```rust
 /// let multiplicand: String = String::from("13597");
 /// let multiplier: String = String::from("8642");
-/// let expected: &str = "\n\
-///                       Symbols\n\
+/// let expected: &str = "Symbols\n\
 ///                       =======\n\
 ///                       Pos. = Position.\n\
 ///                       Ops. = Operations of the long multiplication.\n\
@@ -242,8 +240,7 @@ mod tests {
         // Arrange
         let multiplicand: String = String::from("3");
         let multiplier: String = String::from("2");
-        let expected: &str = "\n\
-                              Symbols\n\
+        let expected: &str = "Symbols\n\
                               =======\n\
                               Pos. = Position.\n\
                               Ops. = Operations of the long multiplication.\n\
@@ -299,8 +296,7 @@ mod tests {
         // Arrange
         let multiplicand: String = String::from("5");
         let multiplier: String = String::from("7");
-        let expected: &str = "\n\
-                              Symbols\n\
+        let expected: &str = "Symbols\n\
                               =======\n\
                               Pos. = Position.\n\
                               Ops. = Operations of the long multiplication.\n\
@@ -356,8 +352,7 @@ mod tests {
         // Arrange
         let multiplicand: String = String::from("13597");
         let multiplier: String = String::from("8642");
-        let expected: &str = "\n\
-                              Symbols\n\
+        let expected: &str = "Symbols\n\
                               =======\n\
                               Pos. = Position.\n\
                               Ops. = Operations of the long multiplication.\n\

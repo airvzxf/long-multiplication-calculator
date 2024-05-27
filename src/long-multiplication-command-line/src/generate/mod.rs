@@ -11,8 +11,7 @@ use crate::length::{get_number_length, get_string_length, get_strings_length};
 ///
 /// Example #1
 /// ```rust
-/// let expected: &str = "\n\
-///                       Symbols\n\
+/// let expected: &str = "Symbols\n\
 ///                       =======\n\
 ///                       Pos. = Position.\n\
 ///                       Ops. = Operations of the long multiplication.\n\
@@ -33,7 +32,6 @@ use crate::length::{get_number_length, get_string_length, get_strings_length};
 /// assert_eq!(expected, text);
 /// ```
 pub fn symbols(text: &mut String) {
-    text.push('\n');
     text.push_str("Symbols\n");
     text.push_str("=======\n");
     text.push_str("Pos. = Position.\n");
@@ -859,8 +857,7 @@ mod tests {
     fn test_symbols_description() {
         // Arrange
         let mut text: String = String::from("");
-        let expected: &str = "\n\
-                              Symbols\n\
+        let expected: &str = "Symbols\n\
                               =======\n\
                               Pos. = Position.\n\
                               Ops. = Operations of the long multiplication.\n\
