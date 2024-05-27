@@ -9,6 +9,9 @@ pub struct Args {
 
     // The output method.
     pub output: String,
+
+    // The file name and path of the output file.
+    pub file: String,
 }
 
 pub fn get_args() -> Args {
@@ -35,13 +38,22 @@ pub fn get_args() -> Args {
                 .default_value("display")
                 .help("The options are: 'display', 'store' or 'both'.")
         )
+        .arg(
+            Arg::new("file")
+                .short('f')
+                .long("file")
+                .required(false)
+                .default_value("long-multiplication-output.txt")
+                .help("The file name and path of the output file.")
+        )
         .get_matches();
 
     let multiplicand: String = unwrap_args(&matches, "multiplicand", false);
     let multiplier: String = unwrap_args(&matches, "multiplier", false);
     let output: String = unwrap_args(&matches, "output", true);
+    let file: String = unwrap_args(&matches, "file", true);
 
-    return Args { multiplicand, multiplier, output };
+    return Args { multiplicand, multiplier, output, file };
 }
 
 fn unwrap_args(matches: &ArgMatches, id: &str, lowercase: bool) -> String {
