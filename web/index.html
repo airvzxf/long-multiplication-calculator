@@ -1,10 +1,10 @@
 <!doctype html>
 
-<html lang="en" xmlns="http://www.w3.org/1999/html">
+<html lang="en">
 <head>
     <meta charset="utf-8">
 
-    <title>Calculator: Long Multiplication</title>
+    <title>Long Multiplication Calculator</title>
     <meta content="Display the multiplication process including the carry numbers and the sums." name="description">
     <meta content="Israel Roldan" name="author">
 
@@ -12,7 +12,7 @@
     <link href="/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180">
     <link href="/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png">
     <link href="/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png">
-    <link href="/site.webmanifest" rel="manifest">
+    <link href="/site.manifest" rel="manifest">
 
     <link href="asset/css/styles.css?v=1.0" rel="stylesheet">
 </head>
@@ -20,38 +20,35 @@
 <body>
 <div class="container">
     <header class="text-center">
-        <h1>Calculator: Long Multiplication</h1>
+        <h1>Long Multiplication Calculator</h1>
     </header>
 
     <section>
         <p>
-            The long multiplication is the same as you did in the school when you was a kid. The intention is show all
-            the process of the multiplication including the carry numbers and the sums.
+            The long multiplication is the same as you did in the school when you were a kid.
+            The intention is show all the process of the multiplication including the carry
+            numbers and the sums.
         </p>
 
         <p>
-            Note: The maximum value supported for the result is 8,999,999,999,999,999,999.
+            Note: Theoretically, there is no limit to the multiplication coefficients or the product.
         </p>
 
         <hr class="percent-70">
 
         <p>
-            <strong>Options:</strong><br>
-
-            <label for="print_description_yes">Print description:</label>
-            <input checked id="print_description_yes" name="print_description" type="radio" value="yes">
-            <label for="print_description_yes">Yes</label>
-
-            <input id="print_description_no" name="print_description" type="radio" value="no">
-            <label for="print_description_no">No</label>
+            <strong>Values:</strong>
             <br>
             <br>
 
             <label for="multiplier">Multiplier:</label>
-            <input id="multiplier" onkeydown="enter_emulation()" placeholder="51" size="5" type="number">
+            <input id="multiplier" placeholder="51" type="text">
+            <br>
+            <br>
 
             <label for="multiplicand">Multiplicand:</label>
-            <input id="multiplicand" onkeydown="enter_emulation()" placeholder="3416" size="5" type="number">
+            <input id="multiplicand" placeholder="3416" type="text">
+            <br>
             <br>
 
             <button onclick="calculate()">Calculate</button>
@@ -59,19 +56,11 @@
 
         <div class="hidden" id="error-message">
             Warning:<br>
-            <span id="error-text"> The multiplier is required.</span>
+            <p id="error-text"></p>
         </div>
 
         <div>
             <hr class="line-top"/>
-        </div>
-
-        <p>
-            Answer: <span id="answer"></span>
-        </p>
-
-        <div>
-            <hr class="line-top">
         </div>
 
         <p>
@@ -87,7 +76,7 @@
         <p>
             This project is under the GPL-3.0 License.<br>
             The source code is in the GitHub repository
-            <a href="https://github.com/airvzxf/calculator-long-multiplication" target="_blank">airvzxf/calculator-long-multiplication</a>.
+            <a href="https://github.com/airvzxf/long-multiplication-calculator" target="_blank">https://github.com/airvzxf/long-multiplication-calculator</a>.
         </p>
     </footer>
 </div>
