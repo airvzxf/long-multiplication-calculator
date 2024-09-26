@@ -20,6 +20,11 @@ header, section, footer {
     margin: 5px;
 }
 
+input[type="text"] {
+    width: 80%;
+    /*margin-bottom: 10px;*/
+}
+
 .hidden {
     display: none;
 }
@@ -53,6 +58,10 @@ header, section, footer {
     border-bottom-width: 0;
 }
 
+#solution {
+    overflow: scroll;
+}
+
 #error-message {
     margin: 15px;
     border: 1px solid brown;
@@ -62,10 +71,7 @@ header, section, footer {
 
 #error-text {
     margin-left: 20px;
-}
-
-#answer {
-    font-weight: bolder;
+    display: block;
 }
 
 .percent-70 {
