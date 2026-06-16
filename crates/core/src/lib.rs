@@ -36,7 +36,7 @@ pub mod length;
 mod multiplication;
 
 pub use error::{CoreError, Result};
-pub use multiplication::{display, get_table, store};
+pub use multiplication::get_table;
 
 /// Maximum number of digits allowed in a single operand.
 ///

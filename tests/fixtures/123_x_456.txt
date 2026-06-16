@@ -55,6 +55,6 @@ P = The product of multiplication.
 ---
 Author: Israel Roldan
 E-mail: israel.alberto.rv@gmail.com
-License: GPL-3.0
+License: AGPL-3.0
 Project: https://github.com/airvzxf/long-multiplication-calculator
 
