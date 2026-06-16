@@ -1,0 +1,27 @@
+[package]
+name = "long-multiplication-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Pure algorithm for the long-multiplication step-by-step table."
+
+[dependencies]
+thiserror = { workspace = true }
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+needless_late_init = "allow"
+similar_names = "allow"
+single_char_add_str = "allow"
+explicit_auto_deref = "allow"
+explicit_counter_loop = "allow"
+same_item_push = "allow"
+needless_range_loop = "allow"
+manual_let_else = "allow"
+ptr_arg = "allow"

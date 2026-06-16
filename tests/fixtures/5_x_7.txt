@@ -1,0 +1,44 @@
+Symbols
+=======
+Pos. = Position.
+Ops. = Operations of the long multiplication.
+Sum. = Sum of each column of the multiplication.
+Sub n. = Subtotal of the last sum.
+Pro. = Product of the multiplication.
+n ^ = Carry-over.
+n R = The row number.
+n C = The column number of the sum of the rows.
+* Replace 'n' for a number.
+P = The product of multiplication.
+
+┏━━━━━━━┓
+┃Pos.   ┃
+┠┄┄┄┬┄┄┄┨
+┃ 2 │ 1 ┃
+┣━━━┷━━━┫
+┃Ops.   ┃
+┣━━━┯━━━┫
+┃   │ 5 ┃
+┃ x │ 7 ┃
+┣━━━┿━━━┫
+┃ 3 │   ┃ 1 ^
+┠┈┈┈┼┈┈┈┨
+┃   │ 5 ┃ 1 R
+┣━━━┷━━━┫
+┃Sum.   ┃
+┣━━━┯━━━┫
+┃   │ 5 ┃ 1 C
+┠┈┈┈┼┈┈┈┨
+┃ 3 │   ┃ 2 C
+┣━━━┷━━━┫
+┃Pro.   ┃
+┣━━━┯━━━┫
+┃ 3 │ 5 ┃ P
+┗━━━┷━━━┛
+
+---
+Author: Israel Roldan
+E-mail: israel.alberto.rv@gmail.com
+License: GPL-3.0
+Project: https://github.com/airvzxf/long-multiplication-calculator
+
