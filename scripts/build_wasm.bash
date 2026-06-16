@@ -12,8 +12,8 @@
 #      these features, so it fails validation.
 #
 # Usage:
-#   ./scripts/build_wasm.sh           # optimised bundle (~25 KB)
-#   ./scripts/build_wasm.sh --no-opt  # skip wasm-opt (~45 KB)
+#   ./scripts/build_wasm.bash         # optimised bundle (~25 KB)
+#   ./scripts/build_wasm.bash --no-opt  # skip wasm-opt (~45 KB)
 #
 # Requirements:
 #   * Rust with the `wasm32-unknown-unknown` target installed:

@@ -46,7 +46,7 @@ Every push to `main` triggers the `deploy.yml` workflow, which:
 
 1. Installs the Rust toolchain (with the `wasm32-unknown-unknown`
    target) and `wasm-pack`.
-2. Runs `scripts/build_wasm.sh --no-opt` to compile the WASM module
+2. Runs `scripts/build_wasm.bash --no-opt` to compile the WASM module
    into `web/asset/js/wasm/`.
 3. Publishes the `web/` directory to Cloudflare Pages.
 
@@ -81,7 +81,7 @@ After the workflow finishes:
 ## Local testing of the static site
 
 ```bash
-./scripts/build_wasm.sh
+./scripts/build_wasm.bash
 cd web
 python3 -m http.server 8000
 # open http://localhost:8000

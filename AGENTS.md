@@ -13,7 +13,7 @@ cargo test --workspace
 cargo build --workspace --release
 cargo doc --workspace --no-deps
 cargo audit
-./scripts/build_wasm.sh        # build + wasm-opt -Oz into web/asset/js/wasm/
+./scripts/build_wasm.bash      # build + wasm-opt -Oz into web/asset/js/wasm/
 wasm-pack test --chrome --headless crates/wasm   # or --firefox --headless
 ```
 
@@ -80,7 +80,7 @@ it to `cli` or `wasm` instead. `core` is a pure library.
   <https://rustwasm.github.io/wasm-pack/>.
 - **`wasm-opt` aborts with `memory.copy operations require bulk memory operations`:** the
   Rust toolchain emits WASM that uses the bulk-memory proposal. Pass
-  `--enable-bulk-memory` to `wasm-opt` (the `scripts/build_wasm.sh`
+  `--enable-bulk-memory` to `wasm-opt` (the `scripts/build_wasm.bash`
   script does this for you). wasm-pack's default `-O` invocation
   does not enable bulk-memory, so do **not** let wasm-pack call
   wasm-opt on its own — use `--no-opt` and run `wasm-opt` yourself.
