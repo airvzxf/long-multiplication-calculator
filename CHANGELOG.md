@@ -38,6 +38,23 @@ project adheres to [Semantic Versioning](https://semver.org/).
   `scripts/build_wasm.sh` now pass `--enable-sign-ext` alongside
   `--enable-bulk-memory`, so validation succeeds and the bundle
   is shrunk to ~41 KB.
+- The CLI's `--output` flag is now a `clap::ValueEnum` with
+  `Display`, `Store`, and `Both` variants validated at parse time
+  (previously this was a `String` matched manually in `main`,
+  contradicting the v2.0.0 changelog claim). Invalid values now
+  produce a clap error (`error: invalid value '...' for '--output
+  <OUTPUT>'`) instead of a generic `anyhow::bail!`, and `--help`
+  lists the possible values with descriptions.
+- Three `aria-describedby` attributes in `web/index.html` pointed
+  to non-existent element ids (`multiplier-error`,
+  `multiplicand-error`, `copy-hint`); the front end uses a single
+  `role="status"` region for error feedback rather than per-field
+  error nodes. The dead references are removed so screen readers
+  stop announcing a broken description relationship.
+- `docs/TESTING.md` referenced the golden fixture as
+  `13597_8642.txt` (the real filename is `13597_x_8642.txt`) and
+  the doctest example invoked the removed `core::store` helper.
+  Both are updated to match the current codebase.
 
 ## [2.0.0] - 2026-06-16
 

@@ -64,8 +64,8 @@ example triggers I/O, mark the block `no_run`:
 
 ```rust
 /// ```no_run
-/// use long_multiplication_core::store;
-/// store("3", "2", "/tmp/x.txt").unwrap();
+/// use long_multiplication_core::get_table;
+/// std::fs::write("/tmp/x.txt", get_table("3", "2")).unwrap();
 /// ```
 ```
 
@@ -82,7 +82,7 @@ guards against accidental changes:
 
 ```bash
 ./target/debug/long-multiplication 13597 8642 > /tmp/new.txt
-diff /tmp/new.txt tests/fixtures/13597_8642.txt
+diff /tmp/new.txt tests/fixtures/13597_x_8642.txt
 ```
 
 Fixtures live in `tests/fixtures/`. New fixtures should be added when
