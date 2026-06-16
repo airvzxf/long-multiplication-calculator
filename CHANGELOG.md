@@ -27,7 +27,7 @@ project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - `.github/workflows/deploy.yml` now installs `binaryen` before
-  running `scripts/build_wasm.sh`, so Cloudflare Pages deploys
+  running `scripts/build_wasm.bash`, so Cloudflare Pages deploys
   publish the optimised WASM bundle (the script silently skipped
   `wasm-opt` if the binary was missing).
 
@@ -35,7 +35,7 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 - `wasm-opt` failures in CI: rustc now emits WASM that uses
   sign-extension ops (`i32.extend8_s`, etc.). The CI workflow and
-  `scripts/build_wasm.sh` now pass `--enable-sign-ext` alongside
+  `scripts/build_wasm.bash` now pass `--enable-sign-ext` alongside
   `--enable-bulk-memory`, so validation succeeds and the bundle
   is shrunk to ~41 KB.
 - The CLI's `--output` flag is now a `clap::ValueEnum` with
@@ -94,7 +94,7 @@ project adheres to [Semantic Versioning](https://semver.org/).
 - `AGENTS.md` with the validation protocol.
 - `docs/ARCHITECTURE.md`, `docs/DEPLOY.md`, `docs/TESTING.md`.
 - `SECURITY.md` for vulnerability disclosure.
-- `scripts/build_wasm.sh` for one-command WASM builds.
+- `scripts/build_wasm.bash` for one-command WASM builds.
 
 ### Changed
 

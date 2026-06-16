@@ -37,7 +37,7 @@ long-multiplication --help
 ```bash
 git clone https://github.com/airvzxf/long-multiplication-calculator
 cd long-multiplication-calculator
-./scripts/build_wasm.sh
+./scripts/build_wasm.bash
 cd web
 python3 -m http.server 8000
 # open http://localhost:8000
@@ -75,7 +75,7 @@ crates/
   cli/    # `long-multiplication` binary
   wasm/   # browser bindings (wasm-bindgen)
 web/      # static site served by Cloudflare Pages
-scripts/  # helper shell scripts (e.g. build_wasm.sh)
+scripts/  # helper shell scripts (e.g. build_wasm.bash)
 .github/  # CI and CD workflows
 docs/     # ARCHITECTURE.md, DEPLOY.md, TESTING.md
 ```
