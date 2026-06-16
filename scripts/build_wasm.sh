@@ -5,10 +5,11 @@
 #
 # Two phases:
 #   1. wasm-pack builds the .wasm + JS glue (with --no-opt).
-#   2. We run wasm-opt ourselves with --enable-bulk-memory, because
-#      recent Rust toolchains emit WASM that uses `memory.copy` and
-#      wasm-pack's default `-O` invocation does not enable the
-#      bulk-memory feature, so it fails validation.
+#   2. We run wasm-opt ourselves with --enable-bulk-memory and
+#      --enable-sign-ext, because recent Rust toolchains emit WASM
+#      that uses `memory.copy` and sign-extension ops (i32.extend8_s,
+#      etc.) and wasm-pack's default `-O` invocation does not enable
+#      these features, so it fails validation.
 #
 # Usage:
 #   ./scripts/build_wasm.sh           # optimised bundle (~25 KB)
@@ -42,9 +43,10 @@ wasm-pack build \
 if [[ "${SKIP_OPT}" -eq 1 ]]; then
     echo ">>> Skipping wasm-opt (--no-opt)"
 elif command -v wasm-opt >/dev/null 2>&1; then
-    echo ">>> Optimising with wasm-opt --enable-bulk-memory -Oz"
+    echo ">>> Optimising with wasm-opt --enable-bulk-memory --enable-sign-ext -Oz"
     wasm-opt \
         --enable-bulk-memory \
+        --enable-sign-ext \
         -Oz \
         "${WASM_FILE}" \
         -o "${WASM_FILE}.opt"
