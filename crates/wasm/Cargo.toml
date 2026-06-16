@@ -1,0 +1,24 @@
+[package]
+name = "long-multiplication-wasm"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "WebAssembly bindings for the long-multiplication calculator."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+long-multiplication-core = { path = "../core" }
+wasm-bindgen = { workspace = true }
+console_error_panic_hook = { workspace = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"

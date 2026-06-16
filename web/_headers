@@ -1,0 +1,22 @@
+# Cloudflare Pages headers for multiplication.rovisoft.net
+#
+# The WASM and CSS bundles are content-hashed by wasm-pack and carry a
+# `?v=2.0` query string respectively, so they can be cached
+# indefinitely. The HTML entry-point must be revalidated so deploys
+# are picked up quickly.
+
+/asset/js/wasm/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/asset/css/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/asset/js/app.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload

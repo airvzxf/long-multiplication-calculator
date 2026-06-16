@@ -1,0 +1,26 @@
+# Build profile optimizations for release artifacts.
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+panic = "abort"
+strip = "symbols"
+
+# Test profile: keep unwinding so test failures show clear stacks.
+[profile.test]
+opt-level = 0
+
+# Optional: use the `mold` linker on Linux when installed (5-10x faster
+# linking). `mold` is in Arch's [extra] repo. If `mold` is not on
+# $PATH, the dev build still succeeds with the system default linker;
+# you only lose the speedup.
+#
+# Uncomment the block below after `pacman -S mold clang`:
+#
+# [target.x86_64-unknown-linux-gnu]
+# linker = "clang"
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+#
+# [target.aarch64-unknown-linux-gnu]
+# linker = "clang"
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]

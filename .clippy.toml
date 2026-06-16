@@ -1,0 +1,4 @@
+msrv = "1.85.0"
+avoid-breaking-exported-api = false
+cognitive-complexity-threshold = 15
+missing-docs-in-crate-items = true

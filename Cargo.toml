@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/core",
+    "crates/cli",
+    "crates/wasm",
+]
+
+[workspace.package]
+version = "2.0.0"
+edition = "2024"
+rust-version = "1.85.0"
+license = "GPL-3.0"
+authors = ["Israel Roldan <israel.alberto.rv@gmail.com>"]
+repository = "https://github.com/airvzxf/long-multiplication-calculator"
+homepage = "https://multiplication.rovisoft.net"
+description = "Long multiplication step-by-step calculator, as taught in primary school. Multi-target: CLI, WASM, library."
+
+[workspace.dependencies]
+thiserror = { version = "2.0", default-features = false }
+clap = { version = "4.5", features = ["derive"] }
+anyhow = "1.0"
+wasm-bindgen = "0.2"
+console_error_panic_hook = "0.1"

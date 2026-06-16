@@ -1,0 +1,3 @@
+# Single-page app fallback. We only have one route today, but this
+# ensures that any direct URL the user types falls back to index.html.
+/*    /index.html   200
