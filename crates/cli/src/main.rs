@@ -5,7 +5,7 @@
 //! stores it to a file, or does both.
 
 use anyhow::{Context, Result};
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use long_multiplication_core::{MAX_DIGITS, get_table, validate_input};
 use std::io::{self, Write};
 use std::path::PathBuf;
@@ -24,13 +24,25 @@ struct Args {
     /// Multiplicador (solo dígitos 0-9)
     multiplier: String,
 
-    /// Modo de salida: display, store o both
-    #[arg(short, long, default_value = "display")]
-    output: String,
+    /// Modo de salida
+    #[arg(short, long, value_enum, default_value_t = OutputMode::Display)]
+    output: OutputMode,
 
     /// Archivo de salida (usado con --output store o both)
     #[arg(short, long, default_value = "long-multiplication-output.txt")]
     file: PathBuf,
+}
+
+/// Where the rendered table should be written.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
+#[value(rename_all = "lower")]
+enum OutputMode {
+    /// Print the table to stdout.
+    Display,
+    /// Save the table to `--file`.
+    Store,
+    /// Print to stdout and save to `--file`.
+    Both,
 }
 
 fn main() -> Result<()> {
@@ -43,23 +55,18 @@ fn main() -> Result<()> {
 
     let table = get_table(multiplicand, multiplier);
 
-    match args.output.as_str() {
-        "display" => {
+    match args.output {
+        OutputMode::Display => {
             println!("{table}");
         }
-        "store" => {
+        OutputMode::Store => {
             write_table(&args.file, &table)?;
             eprintln!("Saved to {}", args.file.display());
         }
-        "both" => {
+        OutputMode::Both => {
             println!("{table}");
             write_table(&args.file, &table)?;
             eprintln!("Saved to {}", args.file.display());
-        }
-        other => {
-            anyhow::bail!(
-                "Invalid --output value '{other}': expected one of: display, store, both"
-            );
         }
     }
 
