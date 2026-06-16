@@ -6,7 +6,7 @@
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use long_multiplication_core::{MAX_DIGITS, get_table, store, validate_input};
+use long_multiplication_core::{MAX_DIGITS, get_table, validate_input};
 use std::io::{self, Write};
 use std::path::PathBuf;
 
@@ -48,16 +48,12 @@ fn main() -> Result<()> {
             println!("{table}");
         }
         "store" => {
-            let path = args.file.display().to_string();
-            store(multiplicand, multiplier, &path)
-                .with_context(|| format!("Cannot write to '{path}'"))?;
+            write_table(&args.file, &table)?;
             eprintln!("Saved to {}", args.file.display());
         }
         "both" => {
             println!("{table}");
-            let path = args.file.display().to_string();
-            store(multiplicand, multiplier, &path)
-                .with_context(|| format!("Cannot write to '{path}'"))?;
+            write_table(&args.file, &table)?;
             eprintln!("Saved to {}", args.file.display());
         }
         other => {
@@ -68,5 +64,13 @@ fn main() -> Result<()> {
     }
 
     let _ = io::stdout().flush();
+    Ok(())
+}
+
+/// Persist the rendered table to disk, attributing the path for context
+/// on failure (replaces the old `core::store` helper, which was removed
+/// to keep `core` I/O-free).
+fn write_table(path: &std::path::Path, table: &str) -> Result<()> {
+    std::fs::write(path, table).with_context(|| format!("Cannot write to '{}'", path.display()))?;
     Ok(())
 }

@@ -40,50 +40,8 @@ pub fn get_table(multiplicand: &str, multiplier: &str) -> String {
     content
 }
 
-/// Print the long-multiplication table to standard output.
-///
-/// Thin wrapper around [`get_table`] that writes the result to
-/// `stdout`. Kept in the core crate because it has no dependency
-/// beyond `std`; the `cli` crate may also use this helper.
-///
-/// # Examples
-///
-/// ```no_run
-/// use long_multiplication_core::display;
-///
-/// display("3", "2");
-/// ```
-pub fn display(multiplicand: &str, multiplier: &str) {
-    println!("{}", get_table(multiplicand, multiplier));
-}
-
-/// Write the long-multiplication table to a file.
-///
-/// The file is created (and overwritten if it exists). On error
-/// the [`std::io::Error`] is propagated instead of being turned
-/// into a `panic!` (the v1.0.0 binary panicked here, which is not
-/// appropriate for a library).
-///
-/// # Errors
-///
-/// Returns any I/O error from `File::create` or `write_all`.
-///
-/// # Examples
-///
-/// ```no_run
-/// use long_multiplication_core::store;
-///
-/// store("3", "2", "/tmp/long-multiplication.txt").unwrap();
-/// ```
-pub fn store(multiplicand: &str, multiplier: &str, file_path: &str) -> std::io::Result<()> {
-    let content = get_table(multiplicand, multiplier);
-    std::fs::write(file_path, &content)
-}
-
 #[cfg(test)]
 mod tests {
-    use std::io::Read;
-
     use super::*;
 
     // # -----------------------------------------------------------------------
@@ -134,7 +92,7 @@ mod tests {
                               ---\n\
                               Author: Israel Roldan\n\
                               E-mail: israel.alberto.rv@gmail.com\n\
-                              License: GPL-3.0\n\
+                              License: AGPL-3.0\n\
                               Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 
         let text: String = get_table(multiplicand, multiplier);
@@ -187,7 +145,7 @@ mod tests {
                               ---\n\
                               Author: Israel Roldan\n\
                               E-mail: israel.alberto.rv@gmail.com\n\
-                              License: GPL-3.0\n\
+                              License: AGPL-3.0\n\
                               Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 
         let text: String = get_table(multiplicand, multiplier);
@@ -286,42 +244,11 @@ mod tests {
                               ---\n\
                               Author: Israel Roldan\n\
                               E-mail: israel.alberto.rv@gmail.com\n\
-                              License: GPL-3.0\n\
+                              License: AGPL-3.0\n\
                               Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 
         let text: String = get_table(multiplicand, multiplier);
 
         assert_eq!(expected, text);
-    }
-
-    // # -----------------------------------------------------------------------
-    // # Function: store
-    // # -----------------------------------------------------------------------
-    #[test]
-    fn test_store_successful() {
-        // Arrange
-        let file_path: &str = "/tmp/test-storage-01.txt";
-        let _ = std::fs::remove_file(file_path);
-
-        // Action
-        store("3", "2", file_path).expect("store should succeed");
-
-        // Assert
-        let mut file = std::fs::File::open(file_path).expect("open file");
-        let mut content = String::new();
-        file.read_to_string(&mut content).expect("read file");
-        // 3 * 2 = 6; the table footer ends with "┃ 0 │ 6 ┃ P"
-        assert!(content.contains("6 ┃ P"), "stored file missing product row: {content}");
-        let _ = std::fs::remove_file(file_path);
-    }
-
-    #[test]
-    fn test_store_fails_when_directory_missing() {
-        // Arrange: a path whose parent does not exist.
-        let file_path: &str = "/tmp/__no_such_dir__/test-storage-02.txt";
-
-        // Action + Assert
-        let result = store("3", "2", file_path);
-        assert!(result.is_err(), "expected I/O error, got {result:?}");
     }
 }

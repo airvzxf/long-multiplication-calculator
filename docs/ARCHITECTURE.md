@@ -28,7 +28,8 @@ adapters consume it: a CLI binary (`cli`) and a WebAssembly module
        │  (bin)          │                │                    │
        │  • clap         │                │  • wasm-bindgen    │
        │  • anyhow       │                │  • console_error_  │
-       │                 │                │    panic_hook      │
+       │  • std::fs /    │                │    panic_hook      │
+       │    println!     │                │                    │
        └────────┬────────┘                └────────┬───────────┘
                 │                                   │
                 ▼                                   ▼
@@ -49,14 +50,14 @@ adapters consume it: a CLI binary (`cli`) and a WebAssembly module
 The heart of the project. It is **deliberately boring**: no I/O, no
 network, no terminal, no `serde`, no `clap`, no `wasm-bindgen`. The
 only runtime dependency is `thiserror` (for the `CoreError` enum).
+I/O is performed exclusively by the two adapter crates (`cli` and
+`wasm`).
 
 Public surface:
 
 ```rust
 pub fn validate_input(input: &str, max_digits: usize) -> Result<&str, CoreError>;
 pub fn get_table(multiplicand: &str, multiplier: &str) -> String;
-pub fn display(multiplicand: &str, multiplier: &str);
-pub fn store(multiplicand: &str, multiplier: &str, file_path: &str) -> std::io::Result<()>;
 pub const MAX_DIGITS: usize = 1_000;
 ```
 
@@ -75,8 +76,7 @@ are not part of the supported public API:
   emit the box-drawing characters. They are intentionally
   non-abstracted: there is one and only one output format (the
   school layout).
-- `multiplication` — `get_table` itself, plus thin `display` and
-  `store` helpers. This module is the public entry point.
+- `multiplication` — `get_table` itself, the public entry point.
 
 ### Why no `Renderer` trait?
 
@@ -104,10 +104,11 @@ A thin wrapper over `core`. The `main.rs` is intentionally small:
 3. Call `core::get_table` once.
 4. Dispatch on `--output` (`display`, `store`, `both`).
 
-`display` uses `println!`. `store` uses `std::fs::write`. Both
-happen in the CLI binary, not in `core` (except for the tiny
-re-exported `core::store` helper which is just `std::fs::write`
-called on `get_table`'s output).
+The CLI is the only place that does I/O for this project: the
+`display` branch calls `println!`, and the `store` and `both`
+branches call `std::fs::write` on a private `write_table` helper.
+Keeping I/O in the adapter (not in `core`) is what lets `core` be
+embedded in `wasm32` without dragging in a filesystem or terminal.
 
 ## Crate: `long-multiplication-wasm`
 

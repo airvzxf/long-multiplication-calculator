@@ -776,7 +776,7 @@ pub fn long_sum(multiplicand: &str, multiplier: &str, text: &mut String) {
 ///                       ---\n\
 ///                       Author: Israel Roldan\n\
 ///                       E-mail: israel.alberto.rv@gmail.com\n\
-///                       License: GPL-3.0\n\
+///                       License: AGPL-3.0\n\
 ///                       Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 ///
 /// use long_multiplication_core::generate;
@@ -789,7 +789,7 @@ pub fn author(text: &mut String) {
     text.push_str("---\n");
     text.push_str("Author: Israel Roldan\n");
     text.push_str("E-mail: israel.alberto.rv@gmail.com\n");
-    text.push_str("License: GPL-3.0\n");
+    text.push_str("License: AGPL-3.0\n");
     text.push_str("Project: https://github.com/airvzxf/long-multiplication-calculator\n");
 }
 
@@ -1763,7 +1763,7 @@ mod tests {
                               ---\n\
                               Author: Israel Roldan\n\
                               E-mail: israel.alberto.rv@gmail.com\n\
-                              License: GPL-3.0\n\
+                              License: AGPL-3.0\n\
                               Project: https://github.com/airvzxf/long-multiplication-calculator\n";
 
         // Action

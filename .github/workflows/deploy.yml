@@ -23,6 +23,11 @@ jobs:
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
+      - name: Install wasm-opt (binaryen)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binaryen
+
       - name: Build optimised WASM into web/
         run: ./scripts/build_wasm.sh
 

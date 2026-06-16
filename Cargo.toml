@@ -7,10 +7,10 @@ members = [
 ]
 
 [workspace.package]
-version = "2.0.0"
+version = "2.1.0"
 edition = "2024"
 rust-version = "1.85.0"
-license = "GPL-3.0"
+license = "AGPL-3.0"
 authors = ["Israel Roldan <israel.alberto.rv@gmail.com>"]
 repository = "https://github.com/airvzxf/long-multiplication-calculator"
 homepage = "https://multiplication.rovisoft.net"

@@ -4,6 +4,41 @@ All notable changes to this project are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/) and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] - 2026-06-16
+
+### Breaking changes
+
+- **License metadata normalised to AGPL-3.0** in `Cargo.toml`,
+  `README.md`, `web/index.html`, and the algorithm-emitted footer
+  (`generate::author` and all derived fixtures). The repo's
+  `LICENSE` file was already AGPL-3.0, but every other reference
+  pointed at GPL-3.0. The footer of the rendered table now reads
+  `License: AGPL-3.0`; consumers diffing the byte-for-byte output
+  must regenerate their golden fixtures. The string version is
+  bumped to `2.1.0` to surface the metadata change.
+- **`core` is now strictly I/O-free.** `display` and `store` were
+  removed from `long-multiplication-core` (they used `println!`
+  and `std::fs::write`, contradicting the crate-boundary rule in
+  `AGENTS.md`). The CLI now performs the file write itself via a
+  small private `write_table` helper, and the `display` branch just
+  inlines `println!`. No more re-exports of I/O helpers from
+  `core`.
+
+### Added
+
+- `.github/workflows/deploy.yml` now installs `binaryen` before
+  running `scripts/build_wasm.sh`, so Cloudflare Pages deploys
+  publish the optimised WASM bundle (the script silently skipped
+  `wasm-opt` if the binary was missing).
+
+### Fixed
+
+- `wasm-opt` failures in CI: rustc now emits WASM that uses
+  sign-extension ops (`i32.extend8_s`, etc.). The CI workflow and
+  `scripts/build_wasm.sh` now pass `--enable-sign-ext` alongside
+  `--enable-bulk-memory`, so validation succeeds and the bundle
+  is shrunk to ~41 KB.
+
 ## [2.0.0] - 2026-06-16
 
 ### Breaking changes

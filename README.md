@@ -4,7 +4,7 @@ Multi-target long multiplication, step by step, the way you learned it
 in primary school. Rendered with Unicode box-drawing characters so the
 table is readable in any terminal and on any device.
 
-![Rust 2024](https://img.shields.io/badge/rust-2024-orange) ![License: GPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue)
+![Rust 2024](https://img.shields.io/badge/rust-2024-orange) ![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue)
 
 ## Try it
 
@@ -82,4 +82,4 @@ docs/     # ARCHITECTURE.md, DEPLOY.md, TESTING.md
 
 ## License
 
-GPL-3.0. See [LICENSE](LICENSE).
+AGPL-3.0. See [LICENSE](LICENSE).
