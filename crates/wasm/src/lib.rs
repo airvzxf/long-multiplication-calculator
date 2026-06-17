@@ -1,7 +1,9 @@
 //! WebAssembly bindings for the long-multiplication calculator.
 //!
-//! Exposes a single [`calculate`] function that mirrors the CLI:
-//! take two digit strings, return the Unicode table.
+//! Exposes the same primitives the CLI uses: [`calculate`] takes two
+//! digit strings and returns the Unicode table, [`max_digits`]
+//! reports the upper bound, and [`version`] returns the
+//! `CARGO_PKG_VERSION` baked into the binary.
 
 use long_multiplication_core::{MAX_DIGITS, get_table, validate_input};
 use wasm_bindgen::prelude::*;
@@ -38,6 +40,28 @@ pub fn calculate(multiplicand: &str, multiplier: &str) -> Result<String, JsError
 #[wasm_bindgen(js_name = maxDigits)]
 pub fn max_digits() -> usize {
     MAX_DIGITS
+}
+
+/// Semantic version of the compiled WASM module.
+///
+/// Sourced from `CARGO_PKG_VERSION` at build time, so it always
+/// matches the version in `Cargo.toml`. Exposed to JavaScript so
+/// the front end can show it in the footer and so a runtime check
+/// can confirm the binary that is actually executing matches the
+/// one the page expects.
+///
+/// # Examples
+///
+/// ```
+/// use long_multiplication_wasm::version;
+///
+/// // The string is the same one baked into Cargo.toml.
+/// assert_eq!(version(), env!("CARGO_PKG_VERSION"));
+/// assert!(!version().is_empty());
+/// ```
+#[wasm_bindgen]
+pub fn version() -> String {
+    env!("CARGO_PKG_VERSION").to_owned()
 }
 
 #[cfg(test)]

@@ -4,7 +4,7 @@
 // `calculate` function to the form. No network round-trips: every
 // computation happens in the browser.
 
-import init, { calculate } from './wasm/long_multiplication_wasm.js';
+import init, { calculate, version } from './wasm/long_multiplication_wasm.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -17,15 +17,26 @@ const copyBtn = $('copy');
 const status = $('status');
 const statusText = $('status-text');
 const solution = $('solution');
+const appVersion = $('app-version');
 
 const DIGIT_RE = /^[0-9]+$/;
 let lastResult = '';
 
-// Initialise WASM, then enable the form.
+// Initialise WASM, then enable the form and stamp the footer with
+// the actual binary version. The `<span id="app-version">` in
+// `index.html` ships empty on purpose: if WASM fails to load, we
+// would rather show nothing than a stale hardcoded number.
 (async () => {
     try {
         await init();
         calculateBtn.disabled = false;
+        if (appVersion) {
+            try {
+                appVersion.textContent = version();
+            } catch {
+                // If `version()` somehow throws, leave the span empty.
+            }
+        }
     } catch (err) {
         showError(`Failed to load the calculator: ${err?.message ?? err}`);
     }
