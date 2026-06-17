@@ -11,6 +11,16 @@
 #      etc.) and wasm-pack's default `-O` invocation does not enable
 #      these features, so it fails validation.
 #
+# A third phase stamps the WASM package version (read from
+# Cargo.toml) as a `?v=<version>` cache-bust suffix on the two
+# files that reference the WASM glue: `web/asset/js/app.js` (the
+# import) and `web/index.html` (the modulepreload). The committed
+# source has the placeholder `?v=__WASM_VERSION__`; this script is
+# the only place that resolves it. The substitution is reverted on
+# EXIT so the working tree stays clean after a local build, and
+# the deploy workflow picks up the stamped files from the CI
+# runner's filesystem before wrangler uploads `web/`.
+#
 # Usage:
 #   ./scripts/build_wasm.bash         # optimised bundle (~25 KB)
 #   ./scripts/build_wasm.bash --no-opt  # skip wasm-opt (~45 KB)
@@ -31,6 +41,17 @@ fi
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${REPO_ROOT}/web/asset/js/wasm"
 WASM_FILE="${OUT_DIR}/long_multiplication_wasm_bg.wasm"
+
+# Read the workspace version from Cargo.toml. This becomes the
+# `?v=<version>` cache-bust suffix on the WASM glue references,
+# so the browser always re-fetches the glue (and its modulepreload)
+# whenever the package version changes.
+WASM_VERSION=$(grep -E '^version = ' "${REPO_ROOT}/Cargo.toml" | head -1 | sed -E 's/^version = "(.*)"/\1/')
+if [[ -z "${WASM_VERSION}" ]]; then
+    echo ">>> ERROR: could not read version from ${REPO_ROOT}/Cargo.toml" >&2
+    exit 1
+fi
+echo ">>> WASM version: ${WASM_VERSION}"
 
 echo ">>> Building WASM (target: web, release, out: ${OUT_DIR})"
 wasm-pack build \
@@ -54,6 +75,22 @@ elif command -v wasm-opt >/dev/null 2>&1; then
 else
     echo ">>> wasm-opt not found on \$PATH; bundle left unoptimised"
 fi
+
+# Stamp the cache-bust suffix into the two files that reference
+# the WASM glue. The committed source has `?v=__WASM_VERSION__`;
+# this is the only place it gets resolved to a real version.
+echo ">>> Stamping cache-bust: ?v=${WASM_VERSION}"
+sed -i "s|?v=__WASM_VERSION__|?v=${WASM_VERSION}|g" \
+    "${REPO_ROOT}/web/asset/js/app.js" \
+    "${REPO_ROOT}/web/index.html"
+
+# Always revert the stamp at exit (success or failure) so the
+# working tree is left in the committed state. The deploy runner
+# reads the stamped files before this trap fires, so `web/` is
+# still uploaded with the version baked in.
+trap 'sed -i "s|?v='"${WASM_VERSION}"'|?v=__WASM_VERSION__|g" \
+    "${REPO_ROOT}/web/asset/js/app.js" \
+    "${REPO_ROOT}/web/index.html"' EXIT
 
 echo ">>> Done. Files:"
 ls -lh "${OUT_DIR}"

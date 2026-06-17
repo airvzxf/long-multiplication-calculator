@@ -4,7 +4,7 @@
 // `calculate` function to the form. No network round-trips: every
 // computation happens in the browser.
 
-import init, { calculate, version } from './wasm/long_multiplication_wasm.js';
+import init, { calculate, version } from './wasm/long_multiplication_wasm.js?v=__WASM_VERSION__';
 
 const $ = (id) => document.getElementById(id);
 
