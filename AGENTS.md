@@ -91,3 +91,35 @@ it to `cli` or `wasm` instead. `core` is a pure library.
 - **`cargo audit` failing on an existing dependency:** discuss before
   upgrading; SemVer 2.0.0 will be bumped if a fix requires a major
   version of a transitive dep.
+
+## Commit signing (mandatory)
+
+All commits in this repository **must be GPG-signed and show as
+"Verified" on GitHub**. The global `~/.gitconfig` enables
+`commit.gpgsign`, `tag.gpgsign`, `push.gpgsign`, and
+`rebase.preserveSignatures`. Follow these rules to keep history
+verified:
+
+- **Never rewrite signed history without preserving signatures.** Do
+  not run `git rebase` (including `git rebase -i`), `git commit
+  --amend`, `git filter-branch`, `git filter-repo`, or `git push
+  --force` on a chain of signed commits unless you confirm the
+  resulting commits are still signed (`git log --pretty="%H %G?"`).
+  Default rebase behaviour **drops the original signature** and only
+  re-signs the new commits when `commit.gpgsign=true` is in effect
+  *and* the gpg-agent can reach the signing key — both of which can
+  fail silently.
+- **If a rebase is necessary**, prefer `git rebase --keep-signature`
+  (or rely on `rebase.preserveSignatures = true` being set in the
+  global config) and verify with `git log --show-signature` before
+  pushing. If the rebase cannot preserve a signature, stop and ask
+  the user before force-pushing.
+- **Before any force-push to `main`**, confirm with the user.
+  Force-pushing rewrites SHAs and breaks anyone tracking `main`.
+- **Tags must be signed too** (`tag.gpgsign = true` is set in the
+  global config). Verify with `git verify-tag <tag>` before
+  publishing a release.
+- **Quick verification command:** `git log --pretty="%H %G? %s"
+  origin/main..HEAD` should print `G` for every line. If any line
+  starts with `N` (no signature) or `B`/`E`/`U` (bad/expired/unknown),
+  do not push — fix the signing first.
