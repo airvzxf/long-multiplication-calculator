@@ -37,7 +37,7 @@ jobs:
           sudo apt-get install -y binaryen
 
       - name: Build optimised WASM into web/
-        run: ./scripts/build_wasm.bash
+        run: ./scripts/build_wasm.bash --no-revert
 
       - name: Publish to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
