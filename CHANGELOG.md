@@ -30,6 +30,14 @@ project adheres to [Semantic Versioning](https://semver.org/).
   running `scripts/build_wasm.bash`, so Cloudflare Pages deploys
   publish the optimised WASM bundle (the script silently skipped
   `wasm-opt` if the binary was missing).
+- The deploy workflow uses `cloudflare/wrangler-action@v3`,
+  picking up the maintained v3 line of the action.
+- The web front-end footer now displays the site and app version;
+  the app version is read from the WASM bundle's stamped metadata
+  so visitors can confirm they are running the latest build.
+- The WASM glue (`web/asset/js/wasm/`) is stamped with the
+  package version at build time, so browsers stop serving the
+  stale cached bundle after a new release.
 
 ### Fixed
 
@@ -55,6 +63,14 @@ project adheres to [Semantic Versioning](https://semver.org/).
   `13597_8642.txt` (the real filename is `13597_x_8642.txt`) and
   the doctest example invoked the removed `core::store` helper.
   Both are updated to match the current codebase.
+- The WASM cache-bust stamp is propagated as a build artifact
+  into the deploy job, so Cloudflare Pages always uploads a
+  versioned bundle even when the deploy step runs on a fresh
+  checkout.
+- `actions/checkout` is bumped to v5 (Node 20 runtime) in both
+  CI workflows.
+- `scripts/build_wasm.sh` is renamed to `scripts/build_wasm.bash`
+  to match the script-naming convention referenced in `AGENTS.md`.
 
 ## [2.0.0] - 2026-06-16
 
