@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns: ["actions/*"]
+      cloudflare:
+        patterns: ["cloudflare/*"]
+      third-party:
+        patterns: ["*"]
+        exclude-patterns: ["actions/*", "cloudflare/*"]
+    commit-message:
+      prefix: "ci"
+    labels: ["dependencies", "ci"]
