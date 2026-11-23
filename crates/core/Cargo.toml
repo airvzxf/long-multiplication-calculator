@@ -12,6 +12,19 @@ description = "Pure algorithm for the long-multiplication step-by-step table."
 [dependencies]
 thiserror = { workspace = true }
 
+# Test and benchmark only: never part of the library that `cli`,
+# `wasm` or other crates link. Both stay on versions that build with
+# the MSRV: Cargo.lock pins `proptest` 1.11.0 (1.12 needs Rust 1.88)
+# and `criterion` 0.7 (0.8 needs Rust 1.86). The benchmarks run with
+# `cargo bench`, not in CI.
+[dev-dependencies]
+proptest = { version = "1.11", default-features = false, features = ["std"] }
+criterion = { version = "0.7", default-features = false, features = ["cargo_bench_support"] }
+
+[[bench]]
+name = "get_table"
+harness = false
+
 [lints.clippy]
 all = { level = "warn", priority = -1 }
 module_name_repetitions = "allow"
