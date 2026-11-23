@@ -246,7 +246,11 @@ jobs:
           set -euo pipefail
           EXE=""; [[ "${TARGET}" == *windows* ]] && EXE=".exe"
           BIN="target/${TARGET}/release/long-multiplication${EXE}"
-          "$BIN" --version | tee /dev/stderr | grep -F "long-multiplication ${VERSION}"
+          # Git Bash on Windows has no /dev/stderr, so no `tee` here.
+          OUT="$("$BIN" --version)"
+          echo "${OUT}"
+          [[ "${OUT}" == "long-multiplication ${VERSION}" ]] \
+            || { echo "ERROR: expected 'long-multiplication ${VERSION}'"; exit 1; }
           "$BIN" 13597 8642 > out.txt
           # The checkout may convert the fixture to CRLF on Windows;
           # the binary always writes LF.
