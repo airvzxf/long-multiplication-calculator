@@ -58,8 +58,32 @@ Public surface:
 ```rust
 pub fn validate_input(input: &str, max_digits: usize) -> Result<&str, CoreError>;
 pub fn get_table(multiplicand: &str, multiplier: &str) -> String;
-pub const MAX_DIGITS: usize = 1_000;
+pub fn estimate_table_bytes(multiplicand: &str, multiplier: &str) -> usize;
+pub fn check_output_size(multiplicand: &str, multiplier: &str, max_bytes: usize) -> Result<usize, CoreError>;
+pub const MAX_DIGITS: usize = 1_000; // default, not a hard limit
 ```
+
+### Limits
+
+The algorithm has no size limit of its own. The size of the table
+is what matters, and the number of digits does not predict it well:
+operands made of nines need one `Sub n.` section per digit, so 200
+nines times 200 nines take about 550 MiB while 200 random digits take
+about 20 MiB. `core` therefore offers two checks and lets each
+adapter choose its limits:
+
+- `validate_input(input, max_digits)`: digits per operand
+  (`usize::MAX` = no limit).
+- `check_output_size(a, b, max_bytes)`: an upper-bound estimate of
+  the table size, computed without rendering it.
+
+| Adapter | Digits | Table size | Can be lifted |
+| --- | --- | --- | --- |
+| CLI | 1000 | 1024 MiB | `--max-digits`, `--max-output-mib` (0 = none), `--unlimited`, or the `LONG_MULTIPLICATION_*` environment variables |
+| WASM / web | 1000 | 32 MiB | No: a tab has a 4 GiB memory ceiling |
+
+Cells are 3 characters wide; tables with more than 999 columns use
+wider cells so the position row stays aligned.
 
 The internal modules are `pub` (so doctests can reach them) but they
 are not part of the supported public API:
@@ -112,13 +136,15 @@ embedded in `wasm32` without dragging in a filesystem or terminal.
 
 ## Crate: `long-multiplication-wasm`
 
-Also a thin wrapper. Two exports:
+Also a thin wrapper. Exports:
 
 - `calculate(multiplicand: &str, multiplier: &str) -> Result<String, JsError>`
-  — the actual computation. Errors are converted to `JsError` so
-  the JavaScript side can `try/catch` them.
-- `max_digits() -> usize` — exposed to JS for friendlier client-side
-  validation.
+  — the actual computation, after checking the digit and size
+  limits. Errors are converted to `JsError` so the JavaScript side
+  can `try/catch` them.
+- `maxDigits()` and `maxOutputBytes()` — the limits, for friendlier
+  client-side validation.
+- `version()` — the package version, shown in the page footer.
 
 A `#[wasm_bindgen(start)]` hook installs `console_error_panic_hook`
 so that any Rust panic surfaces in the browser dev tools as a readable
@@ -126,20 +152,25 @@ message instead of an opaque abort.
 
 ## Web frontend
 
-Pure HTML/CSS/JS, no framework. `index.html` includes a Content
-Security Policy meta tag that allows `'self'` scripts and the
-`'wasm-unsafe-eval'` source for WebAssembly. `app.js` is an ES module
-that imports the WASM bindings, then attaches event handlers to the
-form. The user never makes a network request to compute anything.
+Pure HTML/CSS/JS, no framework. `app.js` handles the form and runs
+every calculation in a module Web Worker (`worker.js`) that loads
+the WASM bindings, so a big table never freezes the page and
+**Clear** cancels it. The user never makes a network request to
+compute anything.
 
-`_headers` and `_redirects` (Cloudflare Pages configuration) set
-long-lived caching on the content-hashed WASM and CSS bundles, and
-standard security headers on every response.
+`_headers` (Cloudflare Pages configuration) sends the Content
+Security Policy (`'self'` scripts plus `'wasm-unsafe-eval'` for
+WebAssembly; `index.html` repeats it in a meta tag for local
+servers), standard security headers, and a one-year `immutable`
+cache for `/asset/*`. That cache is safe because every asset URL
+carries the release version (`?v=<version>`), stamped by
+`scripts/build_wasm.bash`. `404.html` gives unknown URLs a real 404
+instead of the page.
 
 ## Deployment
 
-GitHub Actions runs CI on every push and PR. On push to `main`, a
-separate workflow builds the WASM module and deploys the `web/`
-directory to Cloudflare Pages via the official
-`cloudflare/pages-action`. See [`docs/DEPLOY.md`](DEPLOY.md) for
+GitHub Actions runs CI on every push and PR. When CI succeeds on
+`main`, a separate workflow builds the WASM module and deploys the
+`web/` directory to Cloudflare Pages via the official
+`cloudflare/wrangler-action`. See [`docs/DEPLOY.md`](DEPLOY.md) for
 the step-by-step setup.

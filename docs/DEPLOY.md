@@ -42,13 +42,23 @@ In your GitHub repository: **Settings** → **Secrets and variables**
 
 ## Automatic deploys
 
-Every push to `main` triggers the `deploy.yml` workflow, which:
+The Pages project uses direct upload (it is not connected to Git).
+Every push to `main` runs the `CI` workflow; when CI succeeds, the
+`deploy.yml` workflow starts (`workflow_run`) and deploys that exact
+commit:
 
 1. Installs the Rust toolchain (with the `wasm32-unknown-unknown`
-   target) and `wasm-pack`.
-2. Runs `scripts/build_wasm.bash --no-opt` to compile the WASM module
-   into `web/asset/js/wasm/`.
-3. Publishes the `web/` directory to Cloudflare Pages.
+   target), `wasm-pack` (pinned version, via `taiki-e/install-action`)
+   and `wasm-opt` (`binaryen`).
+2. Runs `scripts/build_wasm.bash --no-revert` to compile and optimise
+   the WASM module into `web/asset/js/wasm/` and stamp the package
+   version into every asset URL (`?v=<version>`).
+3. Publishes the `web/` directory to Cloudflare Pages with
+   `cloudflare/wrangler-action`.
+
+A push whose CI fails is never deployed. Deploys run one at a time
+(`concurrency` with `queue: max`), and a waiting deploy is never
+cancelled.
 
 Total time: typically under two minutes.
 
@@ -57,7 +67,11 @@ Total time: typically under two minutes.
 To deploy without pushing to `main`:
 
 1. **Actions** → **Deploy to Cloudflare Pages** → **Run workflow**.
-2. The build runs against the current default branch.
+2. The build runs against the current default branch (without
+   waiting for CI, so use it only on a commit that already passed).
+
+From a terminal, `npx wrangler pages deployment list --project-name
+long-multiplication-calculator` lists the deploys.
 
 ## Rollback
 
@@ -77,6 +91,16 @@ After the workflow finishes:
 3. Open the browser dev tools → **Network** → reload. The page
    should make zero outbound network calls for the calculation
    (only the static asset requests for HTML, CSS, JS, and WASM).
+
+## Caching
+
+`web/_headers` caches everything under `/asset/` for a year
+(`immutable`). That is safe only because every asset URL carries the
+release version (`?v=<version>`), including the `.wasm` binary, which
+`worker.js` loads by an explicit versioned URL. If you add a new
+asset, reference it with `?v=__WASM_VERSION__` and add its file to
+`STAMP_FILES` in `scripts/build_wasm.bash` if the reference lives in
+a new file. The HTML is revalidated on every visit.
 
 ## Local testing of the static site
 
