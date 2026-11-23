@@ -1,0 +1,12 @@
+{
+  "format_version": 1,
+  "multiplicand": "5",
+  "multiplier": "7",
+  "columns": 2,
+  "rows": [
+    {"row": 1, "multiplier_digit": 7, "units": [5], "carries": [3]}
+  ],
+  "sum": [5, 3],
+  "subtotals": [],
+  "product": "35"
+}

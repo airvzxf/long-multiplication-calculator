@@ -224,3 +224,124 @@ fn cli_output_matches_golden_fixture_123_x_456() {
     let expected = include_str!("../../../tests/fixtures/123_x_456.txt");
     cli().args(["123", "456"]).assert().success().stdout(expected.to_string());
 }
+
+/// The stored table is the printed one without its final newline,
+/// as in v1.0.0.
+#[test]
+fn cli_store_writes_the_fixture_without_the_final_newline() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let file = dir.path().join("table.txt");
+    let expected = include_str!("../../../tests/fixtures/13597_x_8642.txt");
+    cli()
+        .args(["13597", "8642", "--output", "both", "--file", file.to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(expected.to_string());
+    let stored = std::fs::read_to_string(&file).expect("read file");
+    assert_eq!(stored, expected[..expected.len() - 1]);
+}
+
+#[test]
+fn cli_json_matches_golden_fixtures() {
+    let cases = [
+        ("5", "7", include_str!("../../../tests/fixtures/5_x_7.json")),
+        ("123", "456", include_str!("../../../tests/fixtures/123_x_456.json")),
+        ("13597", "8642", include_str!("../../../tests/fixtures/13597_x_8642.json")),
+        (
+            "999999999999",
+            "999999999999",
+            include_str!("../../../tests/fixtures/999999999999_x_999999999999.json"),
+        ),
+    ];
+    for (a, b, expected) in cases {
+        cli().args(["--format", "json", a, b]).assert().success().stdout(expected.to_string());
+    }
+}
+
+#[test]
+fn cli_json_is_valid_and_describes_the_process() {
+    let output = cli().args(["--format", "json", "13597", "8642"]).output().expect("run");
+    assert!(output.status.success());
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).expect("valid JSON");
+    assert_eq!(json["format_version"], 1);
+    assert_eq!(json["columns"], 9);
+    assert_eq!(json["rows"].as_array().map(Vec::len), Some(4));
+    assert_eq!(json["subtotals"].as_array().map(Vec::len), Some(1));
+    assert_eq!(json["product"], "117505274");
+    assert_eq!(13597_u64 * 8642, 117_505_274);
+}
+
+#[test]
+fn cli_json_store_uses_a_json_file_name_and_the_env_variable() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    cli()
+        .current_dir(dir.path())
+        .env("LONG_MULTIPLICATION_FORMAT", "json")
+        .args(["123", "456", "--output", "store"])
+        .assert()
+        .success()
+        .stdout("")
+        .stderr(predicate::str::contains("Saved to long-multiplication-output.json"));
+    let stored = std::fs::read_to_string(dir.path().join("long-multiplication-output.json"))
+        .expect("default JSON file");
+    assert_eq!(stored, include_str!("../../../tests/fixtures/123_x_456.json"));
+}
+
+#[test]
+fn cli_json_honours_the_output_limit() {
+    let nines = "9".repeat(300);
+    cli()
+        .args(["--format", "json", "--max-output-mib", "1", nines.as_str(), nines.as_str()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("would take about"))
+        .stderr(predicate::str::contains("--max-output-mib"));
+    cli()
+        .args(["--format", "json", "--max-output-mib", "0", nines.as_str(), nines.as_str()])
+        .assert()
+        .success();
+}
+
+#[test]
+fn cli_rejects_an_unknown_format() {
+    cli()
+        .args(["--format", "xml", "5", "7"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("invalid value 'xml'"));
+}
+
+/// A closed stdout pipe with `--output both` must not cut the file short.
+#[cfg(unix)]
+#[test]
+fn cli_closed_pipe_still_writes_the_whole_file() {
+    use std::io::Read;
+    use std::process::{Command as StdCommand, Stdio};
+
+    let dir = tempfile::tempdir().expect("tempdir");
+    let file = dir.path().join("table.txt");
+    let nines = "9".repeat(60);
+    let mut child = StdCommand::new(assert_cmd::cargo::cargo_bin("long-multiplication"))
+        .args([
+            nines.as_str(),
+            nines.as_str(),
+            "--output",
+            "both",
+            "--file",
+            file.to_str().unwrap(),
+        ])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("spawn");
+    let mut stdout = child.stdout.take().expect("stdout");
+    stdout.read_exact(&mut [0u8; 1]).expect("read");
+    drop(stdout);
+    let output = child.wait_with_output().expect("wait");
+    assert!(output.status.success(), "status {:?}", output.status);
+
+    let stored = std::fs::read_to_string(&file).expect("read file");
+    let expected = long_multiplication_core::get_table(&nines, &nines);
+    assert_eq!(stored.len(), expected.len());
+    assert!(stored == expected, "stored table differs from get_table");
+}

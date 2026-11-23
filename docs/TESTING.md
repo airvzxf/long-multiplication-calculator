@@ -9,7 +9,7 @@
 | Invariants (property tests) | `cargo test` + `proptest` | `crates/core/src/multiplication.rs`: every row has the same width, the product is right, the size estimate is an upper bound (256 random pairs of up to 60 digits, 64 nine-heavy pairs that need several `Sub n.` sections, plus fixed edge cases); a failure is shrunk to the smallest operands |
 | Benchmarks | `cargo bench -p long-multiplication-core` (`criterion`) | `crates/core/benches/get_table.rs`; local only, not in CI |
 | Other platforms | CI `T2 · test (macOS)`, `T2 · test (Windows)` | the whole `cargo test --workspace`, golden fixtures included |
-| CLI integration | `assert_cmd` + `predicates` + `tempfile` | `crates/cli/tests/cli.rs` (golden fixtures, limits, closed pipe) |
+| CLI integration | `assert_cmd` + `predicates` + `tempfile` + `serde_json` | `crates/cli/tests/cli.rs` (text and JSON golden fixtures, limits, closed pipe, stored file) |
 | WASM smoke | `wasm-pack test --headless --chrome` | `crates/wasm/src/lib.rs` (the `#[cfg(target_arch = "wasm32")]` tests) |
 | Security audit | `cargo audit` | CI step |
 
@@ -95,6 +95,9 @@ guards against accidental changes:
 ./target/debug/long-multiplication 13597 8642 > /tmp/new.txt
 diff /tmp/new.txt tests/fixtures/13597_x_8642.txt
 ```
+
+The JSON output is contractual too (`format_version` 1): every
+`tests/fixtures/*.json` must match `--format json` byte for byte.
 
 Fixtures live in `tests/fixtures/`. New fixtures should be added when
 covering new sizes/edge cases (e.g. very small, very large, single
