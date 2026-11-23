@@ -12,7 +12,7 @@
 
 ### H0a. ~~Propagar los acarreos en una sola pasada~~ — descartado
 
-Decisión del autor (2026-11-23): la herramienta existe para **mostrar el proceso**, no el resultado; cada `Sub n.` es un paso que se quiere ver, aunque los números hechos de nueves generen muchos. El objetivo principal es analizar cómo se descompone la multiplicación (de primos, en el futuro) para intentar la ingeniería inversa; enseñar a niños de primaria es un uso secundario. Los límites por defecto de la CLI y la web ya evitan el caso extremo.
+Decisión del autor (2026-11-23): la herramienta existe para **mostrar el proceso**, no el resultado; cada `Sub n.` es un paso que se quiere ver, aunque los números hechos de nueves generen muchos. El objetivo principal es analizar cómo se descompone la multiplicación (por ejemplo, de números primos); enseñar a niños de primaria es un uso secundario. Reconstruir los factores a partir del producto (multiplicación inversa) queda fuera de este proyecto. Los límites por defecto de la CLI y la web ya evitan el caso extremo.
 
 ### H0b. Salida en streaming para la CLI
 
@@ -20,11 +20,15 @@ Decisión del autor (2026-11-23): la herramienta existe para **mostrar el proces
 
 ---
 
-### H0c. Ideas para el análisis de factores (ingeniería inversa)
+### H0c. Salida estructurada (`--format json`)
 
-- **Otras bases, sobre todo base 2.** En binario cada producto de dígitos es un AND y la estructura de acarreos es la que usan los planteamientos de factorización como SAT; la base 10 es arbitraria.
-- **Salida estructurada (`--format json`).** Columnas, productos parciales y acarreos, para analizarlos con scripts en vez de leer la tabla. Es el momento que `ARCHITECTURE.md` reserva para introducir `serde` (como feature) y los structs.
-- **Modo inverso.** Dado N, listar columna por columna qué terminaciones (a mod 10ᵏ, b mod 10ᵏ) siguen siendo posibles y cuántas sobreviven.
+Exportar el proceso completo, no solo el texto de la tabla: los dígitos de cada operando, por cada fila de la multiplicación las unidades y los acarreos de cada producto de dígitos, la suma de cada columna, cada sección `Sub n.` y el producto. Sirve para analizar con scripts cómo se descompone una multiplicación, sin tener que leer o parsear la tabla Unicode.
+
+Notas de diseño:
+
+- Es el momento que `ARCHITECTURE.md` reserva para introducir los structs del proceso (`LongMultiplication`, filas, columnas) en `core`; la tabla Unicode se generaría a partir de ellos, y sus fixtures garantizan que no cambie ni un byte.
+- `serde` entraría en `core` solo detrás de una feature (`core` hoy solo depende de `thiserror`; AGENTS.md pide consultar antes de añadir dependencias a `core`), o la serialización viviría en la CLI.
+- CLI: `--format text|json` (por defecto `text`), compatible con `--output store|both` y con los límites (el JSON también se estima antes de generarlo).
 
 ---
 
@@ -711,7 +715,7 @@ funciones puras simples:
 |---|---|---|---|---|
 | ~~H0a~~ | ~~Acarreos en una pasada~~ (descartado) | — | — | — |
 | H0b | Salida en streaming (CLI) | ~3h | Medio-Alto | — |
-| H0c | Base 2, JSON, modo inverso | ~1d | **Alto** (objetivo principal) | — |
+| H0c | Salida estructurada (`--format json`) | ~1d | **Alto** | — |
 | H1 | `proptest` para invariante | ~30m | **Alto** | 6 |
 | H2 | `criterion` benchmark | ~30m | **Alto** | 6 |
 | ~~H3~~ | ~~MSRV test en CI~~ (hecho) | ~15m | **Alto** | 4 |
