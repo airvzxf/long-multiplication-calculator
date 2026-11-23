@@ -24,7 +24,9 @@
 //!
 //! Input validation is centralised in [`validate_input`]. It returns a
 //! [`CoreError`] when the input is empty, contains a non-ASCII digit, or
-//! exceeds the configured length.
+//! exceeds the configured length. [`check_output_size`] returns
+//! [`CoreError::OutputTooLarge`] when the rendered table would exceed a
+//! byte budget.
 
 #![forbid(unsafe_code)]
 #![allow(missing_docs)]
@@ -36,20 +38,23 @@ pub mod length;
 mod multiplication;
 
 pub use error::{CoreError, Result};
-pub use multiplication::get_table;
+pub use multiplication::{check_output_size, estimate_table_bytes, get_table};
 
-/// Maximum number of digits allowed in a single operand.
+/// Default maximum number of digits in a single operand.
 ///
-/// A thousand-digit natural number squared produces a table with
-/// ~2 000 columns of box-drawing characters, which is more than enough
-/// for classroom use and keeps the WASM bundle tiny.
+/// This is a default, not a limit of the algorithm: pass a larger
+/// value (or `usize::MAX`) to [`validate_input`] to accept longer
+/// numbers. The number of digits alone does not bound the size of the
+/// table (operands made of nines need one `Sub n.` section per digit),
+/// so adapters should also check [`estimate_table_bytes`] or call
+/// [`check_output_size`] before rendering.
 pub const MAX_DIGITS: usize = 1_000;
 
 /// Validate and normalize a numeric string for the algorithm.
 ///
 /// Trims surrounding whitespace, rejects empty input, rejects any
 /// non-ASCII-digit character (and reports its position), and enforces
-/// the [`MAX_DIGITS`] upper bound. On success returns the trimmed
+/// the `max_digits` upper bound (pass `usize::MAX` for no limit). On success returns the trimmed
 /// digit-only string as a `&str` borrowed from `input`, so no
 /// allocation happens in the happy path.
 ///
@@ -72,13 +77,14 @@ pub fn validate_input(input: &str, max_digits: usize) -> Result<&str> {
     if trimmed.is_empty() {
         return Err(CoreError::EmptyInput);
     }
-    if trimmed.len() > max_digits {
-        return Err(CoreError::TooLong { max: max_digits, got: trimmed.len() });
-    }
     for (pos, ch) in trimmed.chars().enumerate() {
         if !ch.is_ascii_digit() {
             return Err(CoreError::InvalidDigit { position: pos, character: ch });
         }
+    }
+    // Every character is an ASCII digit here, so bytes == digits.
+    if trimmed.len() > max_digits {
+        return Err(CoreError::TooLong { max: max_digits, got: trimmed.len() });
     }
     Ok(trimmed)
 }
@@ -124,6 +130,23 @@ mod tests {
             }
             other => panic!("expected TooLong, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn validate_input_reports_character_index_and_digit_count() {
+        // A multi-byte character before the bad one must not shift the index.
+        assert_eq!(
+            validate_input("1é", 1000),
+            Err(CoreError::InvalidDigit { position: 1, character: 'é' })
+        );
+        // An invalid character is reported even when the input is also too long.
+        assert!(matches!(validate_input("ééé", 2), Err(CoreError::InvalidDigit { .. })));
+    }
+
+    #[test]
+    fn validate_input_accepts_unlimited_length() {
+        let big = "7".repeat(MAX_DIGITS * 3);
+        assert_eq!(validate_input(&big, usize::MAX).map(str::len), Ok(MAX_DIGITS * 3));
     }
 
     #[test]

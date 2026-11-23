@@ -90,8 +90,8 @@ pub fn break_down_multiplication(multiplicand: &str, multiplier: &str) -> (Vec<u
         let mut units: Vec<usize> = Vec::new();
         let mut carriers: Vec<usize> = Vec::new();
         for b in multiplicand.chars().rev() {
-            let multiplicand_digit: usize = a as usize - 0x30;
-            let multiplier_digit: usize = b as usize - 0x30;
+            let multiplier_digit: usize = a as usize - 0x30;
+            let multiplicand_digit: usize = b as usize - 0x30;
             let product: usize = multiplicand_digit * multiplier_digit;
             let unit: usize = product % 10;
             let carry: usize = product / 10;
