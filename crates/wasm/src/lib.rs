@@ -1,7 +1,8 @@
 //! WebAssembly bindings for the long-multiplication calculator.
 //!
 //! Exposes the same primitives the CLI uses: [`calculate`] takes two
-//! digit strings and returns the Unicode table, [`max_digits`] and
+//! digit strings and returns the Unicode table, [`estimate_table_bytes`]
+//! gives the size of a table before building it, [`max_digits`] and
 //! [`max_output_bytes`] report the limits, and [`version`] returns
 //! the `CARGO_PKG_VERSION` baked into the binary.
 //!
@@ -46,6 +47,17 @@ pub fn calculate(multiplicand: &str, multiplier: &str) -> Result<String, JsError
         JsError::new(&format!("{error}. Use the desktop CLI for bigger tables."))
     })?;
     Ok(get_table(a, b))
+}
+
+/// Upper bound, in bytes, of the table for two validated operands.
+///
+/// The worker compares it with [`max_output_bytes`] before calling
+/// [`calculate`], so the page can explain the size limit in the
+/// reader's language instead of showing the English `JsError` text.
+/// Operands must already be digits only (the page checks them first).
+#[wasm_bindgen(js_name = estimateTableBytes)]
+pub fn estimate_table_bytes(multiplicand: &str, multiplier: &str) -> usize {
+    long_multiplication_core::estimate_table_bytes(multiplicand.trim(), multiplier.trim())
 }
 
 /// Maximum number of digits accepted by [`calculate`].
@@ -112,10 +124,18 @@ mod tests {
         assert_eq!(max_output_bytes(), 32 * 1024 * 1024);
     }
 
+    #[test]
+    fn estimate_matches_the_limit_used_by_calculate() {
+        let nines = "9".repeat(200);
+        assert!(estimate_table_bytes(&nines, &nines) > max_output_bytes());
+        assert!(estimate_table_bytes("13597", "8642") < max_output_bytes());
+    }
+
     #[cfg(target_arch = "wasm32")]
     #[wasm_bindgen_test::wasm_bindgen_test]
     fn calculate_refuses_huge_tables() {
         let nines = "9".repeat(200);
+        assert!(estimate_table_bytes(&nines, &nines) > max_output_bytes());
         assert!(calculate(&nines, &nines).is_err());
     }
 

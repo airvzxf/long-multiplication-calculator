@@ -6,8 +6,7 @@ use crate::length::{get_number_length, get_string_length, get_strings_length};
 /// It generates the table symbols for the
 /// long multiplication and stores it in a text variable.
 ///
-/// Examples
-/// --------
+/// # Examples
 ///
 /// Example #1
 /// ```rust
@@ -52,8 +51,7 @@ pub fn symbols(text: &mut String) {
 /// It generates the table top-border for the
 /// long multiplication and stores it in a text variable.
 ///
-/// Examples
-/// --------
+/// # Examples
 ///
 /// Example #1
 /// ```rust
@@ -96,8 +94,7 @@ pub fn top_border(multiplicand: &str, multiplier: &str, text: &mut String) {
 /// It generates the table bottom-border for the
 /// long multiplication and stores it in a text variable.
 ///
-/// Examples
-/// --------
+/// # Examples
 ///
 /// Example #1
 /// ```rust
@@ -134,8 +131,7 @@ pub fn bottom_border(multiplicand: &str, multiplier: &str, text: &mut String) {
 /// It generates the table position-title for the
 /// long multiplication and stores it in a text variable.
 ///
-/// Examples
-/// --------
+/// # Examples
 ///
 /// Example #1
 /// ```rust
@@ -194,8 +190,7 @@ pub fn position_title(multiplicand: &str, multiplier: &str, text: &mut String) {
 /// It generates the table operation-title for the
 /// long multiplication and stores it in a text variable.
 ///
-/// Examples
-/// --------
+/// # Examples
 ///
 /// Example #1
 /// ```rust
@@ -236,8 +231,7 @@ pub fn operation_title(multiplicand: &str, multiplier: &str, text: &mut String) 
 /// It generates the table multiplication-section for the
 /// long multiplication and stores it in a text variable.
 ///
-/// Examples
-/// --------
+/// # Examples
 ///
 /// Example #1
 /// ```rust
@@ -295,8 +289,7 @@ pub fn multiplication(multiplicand: &str, multiplier: &str, text: &mut String) {
 /// It generates the table operations-section for the
 /// long multiplication and stores it in a text variable.
 ///
-/// Examples
-/// --------
+/// # Examples
 ///
 /// Example #1
 /// ```rust
@@ -378,8 +371,7 @@ pub fn operations(multiplicand: &str, multiplier: &str, text: &mut String) {
 /// It generates the table sum-title for the
 /// long multiplication and stores it in a text variable.
 ///
-/// Examples
-/// --------
+/// # Examples
 ///
 /// Example #1
 /// ```rust
@@ -422,8 +414,7 @@ pub fn sum_title(multiplicand: &str, multiplier: &str, text: &mut String) {
 ///
 /// It means that sums the rows for each column.
 ///
-/// Examples
-/// --------
+/// # Examples
 ///
 /// Example #1
 /// ```rust
@@ -501,8 +492,7 @@ pub fn long_sum(multiplicand: &str, multiplier: &str, text: &mut String) {
 /// It generates the table author-section for the
 /// long multiplication and stores it in a text variable.
 ///
-/// Examples
-/// --------
+/// # Examples
 ///
 /// Example #1
 /// ```rust

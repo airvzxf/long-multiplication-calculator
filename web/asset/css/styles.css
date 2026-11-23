@@ -130,7 +130,8 @@ input:focus-visible {
     border-radius: var(--radius);
 }
 
-.field input:invalid {
+.field input:invalid,
+.field input[aria-invalid="true"] {
     border-color: var(--color-error-border);
 }
 

@@ -69,6 +69,19 @@ fn cli_store_writes_file() {
 }
 
 #[test]
+fn cli_store_suggests_mkdir_for_a_missing_directory() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let missing = dir.path().join("missing");
+    let file = missing.join("out.txt");
+
+    cli()
+        .args(["5", "7", "--output", "store", "--file", file.to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(format!("mkdir -p {}", missing.display())));
+}
+
+#[test]
 fn cli_help_prints_usage() {
     cli()
         .arg("--help")

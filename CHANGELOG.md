@@ -4,6 +4,42 @@ All notable changes to this project are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/) and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.2.1] - 2026-11-23
+
+### Added
+
+- Web: the page is bilingual. It follows the browser language
+  (Spanish or English, English by default), including the error
+  messages; the table keeps its byte-for-byte output.
+- Web: share a calculation as a link,
+  `/?multiplicand=13597&multiplier=8642`. The link is checked with
+  the same rules and limits as the form and calculated on load; each
+  successful calculation updates the address bar.
+- Web: "Loading calculator…" until the calculator is ready, and a
+  one-line summary ("Table ready: N rows.") when a table is done.
+- Web: Open Graph and Twitter card tags for link previews.
+- WASM: `estimateTableBytes()` is exported, so the page can explain
+  the size limit in the reader's language.
+- Dependabot also keeps the Rust dependencies current (one grouped
+  weekly PR).
+
+### Changed
+
+- CLI: when `--file` points to a directory that does not exist, the
+  error names it and suggests `mkdir -p <dir>`.
+- `.gitattributes` keeps the reference tables in `tests/fixtures/`
+  byte for byte on every platform (no CRLF conversion on Windows).
+- Rustdoc: the examples in `generate.rs` use `# Examples` headings.
+
+### Fixed
+
+- Security: `anyhow` 1.0.105 (RUSTSEC-2026-0190). The remaining
+  `rustix` advisory (RUSTSEC-2026-0486, unsound) only reaches the
+  test-only `tempfile` dependency.
+- Web accessibility: the table is no longer an `aria-live` region,
+  so a screen reader does not read a table of megabytes aloud; the
+  fields get `aria-invalid` when their value is refused.
+
 ## [2.2.0] - 2026-11-23
 
 ### Added

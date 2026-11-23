@@ -158,6 +158,18 @@ the WASM bindings, so a big table never freezes the page and
 **Clear** cancels it. The user never makes a network request to
 compute anything.
 
+The interface is English, or Spanish when the browser prefers it:
+`i18n.js` holds both dictionaries and translates every
+`data-i18n` element. The worker reports a refused table as numbers
+(`code: "too-large"`, the estimate and the limit, from the
+`estimateTableBytes` export) so the page can word it in either
+language; the table itself is the contractual output and stays as
+it is. A link such as `/?multiplicand=13597&multiplier=8642` fills
+the form and calculates it with the same checks and limits, and
+each successful calculation writes its link to the address bar.
+Only a one-line summary (`Table ready: N rows.`) is announced to
+screen readers, never the table.
+
 `_headers` (Cloudflare Pages configuration) sends the Content
 Security Policy (`'self'` scripts plus `'wasm-unsafe-eval'` for
 WebAssembly; `index.html` repeats it in a meta tag for local
