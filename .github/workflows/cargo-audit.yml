@@ -1,0 +1,40 @@
+name: cargo-audit
+
+# RustSec advisories. The advisory database moves independently of the
+# code, so a nightly run reports new advisories even when nothing is
+# pushed. Vulnerabilities fail the job; "unsound" / "unmaintained"
+# warnings are reported in the log without failing it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '37 5 * * *'
+  workflow_dispatch:
+
+# Serialize runs FIFO; never cancel one in flight.
+concurrency:
+  group: cargo-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+  queue: max
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: 'cargo-audit · RustSec advisories'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-audit@0.23.0
+
+      - name: cargo audit
+        run: cargo audit

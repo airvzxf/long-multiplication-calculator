@@ -4,6 +4,73 @@ All notable changes to this project are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/) and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] - 2026-11-23
+
+### Added
+
+- **Pre-built binaries.** Every release ships the CLI for Linux
+  (x86_64 and ARM64, static musl), macOS (Intel and Apple Silicon)
+  and Windows (x86_64), with `SHA256SUMS` and a CycloneDX SBOM. The
+  new `release.yml` builds them only from a signed tag on `main`,
+  checks each binary against the golden fixture, and re-verifies the
+  published assets.
+- CI is split into parallel jobs (fmt, clippy, MSRV 1.85.0, tests,
+  strict docs, release build with a fixture check, WASM with a size
+  gate), and `cargo-audit` runs in its own workflow, also nightly.
+- **Configurable limits.** `core` gains `estimate_table_bytes` (an
+  upper bound of the table size, computed without rendering it) and
+  `check_output_size`, plus `CoreError::OutputTooLarge`. The number
+  of digits alone does not bound the table: operands made of nines
+  need one `Sub n.` section per digit.
+- CLI: `--max-digits` (default 1000), `--max-output-mib` (default
+  1024) and `--unlimited`, also read from
+  `LONG_MULTIPLICATION_MAX_DIGITS`, `LONG_MULTIPLICATION_MAX_OUTPUT_MIB`
+  and `LONG_MULTIPLICATION_UNLIMITED`. `0` means no limit.
+- WASM: tables over 32 MiB are refused; `maxOutputBytes()` is
+  exported.
+- Web: the calculation runs in a Web Worker, so big tables no longer
+  freeze the page; **Clear** cancels a calculation in progress.
+- Golden fixture `999999999999_x_999999999999.txt` (ten `Sub n.`
+  sections) and invariant tests: every row has the same width and
+  the product is correct.
+
+### Fixed
+
+- **Table alignment.** The `Sub 10.` (and higher) titles were one
+  character too wide, and tables with more than 999 columns broke
+  the position row. Cells are now wider for tables over 999 columns.
+  Output for every other table is unchanged byte for byte.
+- Web: the **Multiplier** field was sent as the multiplicand and
+  vice versa; the fields now map correctly and the multiplicand comes
+  first.
+- Web: the `.wasm` binary, `app.js` and the stylesheet were cached
+  for a year under unversioned or hand-written (`?v=2.0`) URLs, so
+  after a release a browser could combine new JavaScript with an old
+  `.wasm`. Every asset URL now carries the release version. The
+  footer shows the real site version instead of `2.0`.
+- Web: unknown URLs returned the page with status 200 (and a one-year
+  cache under `/asset/`); `_redirects` is removed and `404.html` is
+  added.
+- CLI: a closed pipe (`long-multiplication A B | head`) no longer
+  panics; the program ends quietly.
+- CLI: `--file` with `--output display` is now an error instead of
+  being silently ignored; help text is in English like the rest of
+  the project.
+- `CoreError::InvalidDigit::position` is documented as a character
+  index (it was described as a byte offset), and `TooLong::got` now
+  always counts digits (input is checked for invalid characters
+  first).
+- CI deploys only commits that passed CI (`workflow_run`); the CI
+  workflow builds the WASM with `scripts/build_wasm.bash`, uses the
+  Chrome and chromedriver already on the runner, and installs pinned
+  `wasm-pack` and `cargo-audit` releases instead of `curl | sh` and
+  `cargo install`.
+- Docs: `DEPLOY.md` (`--no-revert`, binaryen), `ARCHITECTURE.md`
+  (wrangler-action, exports, caching) and the 2.1.0 entry's claim
+  that the stamp was passed between jobs as an artifact (the deploy
+  job builds it itself). The Content Security Policy is now also
+  sent as a header, where `frame-ancestors` takes effect.
+
 ## [2.1.0] - 2026-06-16
 
 ### Breaking changes

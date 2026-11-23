@@ -6,8 +6,9 @@
 | --- | --- | --- |
 | Unit (algorithm) | `cargo test` | `#[cfg(test)] mod tests` inside each `crates/core/src/*.rs` module |
 | Doctests | `cargo test --doc` | `///` examples in every public function |
-| CLI integration | `assert_cmd` + `predicates` + `tempfile` | `crates/cli/tests/` (added when needed) |
-| WASM smoke | `wasm-pack test --headless --chrome` | `crates/wasm/src/lib.rs` (the `#[cfg(target_arch = "wasm32")]` test) |
+| Invariants | `cargo test` | `crates/core/src/multiplication.rs`: every row has the same width, the product is right, the size estimate is an upper bound (120 generated inputs plus edge cases) |
+| CLI integration | `assert_cmd` + `predicates` + `tempfile` | `crates/cli/tests/cli.rs` (golden fixtures, limits, closed pipe) |
+| WASM smoke | `wasm-pack test --headless --chrome` | `crates/wasm/src/lib.rs` (the `#[cfg(target_arch = "wasm32")]` tests) |
 | Security audit | `cargo audit` | CI step |
 
 ## Running everything locally
@@ -24,8 +25,8 @@ cargo doc --workspace --no-deps
 # Release build.
 cargo build --workspace --release
 
-# WASM bundle.
-wasm-pack build crates/wasm --target web --release --no-opt
+# WASM bundle (the same script CI and the deploy use).
+./scripts/build_wasm.bash
 
 # Security audit.
 cargo install cargo-audit --locked
@@ -88,3 +89,4 @@ diff /tmp/new.txt tests/fixtures/13597_x_8642.txt
 Fixtures live in `tests/fixtures/`. New fixtures should be added when
 covering new sizes/edge cases (e.g. very small, very large, single
 digit, carries that propagate through more than one column).
+`999999999999_x_999999999999.txt` covers ten `Sub n.` sections.

@@ -8,7 +8,29 @@
 
 ---
 
+## Tier 0 — Decisiones de diseño abiertas (revisión 2026-11-23)
+
+### H0a. ~~Propagar los acarreos en una sola pasada~~ — descartado
+
+Decisión del autor (2026-11-23): la herramienta existe para **mostrar el proceso**, no el resultado; cada `Sub n.` es un paso que se quiere ver, aunque los números hechos de nueves generen muchos. El objetivo principal es analizar cómo se descompone la multiplicación (de primos, en el futuro) para intentar la ingeniería inversa; enseñar a niños de primaria es un uso secundario. Los límites por defecto de la CLI y la web ya evitan el caso extremo.
+
+### H0b. Salida en streaming para la CLI
+
+`get_table` construye la tabla completa en un `String`, así que la memoria usada es igual al tamaño de la salida. Para multiplicaciones `--unlimited` en escritorio convendría que `core` escribiera sobre `core::fmt::Write` y que la CLI la volcara directamente a stdout o al archivo. Exige cambiar los generadores de `&mut String` a `&mut impl fmt::Write` (ver H10).
+
+---
+
+### H0c. Ideas para el análisis de factores (ingeniería inversa)
+
+- **Otras bases, sobre todo base 2.** En binario cada producto de dígitos es un AND y la estructura de acarreos es la que usan los planteamientos de factorización como SAT; la base 10 es arbitraria.
+- **Salida estructurada (`--format json`).** Columnas, productos parciales y acarreos, para analizarlos con scripts en vez de leer la tabla. Es el momento que `ARCHITECTURE.md` reserva para introducir `serde` (como feature) y los structs.
+- **Modo inverso.** Dado N, listar columna por columna qué terminaciones (a mod 10ᵏ, b mod 10ᵏ) siguen siendo posibles y cuántas sobreviven.
+
+---
+
 ## Tier 1 — Valor alto, recomendado para el próximo ciclo
+
+> H1 está cubierto en parte: `crates/core/src/multiplication.rs` ya comprueba, sobre 120 entradas generadas, que todas las filas tienen el mismo ancho, que el producto es correcto y que `estimate_table_bytes` es una cota superior. `proptest` añadiría reducción de casos fallidos (*shrinking*) y más variedad.
 
 ### H1. `proptest` para invariante del algoritmo
 
@@ -83,7 +105,7 @@ proptest! {
 
 **Donde se mencionó:** 6soS, 8kjc, K3LK, Q0ER, p6gp, R7mK (6 docs).
 
-**Valor:** Tracking de regresiones de performance. Hoy el algoritmo corre en microsegundos para 100 dígitos, pero no hay forma de detectarlo automáticamente.
+**Valor:** Tracking de regresiones de performance. Medido el 2026-11-23 (CLI release): 100 dígitos aleatorios × 100 → 3.6 MB en ~8 ms; 100 nueves × 100 nueves → 72 MB en ~70 ms. No hay forma de detectar regresiones automáticamente.
 
 **Esfuerzo:** ~30 LOC + 1 dev-dependency.
 
@@ -131,7 +153,7 @@ criterion_main!(benches);
 
 ---
 
-### H3. Job de CI con `rustc 1.85.0` (MSRV test)
+### H3. ~~Job de CI con `rustc 1.85.0` (MSRV test)~~ — hecho en 2.2.0 (`T1 · msrv` en `ci.yml`)
 
 **Donde se mencionó:** 6soS, Q0ER, p6gp, R7mK (4 docs).
 
@@ -251,7 +273,7 @@ jobs:
 
 ---
 
-### H6. `release.yml` con binarios pre-compilados
+### H6. ~~`release.yml` con binarios pre-compilados~~ — hecho en 2.2.0 (Linux musl x86_64/ARM64, macOS Intel/ARM, Windows)
 
 **Donde se mencionó:** 6soS, K3LK, Q0ER, p6gp, R7mK (5 docs).
 
@@ -440,7 +462,9 @@ function run() {
 
 ## Tier 3 — Cosmético pero valioso cuando haya tiempo
 
-### H9. Refactor de `generate.rs` (1775 líneas) en submódulos
+### H9. Refactor de `generate.rs` en submódulos
+
+> Parcial: las reglas, títulos y filas ya pasan por los helpers `rule`, `title` y `Row`, lo que eliminó la mayor parte del código repetido.
 
 **Donde se mencionó:** 6soS, 8kjc, p6gp, R7mK (4 docs).
 
@@ -685,12 +709,15 @@ funciones puras simples:
 
 | # | Hallazgo | Esfuerzo | Valor | Docs |
 |---|---|---|---|---|
+| ~~H0a~~ | ~~Acarreos en una pasada~~ (descartado) | — | — | — |
+| H0b | Salida en streaming (CLI) | ~3h | Medio-Alto | — |
+| H0c | Base 2, JSON, modo inverso | ~1d | **Alto** (objetivo principal) | — |
 | H1 | `proptest` para invariante | ~30m | **Alto** | 6 |
 | H2 | `criterion` benchmark | ~30m | **Alto** | 6 |
-| H3 | MSRV test en CI | ~15m | **Alto** | 4 |
+| ~~H3~~ | ~~MSRV test en CI~~ (hecho) | ~15m | **Alto** | 4 |
 | H4 | CI multi-OS matrix | ~15m | **Alto** | 4 |
 | H5 | Cron upgrade-compatible | ~30m | Medio | 3 |
-| H6 | `release.yml` con binarios | ~1h | Medio | 5 |
+| ~~H6~~ | ~~`release.yml` con binarios~~ (hecho) | ~1h | Medio | 5 |
 | H7 | Compartir por URL | ~30m | **Medio-Alto** | 4 |
 | H8 | Errores en español | ~15m | Bajo-Medio | 3 |
 | H9 | Subdividir `generate.rs` | ~3h | Bajo (cosmético) | 4 |

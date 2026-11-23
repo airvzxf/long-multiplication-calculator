@@ -18,7 +18,8 @@ wasm-pack test --chrome --headless crates/wasm   # or --firefox --headless
 ```
 
 The CI workflow (`.github/workflows/ci.yml`) runs the same checks on
-every push. Locally you can skip `cargo audit` and the WASM build if
+every push, and the deploy workflow only runs after CI passes on
+`main`. Locally you can skip `cargo audit` and the WASM build if
 you are not touching dependencies or `crates/wasm`.
 
 > **Note on the WASM test runner:** the `calculate_smoke` test is
@@ -64,14 +65,34 @@ it to `cli` or `wasm` instead. `core` is a pure library.
 
 ## Release checklist
 
-1. `cargo +stable build --workspace --release` passes.
-2. `wasm-pack build crates/wasm --target web --release` produces
-   a bundle < 100 KB unoptimised, < 50 KB with `wasm-opt -Oz`.
-3. All 50+ unit tests pass; all doctests pass.
-4. `CHANGELOG.md` updated with a new `## [X.Y.Z]` entry.
-5. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
-6. Confirm Cloudflare Pages redeployed automatically (or trigger
-   via `Actions → Deploy to Cloudflare Pages → Run workflow`).
+Nothing is published to crates.io; a release is a GitHub Release
+with pre-built CLI binaries (`.github/workflows/release.yml`).
+
+1. In a PR: bump `version` in the root `Cargo.toml` (and
+   `Cargo.lock`), and turn `## [Unreleased]` in `CHANGELOG.md` into
+   `## [X.Y.Z] - YYYY-MM-DD` (the release notes are taken from that
+   section; the workflow fails without it).
+2. Wait for CI on the PR. It also runs a release **dry run** (the
+   five-target build matrix, nothing published) when the PR touches
+   the CLI, `core`, manifests or the release workflow.
+3. Squash-merge. Wait for CI and the Cloudflare deploy on `main`.
+4. Tag **the squash commit on main** with a **signed** tag (the
+   workflow rejects tags that are unsigned, signed by a key missing
+   from `.github/trusted-signers`, or not reachable from `main`):
+
+   ```bash
+   git fetch origin
+   git tag -s vX.Y.Z "$(git rev-parse origin/main)" -m "release: X.Y.Z"
+   git push origin vX.Y.Z
+   ```
+
+5. Wait for the `release` workflow: it checks the tag, builds and
+   smoke-tests five targets, publishes the Release with
+   `SHA256SUMS` and an SBOM, then downloads the published assets
+   and verifies them (`Verify · published assets`).
+6. If it fails after the tag exists, fix on `main` and either
+   re-run it (`Actions → release → Run workflow`, tag `vX.Y.Z`) or
+   delete and re-create the tag on the new commit.
 
 ## Common pitfalls
 
@@ -84,6 +105,11 @@ it to `cli` or `wasm` instead. `core` is a pure library.
   script does this for you). wasm-pack's default `-O` invocation
   does not enable bulk-memory, so do **not** let wasm-pack call
   wasm-opt on its own — use `--no-opt` and run `wasm-opt` yourself.
+- **`wasm-pack test` fails with `failed to find the
+  __wbindgen_externref_table_alloc function`:** a global
+  `build.rustflags = ["-C", "target-cpu=native"]` (for example in
+  `~/.cargo/config.toml`) also applies to `wasm32`. Run the WASM
+  commands with `RUSTFLAGS=""`, which overrides it.
 - **Clippy lints failing:** see the per-crate `[lints.clippy]`
   sections in `Cargo.toml`. The project allows a small set of
   `clippy::all` lints that match the original 2021 code style

@@ -83,9 +83,8 @@ pub fn symbols(text: &mut String) {
 pub fn top_border(multiplicand: &str, multiplier: &str, text: &mut String) {
     let length: usize = get_strings_length(multiplicand, multiplier);
 
-    // Create first row
     text.push('┏');
-    for _ in 1..(length * 3) + length {
+    for _ in 0..inner_width(length) {
         text.push('━');
     }
     text.push('┓');
@@ -127,18 +126,7 @@ pub fn top_border(multiplicand: &str, multiplier: &str, text: &mut String) {
 /// ```
 pub fn bottom_border(multiplicand: &str, multiplier: &str, text: &mut String) {
     let length: usize = get_strings_length(multiplicand, multiplier);
-
-    // Create first row
-    text.push('┗');
-    for n in 1..length + 1 {
-        text.push_str("━━━");
-        if n == length {
-            break;
-        }
-        text.push('┷');
-    }
-    text.push('┛');
-    text.push('\n');
+    rule(text, length, ['┗', '━', '┷', '┛']);
 }
 
 /// Store the position title of the long multiplication.
@@ -182,57 +170,23 @@ pub fn bottom_border(multiplicand: &str, multiplier: &str, text: &mut String) {
 /// ```
 pub fn position_title(multiplicand: &str, multiplier: &str, text: &mut String) {
     let length: usize = get_strings_length(multiplicand, multiplier);
+    let width: usize = cell_width(length);
 
-    // Create first row
-    text.push_str("┃Pos.");
-    for _ in 1..(length * 3) + length - 4 {
-        text.push(' ');
+    title(text, length, "Pos.");
+    rule(text, length, ['┠', '┄', '┬', '┨']);
+
+    // Column numbers, from the highest on the left to 1 on the right.
+    text.push('┃');
+    for n in 0..length {
+        if n > 0 {
+            text.push('│');
+        }
+        push_cell(text, width, &(length - n).to_string());
     }
     text.push('┃');
     text.push('\n');
 
-    // Create second row
-    text.push('┠');
-    for n in 1..length + 1 {
-        text.push_str("┄┄┄");
-        if n == length {
-            break;
-        }
-        text.push('┬');
-    }
-    text.push('┨');
-    text.push('\n');
-
-    // Create third row
-    text.push('┃');
-    for n in 1..length + 1 {
-        let number: usize = length + 1 - n;
-        if number < 100 {
-            text.push(' ');
-        }
-        text.push_str(&*number.to_string());
-        if number < 10 {
-            text.push(' ');
-        }
-        if n == length {
-            break;
-        }
-        text.push('│');
-    }
-    text.push('┃');
-    text.push('\n');
-
-    // Create fourth row
-    text.push('┣');
-    for n in 1..length + 1 {
-        text.push_str("━━━");
-        if n == length {
-            break;
-        }
-        text.push('┷');
-    }
-    text.push('┫');
-    text.push('\n');
+    rule(text, length, ['┣', '━', '┷', '┫']);
 }
 
 /// Store the operation title of the long multiplication.
@@ -273,25 +227,8 @@ pub fn position_title(multiplicand: &str, multiplier: &str, text: &mut String) {
 pub fn operation_title(multiplicand: &str, multiplier: &str, text: &mut String) {
     let length: usize = get_strings_length(multiplicand, multiplier);
 
-    // Create first row
-    text.push_str("┃Ops.");
-    for _ in 1..(length * 3) + length - 4 {
-        text.push(' ');
-    }
-    text.push('┃');
-    text.push('\n');
-
-    // Create second row
-    text.push('┣');
-    for n in 1..length + 1 {
-        text.push_str("━━━");
-        if n == length {
-            break;
-        }
-        text.push('┯');
-    }
-    text.push('┫');
-    text.push('\n');
+    title(text, length, "Ops.");
+    rule(text, length, ['┣', '━', '┯', '┫']);
 }
 
 /// Store the multiplication section of the long multiplication.
@@ -335,57 +272,22 @@ pub fn multiplication(multiplicand: &str, multiplier: &str, text: &mut String) {
     let multiplicand_len: usize = get_string_length(multiplicand);
     let multiplier_len: usize = get_string_length(multiplier);
     let length: usize = multiplicand_len + multiplier_len;
+    let width: usize = cell_width(length);
 
-    // Create first row
-    text.push('┃');
-    for n in 0..(length - multiplicand_len) {
-        text.push_str("   ");
-        if n == length {
-            break;
-        }
-        text.push('│');
-    }
+    // Multiplicand, right-aligned.
+    let mut row = Row::new(text, width);
+    row.empty(length - multiplicand_len);
+    row.chars(multiplicand.chars());
+    row.finish("");
 
-    for i in multiplicand.chars() {
-        text.push(' ');
-        text.push(i);
-        text.push_str(" │");
-    }
-    text.pop();
-    text.push('┃');
-    text.push('\n');
+    // Multiplier, right-aligned, with the `x` sign in the first cell.
+    let mut row = Row::new(text, width);
+    row.chars(['x']);
+    row.empty(length - multiplier_len - 1);
+    row.chars(multiplier.chars());
+    row.finish("");
 
-    // Create second row
-    text.push('┃');
-    text.push_str(" x │");
-    for n in 0..(length - multiplier_len - 1) {
-        text.push_str("   ");
-        if n == length {
-            break;
-        }
-        text.push('│');
-    }
-
-    for i in multiplier.chars() {
-        text.push(' ');
-        text.push(i);
-        text.push_str(" │");
-    }
-    text.pop();
-    text.push('┃');
-    text.push('\n');
-
-    // Create third row
-    text.push('┣');
-    for n in 1..length + 1 {
-        text.push_str("━━━");
-        if n == length {
-            break;
-        }
-        text.push('┿');
-    }
-    text.push('┫');
-    text.push('\n');
+    rule(text, length, ['┣', '━', '┿', '┫']);
 }
 
 /// Store the operations section of the long multiplication.
@@ -436,112 +338,39 @@ pub fn multiplication(multiplicand: &str, multiplier: &str, text: &mut String) {
 pub fn operations(multiplicand: &str, multiplier: &str, text: &mut String) {
     let multiplicand_len: usize = get_string_length(multiplicand);
     let length: usize = get_strings_length(multiplicand, multiplier);
+    let width: usize = cell_width(length);
 
-    let operation_unit: Vec<usize>;
-    let operation_carry: Vec<usize>;
-    (operation_unit, operation_carry) = break_down_multiplication(multiplicand, multiplier);
+    let (operation_unit, operation_carry) = break_down_multiplication(multiplicand, multiplier);
 
     let step: usize = multiplicand_len;
     let max_group_rows: usize = operation_unit.len() / step;
-    let mut iteration: usize = 1;
-    for start in (0..operation_unit.len()).step_by(step) {
-        let start: usize = start;
+    for (index, start) in (0..operation_unit.len()).step_by(step).enumerate() {
+        let iteration: usize = index + 1;
         let end: usize = start + step;
-        let slice: &[usize] = &operation_carry[start..end];
 
-        // Create first row
-        text.push('┃');
-        let start_spaces: usize = length - step - iteration;
-        for _ in 0..start_spaces {
-            text.push_str("   │");
-        }
-        for n in slice {
-            text.push(' ');
-            text.push_str(&*n.to_string());
-            text.push(' ');
-            text.push('│');
-        }
-        let end_spaces: usize = iteration;
-        for n in 0..end_spaces {
-            text.push_str("   ");
-            if n < end_spaces - 1 {
-                text.push('│');
-            }
-        }
-        text.push_str("┃ ");
-        let row: String = iteration.to_string();
-        text.push_str(&*row);
-        text.push_str(" ^\n");
+        // Carries of this row, shifted one column to the left.
+        let mut row = Row::new(text, width);
+        row.empty(length - step - iteration);
+        row.digits(&operation_carry[start..end]);
+        row.empty(iteration);
+        row.finish(&format!(" {iteration} ^"));
 
-        // Create second row
-        text.push('┠');
-        for n in 1..length + 1 {
-            text.push_str("┈┈┈");
-            if n == length {
-                break;
-            }
-            text.push('┼');
-        }
-        text.push('┨');
-        text.push('\n');
+        rule(text, length, ['┠', '┈', '┼', '┨']);
 
-        // Create third row
-        let slice: &[usize] = &operation_unit[start..end];
-        let start_spaces: usize = length - step - iteration + 1;
-        text.push('┃');
-        for _ in 0..start_spaces {
-            text.push_str("   │");
-        }
-        for n in slice {
-            text.push(' ');
-            text.push_str(&*n.to_string());
-            text.push(' ');
-            text.push('│');
-        }
-        let end_spaces: usize = iteration - 1;
-        if end_spaces == 0 {
-            text.pop();
-        }
-        for n in 0..end_spaces {
-            text.push_str("   ");
-            if n < end_spaces - 1 {
-                text.push('│');
-            }
-        }
-        text.push_str("┃ ");
-        let row: String = iteration.to_string();
-        text.push_str(&*row);
-        text.push_str(" R\n");
+        // Units of this row.
+        let mut row = Row::new(text, width);
+        row.empty(length - step - iteration + 1);
+        row.digits(&operation_unit[start..end]);
+        row.empty(iteration - 1);
+        row.finish(&format!(" {iteration} R"));
 
-        // Create fourth row
         if iteration == max_group_rows {
             break;
         }
-        text.push('┠');
-        for n in 1..length + 1 {
-            text.push_str("───");
-            if n == length {
-                break;
-            }
-            text.push('┼');
-        }
-        text.push('┨');
-        text.push('\n');
-
-        iteration += 1;
+        rule(text, length, ['┠', '─', '┼', '┨']);
     }
 
-    // Create the final row
-    text.push('┣');
-    for n in 1..length + 1 {
-        text.push_str("━━━");
-        if n == length {
-            break;
-        }
-        text.push('┷');
-    }
-    text.push('┫');
-    text.push('\n');
+    rule(text, length, ['┣', '━', '┷', '┫']);
 }
 
 /// Store the sum title of the long multiplication.
@@ -582,25 +411,8 @@ pub fn operations(multiplicand: &str, multiplier: &str, text: &mut String) {
 pub fn sum_title(multiplicand: &str, multiplier: &str, text: &mut String) {
     let length: usize = get_strings_length(multiplicand, multiplier);
 
-    // Create first row
-    text.push_str("┃Sum.");
-    for _ in 1..(length * 3) + length - 4 {
-        text.push(' ');
-    }
-    text.push('┃');
-    text.push('\n');
-
-    // Create second row
-    text.push('┣');
-    for n in 1..length + 1 {
-        text.push_str("━━━");
-        if n == length {
-            break;
-        }
-        text.push('┯');
-    }
-    text.push('┫');
-    text.push('\n');
+    title(text, length, "Sum.");
+    rule(text, length, ['┣', '━', '┯', '┫']);
 }
 
 /// Store the long-sum section of the long multiplication.
@@ -658,107 +470,30 @@ pub fn long_sum(multiplicand: &str, multiplier: &str, text: &mut String) {
     let additions: Vec<usize> = break_down_addition(multiplicand, multiplier);
 
     let length: usize = get_strings_length(multiplicand, multiplier);
+    let width: usize = cell_width(length);
     generate_rows_with_numbers(&additions, length, text);
 
     let mut sub_addition: Vec<usize> = break_down_subtotal(&additions);
     let mut sub_index: usize = 0;
-    loop {
-        let mut decimals: bool = false;
-        for number in &sub_addition {
-            if number > &9 {
-                decimals = true;
-                break;
-            }
-        }
-
-        if !decimals {
-            break;
-        }
-
-        // Create the first row of the sub-addition
-        text.push('┣');
-        for n in 1..length + 1 {
-            text.push_str("━━━");
-            if n == length {
-                break;
-            }
-            text.push('┷');
-        }
-        text.push('┫');
-        text.push('\n');
-
-        // Create the second row of the sub-addition
-        text.push_str("┃Sub ");
+    while needs_subtotal(&sub_addition) {
         sub_index += 1;
-        text.push_str(&*sub_index.to_string());
-        text.push('.');
-        for _ in 1..(length * 3) + length - 6 {
-            text.push(' ');
-        }
-        text.push('┃');
-        text.push('\n');
+        rule(text, length, ['┣', '━', '┷', '┫']);
+        title(text, length, &format!("Sub {sub_index}."));
+        rule(text, length, ['┣', '━', '┯', '┫']);
 
-        // Create the third row of the sub-addition
-        text.push('┣');
-        for n in 1..length + 1 {
-            text.push_str("━━━");
-            if n == length {
-                break;
-            }
-            text.push('┯');
-        }
-        text.push('┫');
-        text.push('\n');
-
-        // Create the sum of columns
         generate_rows_with_numbers(&sub_addition, length, text);
         sub_addition = break_down_subtotal(&sub_addition);
     }
 
-    // Create last row
-    text.push('┣');
-    for n in 1..length + 1 {
-        text.push_str("━━━");
-        if n == length {
-            break;
-        }
-        text.push('┷');
-    }
-    text.push('┫');
-    text.push('\n');
+    rule(text, length, ['┣', '━', '┷', '┫']);
+    title(text, length, "Pro.");
+    rule(text, length, ['┣', '━', '┯', '┫']);
 
-    // Create first row product title
-    text.push_str("┃Pro.");
-    for _ in 1..(length * 3) + length - 4 {
-        text.push(' ');
-    }
-    text.push('┃');
-    text.push('\n');
-
-    // Create second row product title
-    text.push('┣');
-    for n in 1..length + 1 {
-        text.push_str("━━━");
-        if n == length {
-            break;
-        }
-        text.push('┯');
-    }
-    text.push('┫');
-    text.push('\n');
-
-    // Create first row for product
+    // The product, most significant digit first.
     sub_addition.reverse();
-    text.push('┃');
-    for i in sub_addition {
-        text.push(' ');
-        text.push_str(&*i.to_string());
-        text.push_str(" │");
-    }
-    text.pop();
-
-    text.push_str("┃ P");
-    text.push('\n');
+    let mut row = Row::new(text, width);
+    row.digits(&sub_addition);
+    row.finish(" P");
 }
 
 /// Store the author section of the long multiplication.
@@ -785,7 +520,7 @@ pub fn long_sum(multiplicand: &str, multiplier: &str, text: &mut String) {
 /// assert_eq!(expected, text);
 /// ```
 pub fn author(text: &mut String) {
-    text.push_str("\n");
+    text.push('\n');
     text.push_str("---\n");
     text.push_str("Author: Israel Roldan\n");
     text.push_str("E-mail: israel.alberto.rv@gmail.com\n");
@@ -793,56 +528,139 @@ pub fn author(text: &mut String) {
     text.push_str("Project: https://github.com/airvzxf/long-multiplication-calculator\n");
 }
 
-fn generate_rows_with_numbers(numbers: &Vec<usize>, length: usize, text: &mut String) {
-    let mut iteration: usize = 0;
+fn generate_rows_with_numbers(numbers: &[usize], length: usize, text: &mut String) {
+    let width: usize = cell_width(length);
 
-    for row in numbers {
-        // Create first row
-        let row_size: usize = get_number_length(*row);
-        text.push('┃');
-        for _ in 0..(length - iteration - row_size) {
-            text.push_str("   ");
-            text.push('│');
-        }
+    for (column, number) in numbers.iter().enumerate() {
+        // The sum of column `column` is written so that its units
+        // digit lands in that column; its tens spill to the left.
+        let digits: String = number.to_string();
+        let mut row = Row::new(text, width);
+        row.empty(length - column - digits.len());
+        row.chars(digits.chars());
+        row.empty(column);
+        row.finish(&format!(" {} C", column + 1));
 
-        for i in row.to_string().chars() {
-            text.push(' ');
-            text.push(i);
-            text.push_str(" │");
-        }
-        text.pop();
-
-        if iteration > 0 {
-            text.push('│');
-        }
-        for n in 0..iteration {
-            text.push_str("   ");
-            if n == iteration - 1 {
-                break;
-            }
-            text.push('│');
-        }
-        iteration += 1;
-        text.push_str("┃ ");
-        let row: String = iteration.to_string();
-        text.push_str(&*row);
-        text.push_str(" C");
-        text.push('\n');
-
-        // Create second row
-        if iteration == length {
+        if column + 1 == length {
             break;
         }
-        text.push('┠');
-        for n in 1..length + 1 {
-            text.push_str("┈┈┈");
-            if n == length {
-                break;
-            }
-            text.push('┼');
+        rule(text, length, ['┠', '┈', '┼', '┨']);
+    }
+}
+
+/// Width of every cell, in characters.
+///
+/// Three characters fit every column number up to 999. Wider tables
+/// get wider cells so that the `Pos.` row stays aligned; tables of up
+/// to 999 columns are unchanged.
+pub(crate) fn cell_width(length: usize) -> usize {
+    get_number_length(length).max(3)
+}
+
+/// Number of characters between the left and right outer borders.
+pub(crate) fn inner_width(length: usize) -> usize {
+    length * cell_width(length) + length - 1
+}
+
+/// Whether a list of column sums still holds a value of two or more
+/// digits, so that one more `Sub n.` section is needed.
+pub(crate) fn needs_subtotal(numbers: &[usize]) -> bool {
+    numbers.iter().any(|&number| number > 9)
+}
+
+/// Push a horizontal rule: `[left, fill, separator, right]`.
+fn rule(text: &mut String, length: usize, [left, fill, separator, right]: [char; 4]) {
+    let width: usize = cell_width(length);
+    text.push(left);
+    for n in 0..length {
+        if n > 0 {
+            text.push(separator);
         }
-        text.push('┨');
-        text.push('\n');
+        for _ in 0..width {
+            text.push(fill);
+        }
+    }
+    text.push(right);
+    text.push('\n');
+}
+
+/// Push a section title such as `┃Pos.   ┃`.
+fn title(text: &mut String, length: usize, label: &str) {
+    text.push('┃');
+    text.push_str(label);
+    for _ in label.chars().count()..inner_width(length) {
+        text.push(' ');
+    }
+    text.push('┃');
+    text.push('\n');
+}
+
+/// Push the content of one cell, padded to `width` characters.
+///
+/// A short value keeps one space on each side (` 7 `); a value that
+/// is one character narrower than the cell is right-aligned (` 42`);
+/// a value as wide as the cell fills it (`100`).
+fn push_cell(text: &mut String, width: usize, content: &str) {
+    let len: usize = content.chars().count();
+    let right: usize = usize::from(len + 2 <= width);
+    let left: usize = width.saturating_sub(len + right);
+    for _ in 0..left {
+        text.push(' ');
+    }
+    text.push_str(content);
+    for _ in 0..right {
+        text.push(' ');
+    }
+}
+
+/// Builder for one table row: cells joined by `│`, framed by `┃`.
+struct Row<'a> {
+    text: &'a mut String,
+    width: usize,
+    first: bool,
+}
+
+impl<'a> Row<'a> {
+    fn new(text: &'a mut String, width: usize) -> Self {
+        text.push('┃');
+        Self { text, width, first: true }
+    }
+
+    fn separator(&mut self) {
+        if !self.first {
+            self.text.push('│');
+        }
+        self.first = false;
+    }
+
+    fn empty(&mut self, count: usize) {
+        for _ in 0..count {
+            self.separator();
+            for _ in 0..self.width {
+                self.text.push(' ');
+            }
+        }
+    }
+
+    fn chars(&mut self, chars: impl IntoIterator<Item = char>) {
+        let mut buffer = [0u8; 4];
+        for ch in chars {
+            self.separator();
+            push_cell(self.text, self.width, ch.encode_utf8(&mut buffer));
+        }
+    }
+
+    fn digits(&mut self, digits: &[usize]) {
+        self.chars(digits.iter().map(|&digit| {
+            char::from_digit(u32::try_from(digit % 10).unwrap_or(0), 10).unwrap_or('?')
+        }));
+    }
+
+    /// Close the row and append `suffix` (for example ` 1 ^`).
+    fn finish(self, suffix: &str) {
+        self.text.push('┃');
+        self.text.push_str(suffix);
+        self.text.push('\n');
     }
 }
 

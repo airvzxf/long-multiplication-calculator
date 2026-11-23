@@ -1,20 +1,17 @@
 # Cloudflare Pages headers for multiplication.rovisoft.net
 #
-# The WASM and CSS bundles are content-hashed by wasm-pack and carry a
-# `?v=2.0` query string respectively, so they can be cached
-# indefinitely. The HTML entry-point must be revalidated so deploys
-# are picked up quickly.
+# Every file under /asset/ is requested with a `?v=<version>` query
+# string (stamped by scripts/build_wasm.bash), including the `.wasm`
+# binary, which worker.js loads by an explicit versioned URL. A new
+# release therefore always uses new URLs, so these files can be
+# cached for a year. The HTML entry point is revalidated on every
+# visit (Cloudflare's default for HTML) so deploys are picked up.
 
-/asset/js/wasm/*
+/asset/*
   Cache-Control: public, max-age=31536000, immutable
-
-/asset/css/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/asset/js/app.js
-  Cache-Control: public, max-age=300, must-revalidate
 
 /*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: no-referrer

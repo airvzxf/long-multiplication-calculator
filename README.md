@@ -9,7 +9,7 @@ table is readable in any terminal and on any device.
 ## Try it
 
 - **Web (no install):** <https://multiplication.rovisoft.net>
-- **CLI:** `cargo install --path crates/cli` then `long-multiplication 13597 8642`
+- **CLI:** download a binary from the [releases](https://github.com/airvzxf/long-multiplication-calculator/releases/latest), or `cargo install --path crates/cli`
 - **As a library:** see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
 ## Features
@@ -25,7 +25,30 @@ table is readable in any terminal and on any device.
 
 ## Installation
 
-### CLI
+### CLI: pre-built binary (no Rust needed)
+
+Download the archive for your system from the
+[latest release](https://github.com/airvzxf/long-multiplication-calculator/releases/latest):
+
+| System | Archive |
+| --- | --- |
+| Linux x86_64 (any distro) | `long-multiplication-vX.Y.Z-x86_64-unknown-linux-musl.tar.gz` |
+| Linux ARM64 (any distro) | `long-multiplication-vX.Y.Z-aarch64-unknown-linux-musl.tar.gz` |
+| macOS Apple Silicon | `long-multiplication-vX.Y.Z-aarch64-apple-darwin.tar.gz` |
+| macOS Intel | `long-multiplication-vX.Y.Z-x86_64-apple-darwin.tar.gz` |
+| Windows x86_64 | `long-multiplication-vX.Y.Z-x86_64-pc-windows-msvc.zip` |
+
+```bash
+sha256sum -c SHA256SUMS --ignore-missing      # optional: verify the download
+tar -xzf long-multiplication-*-x86_64-unknown-linux-musl.tar.gz
+./long-multiplication-*/long-multiplication 13597 8642
+```
+
+The binaries are not code-signed. On macOS, run
+`xattr -d com.apple.quarantine long-multiplication` once; on Windows,
+choose "More info → Run anyway" if SmartScreen asks.
+
+### CLI: from source
 
 ```bash
 cargo install --path crates/cli
@@ -50,11 +73,35 @@ python3 -m http.server 8000
 long-multiplication 13597 8642
 
 # Save the table to a file
-long-multiplication 5 7 --output store --file resultado.txt
+long-multiplication 5 7 --output store --file result.txt
 
 # Show both stdout and file
 long-multiplication 99 99 --output both
 ```
+
+## Limits
+
+The table grows fast: two 200-digit numbers made of nines produce
+about 550 MiB of text. To keep that from happening by accident:
+
+| | Digits per number | Table size |
+| --- | --- | --- |
+| Web | 1000 | 32 MiB (fixed) |
+| CLI | 1000 | 1024 MiB |
+
+The CLI limits are only defaults. Change them per run or for your
+whole session:
+
+```bash
+long-multiplication --max-digits 5000 --max-output-mib 4096 A B   # raise them
+long-multiplication --unlimited A B > table.txt                   # remove them
+export LONG_MULTIPLICATION_UNLIMITED=true                          # same, for every run
+```
+
+`0` also means "no limit" for `--max-digits` / `--max-output-mib`
+(and for `LONG_MULTIPLICATION_MAX_DIGITS` /
+`LONG_MULTIPLICATION_MAX_OUTPUT_MIB`). Without limits, only your
+memory, disk and time are the limit.
 
 ## Development
 

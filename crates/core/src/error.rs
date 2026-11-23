@@ -17,16 +17,68 @@ pub enum CoreError {
     TooLong {
         /// The configured maximum number of digits.
         max: usize,
-        /// The actual length of the offending input.
+        /// The number of digits in the offending input.
         got: usize,
     },
 
     /// The input string contains a character that is not an ASCII digit.
     #[error("Invalid character '{character}' at position {position}: expected 0-9")]
     InvalidDigit {
-        /// Byte offset of the offending character within the trimmed input.
+        /// Zero-based character index of the offending character within
+        /// the trimmed input.
         position: usize,
         /// The offending character.
         character: char,
     },
+
+    /// The rendered table would be larger than the configured maximum.
+    #[error(
+        "The table would take about {} (limit {})",
+        human_bytes(*estimated),
+        human_bytes(*max)
+    )]
+    OutputTooLarge {
+        /// Upper-bound estimate of the table size, in bytes.
+        estimated: usize,
+        /// The configured maximum, in bytes.
+        max: usize,
+    },
+}
+
+/// Format a byte count with a binary unit, for example `1.5 MiB`.
+///
+/// Integer arithmetic only: floating-point formatting would add about
+/// 15 KB to the WebAssembly bundle.
+fn human_bytes(bytes: usize) -> String {
+    const UNITS: [&str; 5] = ["bytes", "KiB", "MiB", "GiB", "TiB"];
+    let mut unit = 0;
+    let mut scale: u128 = 1;
+    while unit < UNITS.len() - 1 && bytes as u128 >= scale * 1024 {
+        scale *= 1024;
+        unit += 1;
+    }
+    if unit == 0 {
+        return format!("{bytes} bytes");
+    }
+    // Round to one decimal place.
+    let tenths = (bytes as u128 * 10 + scale / 2) / scale;
+    format!("{}.{} {}", tenths / 10, tenths % 10, UNITS[unit])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn human_bytes_picks_a_binary_unit() {
+        assert_eq!(human_bytes(512), "512 bytes");
+        assert_eq!(human_bytes(1536), "1.5 KiB");
+        assert_eq!(human_bytes(32 * 1024 * 1024), "32.0 MiB");
+    }
+
+    #[test]
+    fn output_too_large_message_names_both_sizes() {
+        let error = CoreError::OutputTooLarge { estimated: 3 * 1024 * 1024, max: 1024 * 1024 };
+        assert_eq!(error.to_string(), "The table would take about 3.0 MiB (limit 1.0 MiB)");
+    }
 }

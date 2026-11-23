@@ -1,0 +1,430 @@
+name: release
+
+# Builds the `long-multiplication` CLI for Linux, macOS and Windows and
+# publishes it on a GitHub Release. Nothing is published to crates.io.
+#
+# Release flow (see AGENTS.md "Release checklist"):
+#   1. A PR bumps the version in Cargo.toml and adds the CHANGELOG
+#      entry; it is squash-merged into main.
+#   2. The squash commit on main is tagged with a signed tag:
+#        git tag -s vX.Y.Z "$(git rev-parse origin/main)" -m "release: X.Y.Z"
+#        git push origin vX.Y.Z
+#   3. This workflow validates the tag, builds, publishes, then
+#      downloads the published assets and checks them again.
+#
+# Dry run: a pull request that touches the release inputs runs the
+# build matrix and the SBOM (no tag checks, nothing published), so a
+# broken release is caught before anyone pushes a tag.
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/release.yml'
+      - 'Cargo.lock'
+      - '**/Cargo.toml'
+      - 'crates/core/**'
+      - 'crates/cli/**'
+      - '.cargo/**'
+      - 'rust-toolchain.toml'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v2.2.0). Must exist on the remote.'
+        required: true
+        type: string
+
+# Serialize runs for the same tag FIFO and never cancel one in flight:
+# two runs racing the asset upload of one release would collide.
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+  queue: max
+
+# Every job reads only; `publish` alone escalates to `contents: write`.
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # A manual dispatch could feed any string into `git rev-parse`; fail
+  # fast on a malformed tag name instead of mid-build.
+  validate-tag-input:
+    name: 'Validate · tag input'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      tag: ${{ steps.resolve.outputs.TAG }}
+      version: ${{ steps.resolve.outputs.VERSION }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.event_name == 'pull_request'
+        with:
+          persist-credentials: false
+
+      - name: Validate tag shape
+        id: resolve
+        env:
+          RAW: ${{ github.event.inputs.tag || github.ref_name }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if [[ "${EVENT}" == "pull_request" ]]; then
+            # Dry run: pretend the tag is the version in Cargo.toml.
+            RAW="v$(sed -nE 's/^version = "(.*)"/\1/p' Cargo.toml | head -1)"
+            echo "Dry run for ${RAW}"
+          fi
+          TAG="${RAW}"
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?$ ]] \
+            || { echo "ERROR: '$TAG' is not vX.Y.Z[-prerelease]"; exit 1; }
+          echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "VERSION=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+  # Enforces "tag the squash commit on main, not the branch tip": a tag
+  # whose commit is not on main would publish binaries that match no
+  # commit of the project history.
+  verify-tag-reachability:
+    name: 'Verify · tag is reachable from main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: validate-tag-input
+    if: github.event_name != 'pull_request'
+    outputs:
+      tag_commit: ${{ steps.resolve.outputs.TAG_COMMIT }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.validate-tag-input.outputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve tag commit and check it is on main
+        id: resolve
+        env:
+          TAG: ${{ needs.validate-tag-input.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          TAG_COMMIT="$(git rev-parse "${TAG}^{commit}")"
+          MAIN_COMMIT="$(git rev-parse origin/main)"
+          echo "TAG_COMMIT=${TAG_COMMIT}" >> "$GITHUB_OUTPUT"
+          if git merge-base --is-ancestor "${TAG_COMMIT}" origin/main; then
+            echo "✓ ${TAG} (${TAG_COMMIT}) is reachable from origin/main (${MAIN_COMMIT})"
+            exit 0
+          fi
+          {
+            echo "ERROR: tag ${TAG} points at ${TAG_COMMIT}, which is NOT an"
+            echo "ancestor of origin/main (${MAIN_COMMIT})."
+            echo "Fix (delete the orphan tag, re-tag the squash commit on main):"
+            echo "  git tag -d ${TAG}"
+            echo "  git push origin :refs/tags/${TAG}"
+            echo "  git fetch origin && git tag -s ${TAG} \"\$(git rev-parse origin/main)\" -m 'release: ${TAG#v}'"
+            echo "  git push origin ${TAG}"
+          } >&2
+          exit 1
+
+  # Only tags signed by a key in .github/trusted-signers are released.
+  # The allow-list is read from origin/main, not from the tagged tree,
+  # so removing a key there revokes it for every later tag.
+  verify-tag-signature:
+    name: 'Verify · tag is signed by a trusted signer'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: validate-tag-input
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.validate-tag-input.outputs.tag }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify tag signature against origin/main's allow-list
+        env:
+          TAG: ${{ needs.validate-tag-input.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin main
+          git fetch --depth=1 origin "refs/tags/${TAG}:refs/tags/${TAG}" --force
+          ALLOWED="$RUNNER_TEMP/allowed_signers"
+          git show "origin/main:.github/trusted-signers" > "$ALLOWED"
+          grep -qE '^[^#[:space:]]' "$ALLOWED" || { echo "ERROR: empty .github/trusted-signers on origin/main"; exit 1; }
+          git config gpg.format ssh
+          git config gpg.ssh.allowedsignersfile "$ALLOWED"
+          if git verify-tag "${TAG}"; then
+            echo "✓ ${TAG} is signed by a key in .github/trusted-signers"
+            exit 0
+          fi
+          {
+            echo "ERROR: tag ${TAG} is not signed by a key in .github/trusted-signers."
+            git cat-file tag "${TAG}" | grep -E '^(tagger|-----BEGIN)' || true
+            echo "Fix: git tag -d ${TAG}; git push origin :refs/tags/${TAG};"
+            echo "     git tag -s ${TAG} <commit> -m 'release: ${TAG#v}'; git push origin ${TAG}"
+          } >&2
+          exit 1
+
+  build:
+    name: 'Build · ${{ matrix.target }}'
+    needs: [validate-tag-input, verify-tag-reachability, verify-tag-signature]
+    # Runs after both tag checks pass, or right away in a PR dry run.
+    if: >-
+      !cancelled() && needs.validate-tag-input.result == 'success' &&
+      (github.event_name == 'pull_request' ||
+       (needs.verify-tag-reachability.result == 'success' &&
+        needs.verify-tag-signature.result == 'success'))
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # musl: fully static binaries that run on any Linux distro.
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            archive: tar.gz
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-24.04-arm
+            archive: tar.gz
+          - target: x86_64-apple-darwin
+            os: macos-15-intel
+            archive: tar.gz
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            archive: tar.gz
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            archive: zip
+    defaults:
+      run:
+        shell: bash
+    env:
+      TAG: ${{ needs.validate-tag-input.outputs.tag }}
+      VERSION: ${{ needs.validate-tag-input.outputs.version }}
+      TARGET: ${{ matrix.target }}
+    steps:
+      # Pin to the commit the verify jobs approved, so a tag moved
+      # mid-run cannot change what gets built.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.verify-tag-reachability.outputs.tag_commit || github.sha }}
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install musl tools
+        if: contains(matrix.target, 'musl')
+        run: |
+          sudo apt-get -o Acquire::Retries=3 update
+          sudo apt-get -o Acquire::Retries=3 install -y musl-tools
+
+      - name: Check the tag matches the crate version
+        run: |
+          set -euo pipefail
+          CRATE_VERSION="$(cargo pkgid -p long-multiplication | sed 's/.*[#@]//')"
+          [[ "${CRATE_VERSION}" == "${VERSION}" ]] \
+            || { echo "ERROR: tag ${TAG} but Cargo.toml says ${CRATE_VERSION}"; exit 1; }
+          echo "✓ Cargo.toml version ${CRATE_VERSION} matches ${TAG}"
+
+      # rust-toolchain.toml pins `stable`; make sure that toolchain has
+      # the target too (dtolnay installs it for its own toolchain).
+      - name: Add the target to the pinned toolchain
+        run: rustup target add "${TARGET}"
+
+      - name: Build
+        run: cargo build --release --locked -p long-multiplication --target "${TARGET}"
+
+      - name: Smoke test (version and golden fixture)
+        run: |
+          set -euo pipefail
+          EXE=""; [[ "${TARGET}" == *windows* ]] && EXE=".exe"
+          BIN="target/${TARGET}/release/long-multiplication${EXE}"
+          # Git Bash on Windows has no /dev/stderr, so no `tee` here.
+          OUT="$("$BIN" --version)"
+          echo "${OUT}"
+          [[ "${OUT}" == "long-multiplication ${VERSION}" ]] \
+            || { echo "ERROR: expected 'long-multiplication ${VERSION}'"; exit 1; }
+          "$BIN" 13597 8642 > out.txt
+          # The checkout may convert the fixture to CRLF on Windows;
+          # the binary always writes LF.
+          tr -d '\r' < tests/fixtures/13597_x_8642.txt | cmp - out.txt
+          echo "✓ ${TARGET} output matches the golden fixture"
+
+      - name: Package
+        id: package
+        run: |
+          set -euo pipefail
+          EXE=""; [[ "${TARGET}" == *windows* ]] && EXE=".exe"
+          NAME="long-multiplication-${TAG}-${TARGET}"
+          mkdir -p "dist/${NAME}"
+          cp "target/${TARGET}/release/long-multiplication${EXE}" "dist/${NAME}/"
+          cp README.md LICENSE CHANGELOG.md "dist/${NAME}/"
+          cd dist
+          if [[ "${{ matrix.archive }}" == "zip" ]]; then
+            ARCHIVE="${NAME}.zip"
+            7z a -tzip "${ARCHIVE}" "${NAME}" > /dev/null
+          else
+            ARCHIVE="${NAME}.tar.gz"
+            tar -czf "${ARCHIVE}" "${NAME}"
+          fi
+          if command -v sha256sum > /dev/null; then
+            sha256sum "${ARCHIVE}" > "${ARCHIVE}.sha256"
+          else
+            shasum -a 256 "${ARCHIVE}" > "${ARCHIVE}.sha256"
+          fi
+          cat "${ARCHIVE}.sha256"
+          echo "archive=dist/${ARCHIVE}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-${{ matrix.target }}
+          path: |
+            ${{ steps.package.outputs.archive }}
+            ${{ steps.package.outputs.archive }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+
+  sbom:
+    name: 'Build · SBOM (CycloneDX)'
+    needs: [validate-tag-input, verify-tag-reachability, verify-tag-signature]
+    # Runs after both tag checks pass, or right away in a PR dry run.
+    if: >-
+      !cancelled() && needs.validate-tag-input.result == 'success' &&
+      (github.event_name == 'pull_request' ||
+       (needs.verify-tag-reachability.result == 'success' &&
+        needs.verify-tag-signature.result == 'success'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.verify-tag-reachability.outputs.tag_commit || github.sha }}
+          persist-credentials: false
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          format: cyclonedx-json
+          artifact-name: long-multiplication.sbom.cdx.json
+          upload-release-assets: false
+
+  publish:
+    name: 'Publish · GitHub Release'
+    needs: [validate-tag-input, build, sbom]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.validate-tag-input.outputs.tag }}
+      VERSION: ${{ needs.validate-tag-input.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.validate-tag-input.outputs.tag }}
+          persist-credentials: false
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: release-*
+          path: release/
+          merge-multiple: true
+
+      - name: Download SBOM
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: long-multiplication.sbom.cdx.json
+          path: release/
+
+      - name: Aggregate checksums
+        run: |
+          set -euo pipefail
+          cd release
+          test -f long-multiplication.sbom.cdx.json || { echo "ERROR: SBOM missing"; exit 1; }
+          rm -f ./*.sha256
+          sha256sum -- *.tar.gz *.zip long-multiplication.sbom.cdx.json > SHA256SUMS
+          sha256sum -c SHA256SUMS
+          ls -la
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          set -euo pipefail
+          # The section between "## [X.Y.Z]" and the next "## [".
+          awk -v v="${VERSION}" '
+            $0 ~ "^## \\[" v "\\]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          test -s notes.md || { echo "ERROR: no '## [${VERSION}]' section in CHANGELOG.md"; exit 1; }
+          {
+            echo
+            echo "## Download"
+            echo
+            echo "| System | File |"
+            echo "| --- | --- |"
+            echo "| Linux x86_64 (any distro, static) | \`long-multiplication-${TAG}-x86_64-unknown-linux-musl.tar.gz\` |"
+            echo "| Linux ARM64 (any distro, static) | \`long-multiplication-${TAG}-aarch64-unknown-linux-musl.tar.gz\` |"
+            echo "| macOS Apple Silicon | \`long-multiplication-${TAG}-aarch64-apple-darwin.tar.gz\` |"
+            echo "| macOS Intel | \`long-multiplication-${TAG}-x86_64-apple-darwin.tar.gz\` |"
+            echo "| Windows x86_64 | \`long-multiplication-${TAG}-x86_64-pc-windows-msvc.zip\` |"
+            echo
+            echo "Verify with \`sha256sum -c SHA256SUMS --ignore-missing\`. The binaries are not"
+            echo "code-signed: on macOS run \`xattr -d com.apple.quarantine long-multiplication\`"
+            echo "once; on Windows choose \"More info → Run anyway\" in SmartScreen."
+          } >> notes.md
+          cat notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          tag_name: ${{ needs.validate-tag-input.outputs.tag }}
+          name: ${{ needs.validate-tag-input.outputs.tag }}
+          body_path: notes.md
+          prerelease: ${{ contains(needs.validate-tag-input.outputs.version, '-') }}
+          fail_on_unmatched_files: true
+          files: |
+            release/*.tar.gz
+            release/*.zip
+            release/long-multiplication.sbom.cdx.json
+            release/SHA256SUMS
+
+  # Download what was actually published, as a user would, and check
+  # it: every checksum matches and the Linux binary still works.
+  verify-published:
+    name: 'Verify · published assets'
+    needs: [validate-tag-input, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TAG: ${{ needs.validate-tag-input.outputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.validate-tag-input.outputs.tag }}
+          persist-credentials: false
+
+      - name: Download the release and check it
+        run: |
+          set -euo pipefail
+          mkdir published && cd published
+          gh release download "${TAG}" --repo "${GITHUB_REPOSITORY}"
+          ls -la
+          shopt -s nullglob
+          ARCHIVES=(*.tar.gz *.zip)
+          test "${#ARCHIVES[@]}" -eq 5 \
+            || { echo "ERROR: expected 5 archives, got ${#ARCHIVES[@]}"; exit 1; }
+          sha256sum -c SHA256SUMS
+          NAME="long-multiplication-${TAG}-x86_64-unknown-linux-musl"
+          tar -xzf "${NAME}.tar.gz"
+          "${NAME}/long-multiplication" 13597 8642 | cmp - ../tests/fixtures/13597_x_8642.txt
+          echo "✓ published Linux binary matches the golden fixture"
