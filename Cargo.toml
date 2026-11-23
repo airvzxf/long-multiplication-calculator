@@ -18,7 +18,7 @@ description = "Long multiplication step-by-step calculator, as taught in primary
 
 [workspace.dependencies]
 thiserror = { version = "2.0", default-features = false }
-clap = { version = "4.5", features = ["derive"] }
+clap = { version = "4.5", features = ["derive", "env"] }
 anyhow = "1.0"
 wasm-bindgen = "0.2"
 console_error_panic_hook = "0.1"
