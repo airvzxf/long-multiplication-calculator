@@ -14,7 +14,9 @@ table is readable in any terminal and on any device.
 
 ## Features
 
-- **100% static web** — computation runs in the browser via WebAssembly.
+- **100% static web** — computation runs in the browser via WebAssembly,
+  in English or Spanish, and every table has a link you can share
+  (`?multiplicand=13597&multiplier=8642`).
   No backend, no server, no third-party scripts.
 - **Identical CLI output** — `long-multiplication A B` produces the
   exact same Unicode table as the v1.0.0 binary, byte for byte.

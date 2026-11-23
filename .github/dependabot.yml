@@ -15,3 +15,18 @@ updates:
     commit-message:
       prefix: "ci"
     labels: ["dependencies", "ci"]
+
+  # Rust crates of the whole workspace (one Cargo.lock at the root).
+  # A single weekly PR keeps Cargo.lock current; `cargo audit` and the
+  # full CI gate run on it like on any other PR.
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      cargo:
+        patterns: ["*"]
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    labels: ["dependencies", "rust"]

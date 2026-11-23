@@ -11,6 +11,20 @@
 
     <title>Long Multiplication Calculator</title>
 
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Long Multiplication Calculator">
+    <meta property="og:title" content="Long Multiplication Calculator">
+    <meta property="og:description" content="See every step of a long multiplication: the carry numbers, the column sums and each subtotal.">
+    <meta property="og:url" content="https://multiplication.rovisoft.net/">
+    <meta property="og:image" content="https://multiplication.rovisoft.net/android-chrome-512x512.png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:image:alt" content="Long Multiplication Calculator icon">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Long Multiplication Calculator">
+    <meta name="twitter:description" content="See every step of a long multiplication: the carry numbers, the column sums and each subtotal.">
+    <meta name="twitter:image" content="https://multiplication.rovisoft.net/android-chrome-512x512.png">
+
     <link href="/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180">
     <link href="/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png">
     <link href="/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png">
@@ -20,17 +34,17 @@
 <body>
 <main class="container">
     <header>
-        <h1>Long Multiplication Calculator</h1>
+        <h1 data-i18n="page.heading">Long Multiplication Calculator</h1>
     </header>
 
     <section aria-labelledby="intro">
-        <h2 id="intro" class="visually-hidden">Introduction</h2>
-        <p>
+        <h2 id="intro" class="visually-hidden" data-i18n="intro.heading">Introduction</h2>
+        <p data-i18n="intro.text">
             The long multiplication is the same as you did in the school when you were a kid.
             The intention is to show all the process of the multiplication including the carry
             numbers and the sums.
         </p>
-        <p>
+        <p data-i18n="intro.limits">
             Note: the web calculator accepts up to 1000 digits per number and tables of up to 32 MiB.
             The desktop command-line version has no fixed limit: only your memory, disk and time.
         </p>
@@ -39,10 +53,10 @@
     <hr class="divider">
 
     <form id="calculator" aria-labelledby="form-label">
-        <h2 id="form-label" class="visually-hidden">Calculator form</h2>
+        <h2 id="form-label" class="visually-hidden" data-i18n="form.heading">Calculator form</h2>
 
         <div class="field">
-            <label for="multiplicand">Multiplicand</label>
+            <label for="multiplicand" data-i18n="form.multiplicand">Multiplicand</label>
             <input id="multiplicand"
                    name="multiplicand"
                    type="text"
@@ -52,11 +66,11 @@
                    placeholder="3416"
                    required
                    aria-describedby="multiplicand-hint">
-            <small id="multiplicand-hint" class="hint">Digits only, 0-9.</small>
+            <small id="multiplicand-hint" class="hint" data-i18n="form.hint">Digits only, 0-9.</small>
         </div>
 
         <div class="field">
-            <label for="multiplier">Multiplier</label>
+            <label for="multiplier" data-i18n="form.multiplier">Multiplier</label>
             <input id="multiplier"
                    name="multiplier"
                    type="text"
@@ -66,13 +80,13 @@
                    placeholder="51"
                    required
                    aria-describedby="multiplier-hint">
-            <small id="multiplier-hint" class="hint">Digits only, 0-9.</small>
+            <small id="multiplier-hint" class="hint" data-i18n="form.hint">Digits only, 0-9.</small>
         </div>
 
         <div class="actions">
-            <button id="calculate" type="submit" disabled>Calculate</button>
-            <button id="clear" type="reset">Clear</button>
-            <button id="copy" type="button" disabled>Copy result</button>
+            <button id="calculate" type="submit" disabled data-i18n="form.calculate">Calculate</button>
+            <button id="clear" type="reset" data-i18n="form.clear">Clear</button>
+            <button id="copy" type="button" disabled data-i18n="form.copy">Copy result</button>
         </div>
     </form>
 
@@ -83,17 +97,17 @@
     <hr class="divider">
 
     <section aria-labelledby="solution-label">
-        <h2 id="solution-label">Solution</h2>
-        <pre id="solution" aria-live="polite" tabindex="0"><span class="empty-state">The table will appear here.</span></pre>
+        <h2 id="solution-label" data-i18n="solution.heading">Solution</h2>
+        <pre id="solution" tabindex="0"><span class="empty-state" data-i18n="solution.empty">The table will appear here.</span></pre>
     </section>
 
     <footer>
         <p>
-            Author: <a href="https://github.com/airvzxf" target="_blank" rel="noopener noreferrer">Israel Alberto Roldan Vega</a>.<br>
-            This project is under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="license">AGPL-3.0 License</a>.<br>
-            Source: <a href="https://github.com/airvzxf/long-multiplication-calculator" target="_blank" rel="noopener noreferrer">github.com/airvzxf/long-multiplication-calculator</a>.<br>
-            Site version: __WASM_VERSION__.<br>
-            App version: <span id="app-version"></span>
+            <span data-i18n="footer.author">Author:</span> <a href="https://github.com/airvzxf" target="_blank" rel="noopener noreferrer">Israel Alberto Roldan Vega</a>.<br>
+            <span data-i18n="footer.license">License:</span> <a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="license">AGPL-3.0</a>.<br>
+            <span data-i18n="footer.source">Source:</span> <a href="https://github.com/airvzxf/long-multiplication-calculator" target="_blank" rel="noopener noreferrer">github.com/airvzxf/long-multiplication-calculator</a>.<br>
+            <span data-i18n="footer.siteVersion">Site version:</span> __WASM_VERSION__.<br>
+            <span data-i18n="footer.appVersion">App version:</span> <span id="app-version"></span>
         </p>
     </footer>
 </main>

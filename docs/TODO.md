@@ -221,7 +221,7 @@ criterion_main!(benches);
 
 ## Tier 2 — Valor real, prioridad media
 
-### H5. Cron workflow mensual con `cargo upgrade --compatible`
+### H5. ~~Cron workflow mensual con `cargo upgrade --compatible`~~ — sustituido en 2.2.1 por Dependabot (`cargo`, agrupado, semanal, en `.github/dependabot.yml`)
 
 **Donde se mencionó:** 6soS, Q0ER, p6gp (3 docs).
 
@@ -357,7 +357,7 @@ jobs:
 
 ---
 
-### H7. Compartir cálculos vía URL con query params
+### H7. ~~Compartir cálculos vía URL con query params~~ — hecho en 2.2.1 (`?multiplicand=…&multiplier=…`)
 
 **Donde se mencionó:** 6soS, 8kjc, K3LK, Q0ER (4 docs).
 
@@ -414,7 +414,7 @@ function run() {
 
 ---
 
-### H8. Mapeo de errores al frontend en español
+### H8. ~~Mapeo de errores al frontend en español~~ — hecho en 2.2.1: la web entera es bilingüe es/en según el idioma del navegador (`web/asset/js/i18n.js`)
 
 **Donde se mencionó:** K3LK, p6gp, R7mK (3 docs).
 
@@ -539,7 +539,7 @@ pub fn get_table(multiplicand: &str, multiplier: &str) -> String {
 
 ---
 
-### H11. Texto "Inicializando calculadora..." mientras WASM carga
+### H11. ~~Texto "Inicializando calculadora..." mientras WASM carga~~ — hecho en 2.2.1 ("Loading calculator…" en `#status` hasta que el worker envía `ready`)
 
 **Donde se mencionó:** 6soS, CuzL, p6gp, R7mK.
 
@@ -571,7 +571,7 @@ document.getElementById('loader').hidden = false;
 
 ---
 
-### H12. `aria-invalid` dinámico en inputs
+### H12. ~~`aria-invalid` dinámico en inputs~~ — hecho en 2.2.1
 
 **Donde se mencionó:** CuzL, p6gp (2 docs).
 
@@ -610,7 +610,7 @@ function run() {
 
 ---
 
-### H13. Sugerencia `mkdir -p` en errores de escritura del CLI
+### H13. ~~Sugerencia `mkdir -p` en errores de escritura del CLI~~ — hecho en 2.2.1
 
 **Donde se mencionó:** 8kjc, p6gp, R7mK (3 docs).
 
@@ -645,7 +645,7 @@ fn write_table(path: &std::path::Path, table: &str) -> Result<()> {
 
 ---
 
-### H14. OG / Twitter meta tags
+### H14. ~~OG / Twitter meta tags~~ — hecho en 2.2.1 (`twitter:card=summary`, el icono es cuadrado)
 
 **Donde se mencionó:** 6soS, Q0ER (2 docs).
 
@@ -709,6 +709,12 @@ funciones puras simples:
 
 ---
 
+### Idea opcional: paquete AUR `long-multiplication-bin`
+
+Un `PKGBUILD` que descargue el binario de Linux de la GitHub Release y compruebe `SHA256SUMS`, como en telora. Aplazado por decisión del autor (2026-11-23).
+
+---
+
 ## Resumen de prioridad
 
 | # | Hallazgo | Esfuerzo | Valor | Docs |
@@ -720,16 +726,16 @@ funciones puras simples:
 | H2 | `criterion` benchmark | ~30m | **Alto** | 6 |
 | ~~H3~~ | ~~MSRV test en CI~~ (hecho) | ~15m | **Alto** | 4 |
 | H4 | CI multi-OS matrix | ~15m | **Alto** | 4 |
-| H5 | Cron upgrade-compatible | ~30m | Medio | 3 |
+| ~~H5~~ | ~~Cron upgrade-compatible~~ (sustituido por Dependabot) | ~30m | Medio | 3 |
 | ~~H6~~ | ~~`release.yml` con binarios~~ (hecho) | ~1h | Medio | 5 |
-| H7 | Compartir por URL | ~30m | **Medio-Alto** | 4 |
-| H8 | Errores en español | ~15m | Bajo-Medio | 3 |
+| ~~H7~~ | ~~Compartir por URL~~ (hecho) | ~30m | **Medio-Alto** | 4 |
+| ~~H8~~ | ~~Errores en español~~ (hecho: web bilingüe) | ~15m | Bajo-Medio | 3 |
 | H9 | Subdividir `generate.rs` | ~3h | Bajo (cosmético) | 4 |
 | H10 | Reemplazar `&mut String` | ~1h | Bajo (cosmético) | 1 |
-| H11 | Texto "Loading..." | ~5m | Bajo (cosmético) | 4 |
-| H12 | `aria-invalid` dinámico | ~10m | Bajo (cosmético) | 2 |
-| H13 | Sugerencia `mkdir -p` | ~5m | Bajo (cosmético) | 3 |
-| H14 | OG / Twitter meta tags | ~5m | Bajo (cosmético) | 2 |
+| ~~H11~~ | ~~Texto "Loading..."~~ (hecho) | ~5m | Bajo (cosmético) | 4 |
+| ~~H12~~ | ~~`aria-invalid` dinámico~~ (hecho) | ~10m | Bajo (cosmético) | 2 |
+| ~~H13~~ | ~~Sugerencia `mkdir -p`~~ (hecho) | ~5m | Bajo (cosmético) | 3 |
+| ~~H14~~ | ~~OG / Twitter meta tags~~ (hecho) | ~5m | Bajo (cosmético) | 2 |
 | H15 | Decisiones YAGNI en CHANGELOG | ~10m | Bajo (doc) | 5 |
 
 **Estimación total Tier 1 (H1-H4):** ~90 minutos. Aporta 4 mejoras estructurales reales.

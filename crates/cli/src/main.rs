@@ -137,5 +137,24 @@ fn print_table(table: &str) -> Result<()> {
 /// Persist the rendered table to disk, attributing the path for context
 /// on failure. File I/O lives here, not in `core`, which stays I/O-free.
 fn write_table(path: &Path, table: &str) -> Result<()> {
-    std::fs::write(path, table).with_context(|| format!("Cannot write to '{}'", path.display()))
+    std::fs::write(path, table).map_err(|error| {
+        let context = format!("Cannot write to '{}'", path.display());
+        match missing_parent(path, &error) {
+            Some(parent) => anyhow!(error).context(format!(
+                "{context}: the directory '{}' does not exist (create it with `mkdir -p {}`)",
+                parent.display(),
+                parent.display()
+            )),
+            None => anyhow!(error).context(context),
+        }
+    })
+}
+
+/// The parent directory of `path`, when a write failed because that
+/// directory does not exist.
+fn missing_parent<'a>(path: &'a Path, error: &io::Error) -> Option<&'a Path> {
+    if error.kind() != io::ErrorKind::NotFound {
+        return None;
+    }
+    path.parent().filter(|parent| !parent.as_os_str().is_empty() && !parent.exists())
 }
