@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/) and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Property tests with `proptest` (dev-dependency of `core`): the
+  invariant test now draws random operands, including nine-heavy
+  ones with several `Sub n.` sections, and shrinks any failure.
+- `criterion` benchmarks for `get_table` and `estimate_table_bytes`
+  (`cargo bench -p long-multiplication-core`, not run in CI).
+- CI runs `cargo test --workspace` on macOS and Windows too.
+
 ## [2.2.1] - 2026-11-23
 
 ### Added

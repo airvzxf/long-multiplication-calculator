@@ -129,21 +129,19 @@ pub fn check_output_size(multiplicand: &str, multiplier: &str, max_bytes: usize)
 mod tests {
     use super::*;
 
-    /// Small deterministic generator, so the tests need no extra crate.
-    fn pseudo_random_numbers(count: usize) -> Vec<String> {
-        let mut state: u64 = 0x2545_F491_4F6C_DD1D;
-        let mut next = move || {
-            state ^= state << 13;
-            state ^= state >> 7;
-            state ^= state << 17;
-            state
-        };
-        (0..count)
-            .map(|_| {
-                let len = (next() % 40 + 1) as usize;
-                (0..len).map(|_| char::from(b'0' + (next() % 10) as u8)).collect()
-            })
-            .collect()
+    use proptest::prelude::*;
+
+    /// Operands of 1 to `max_len` digits, leading zeros included.
+    fn operand(max_len: usize) -> impl Strategy<Value = String> {
+        proptest::collection::vec(0u8..10, 1..=max_len)
+            .prop_map(|digits| digits.into_iter().map(|d| char::from(b'0' + d)).collect())
+    }
+
+    /// Operands made mostly of nines: their column sums need several
+    /// `Sub n.` sections, the part of the table most likely to break.
+    fn nine_heavy_operand(max_len: usize) -> impl Strategy<Value = String> {
+        proptest::collection::vec(prop_oneof![4 => Just(9u8), 1 => 0u8..9], 1..=max_len)
+            .prop_map(|digits| digits.into_iter().map(|d| char::from(b'0' + d)).collect())
     }
 
     fn display_width(line: &str) -> usize {
@@ -197,11 +195,25 @@ mod tests {
         out.iter().rev().map(|d| char::from_digit(*d, 10).unwrap()).collect()
     }
 
-    #[test]
-    fn tables_are_aligned_and_correct_for_many_inputs() {
-        let numbers = pseudo_random_numbers(120);
-        for pair in numbers.chunks(2) {
-            assert_table_invariants(&pair[0], &pair[1]);
+    proptest! {
+        /// Every row has the same width, the `P` row holds the right
+        /// product, and `estimate_table_bytes` is an upper bound of the
+        /// real size (and not more than twice it).
+        #[test]
+        fn tables_are_aligned_and_correct(a in operand(60), b in operand(60)) {
+            assert_table_invariants(&a, &b);
+        }
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(64))]
+
+        #[test]
+        fn tables_with_subtotals_are_aligned_and_correct(
+            a in nine_heavy_operand(25),
+            b in nine_heavy_operand(25),
+        ) {
+            assert_table_invariants(&a, &b);
         }
     }
 

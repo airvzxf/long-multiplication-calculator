@@ -34,9 +34,7 @@ Notas de diseño:
 
 ## Tier 1 — Valor alto, recomendado para el próximo ciclo
 
-> H1 está cubierto en parte: `crates/core/src/multiplication.rs` ya comprueba, sobre 120 entradas generadas, que todas las filas tienen el mismo ancho, que el producto es correcto y que `estimate_table_bytes` es una cota superior. `proptest` añadiría reducción de casos fallidos (*shrinking*) y más variedad.
-
-### H1. `proptest` para invariante del algoritmo
+### H1. ~~`proptest` para invariante del algoritmo~~ — hecho (`tables_are_aligned_and_correct` y `tables_with_subtotals_are_aligned_and_correct` en `multiplication.rs`)
 
 **Donde se mencionó:** 6soS, 8kjc, K3LK, Q0ER, p6gp, R7mK (6 docs).
 
@@ -105,7 +103,7 @@ proptest! {
 
 ---
 
-### H2. `criterion` benchmark
+### H2. ~~`criterion` benchmark~~ — hecho (`crates/core/benches/get_table.rs`, `criterion` 0.7 por el MSRV; fuera de la CI)
 
 **Donde se mencionó:** 6soS, 8kjc, K3LK, Q0ER, p6gp, R7mK (6 docs).
 
@@ -189,7 +187,7 @@ criterion_main!(benches);
 
 ---
 
-### H4. CI matrix multi-OS
+### H4. ~~CI matrix multi-OS~~ — hecho (`T2 · test (macOS)` y `T2 · test (Windows)` en `ci.yml`; `.gitattributes` protege los fixtures)
 
 **Donde se mencionó:** 6soS, K3LK, p6gp, R7mK (4 docs).
 
@@ -722,10 +720,10 @@ Un `PKGBUILD` que descargue el binario de Linux de la GitHub Release y compruebe
 | ~~H0a~~ | ~~Acarreos en una pasada~~ (descartado) | — | — | — |
 | H0b | Salida en streaming (CLI) | ~3h | Medio-Alto | — |
 | H0c | Salida estructurada (`--format json`) | ~1d | **Alto** | — |
-| H1 | `proptest` para invariante | ~30m | **Alto** | 6 |
-| H2 | `criterion` benchmark | ~30m | **Alto** | 6 |
+| ~~H1~~ | ~~`proptest` para invariante~~ (hecho) | ~30m | **Alto** | 6 |
+| ~~H2~~ | ~~`criterion` benchmark~~ (hecho) | ~30m | **Alto** | 6 |
 | ~~H3~~ | ~~MSRV test en CI~~ (hecho) | ~15m | **Alto** | 4 |
-| H4 | CI multi-OS matrix | ~15m | **Alto** | 4 |
+| ~~H4~~ | ~~CI multi-OS matrix~~ (hecho) | ~15m | **Alto** | 4 |
 | ~~H5~~ | ~~Cron upgrade-compatible~~ (sustituido por Dependabot) | ~30m | Medio | 3 |
 | ~~H6~~ | ~~`release.yml` con binarios~~ (hecho) | ~1h | Medio | 5 |
 | ~~H7~~ | ~~Compartir por URL~~ (hecho) | ~30m | **Medio-Alto** | 4 |

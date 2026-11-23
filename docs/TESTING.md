@@ -6,7 +6,9 @@
 | --- | --- | --- |
 | Unit (algorithm) | `cargo test` | `#[cfg(test)] mod tests` inside each `crates/core/src/*.rs` module |
 | Doctests | `cargo test --doc` | `///` examples in every public function |
-| Invariants | `cargo test` | `crates/core/src/multiplication.rs`: every row has the same width, the product is right, the size estimate is an upper bound (120 generated inputs plus edge cases) |
+| Invariants (property tests) | `cargo test` + `proptest` | `crates/core/src/multiplication.rs`: every row has the same width, the product is right, the size estimate is an upper bound (256 random pairs of up to 60 digits, 64 nine-heavy pairs that need several `Sub n.` sections, plus fixed edge cases); a failure is shrunk to the smallest operands |
+| Benchmarks | `cargo bench -p long-multiplication-core` (`criterion`) | `crates/core/benches/get_table.rs`; local only, not in CI |
+| Other platforms | CI `T2 · test (macOS)`, `T2 · test (Windows)` | the whole `cargo test --workspace`, golden fixtures included |
 | CLI integration | `assert_cmd` + `predicates` + `tempfile` | `crates/cli/tests/cli.rs` (golden fixtures, limits, closed pipe) |
 | WASM smoke | `wasm-pack test --headless --chrome` | `crates/wasm/src/lib.rs` (the `#[cfg(target_arch = "wasm32")]` tests) |
 | Security audit | `cargo audit` | CI step |
@@ -31,7 +33,15 @@ cargo build --workspace --release
 # Security audit.
 cargo install cargo-audit --locked
 cargo audit
+
+# Benchmarks (optional, not in CI). Compare two runs on one machine:
+cargo bench -p long-multiplication-core --bench get_table -- --save-baseline before
+cargo bench -p long-multiplication-core --bench get_table -- --baseline before
 ```
+
+If `proptest` finds a failing case it writes it to
+`crates/core/proptest-regressions/`; commit that file with the fix so
+the case is replayed on every run.
 
 The full protocol is in [`AGENTS.md`](../AGENTS.md) ("The Gauntlet").
 
