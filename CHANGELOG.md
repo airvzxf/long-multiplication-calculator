@@ -4,16 +4,43 @@ All notable changes to this project are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/) and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [2.3.0] - 2026-11-23
+
+The text table is byte for byte the same as before.
 
 ### Added
 
+- **JSON output.** `--format json` (or `LONG_MULTIPLICATION_FORMAT`)
+  writes every step of the process: the units and carries of each
+  row, the sum of each column, every `Sub n.` section and the
+  product (`format_version` 1, documented in the README and pinned
+  by `tests/fixtures/*.json`). It works with `--output store|both`
+  (default file `long-multiplication-output.json`) and with the size
+  limits, which estimate the JSON size too.
+- `core`: `LongMultiplication`, the process as data (`rows`, `sum`,
+  `subtotals`, `product`), with `write_table` onto any
+  `core::fmt::Write`. Only the column sums and the product are
+  stored; rows and `Sub n.` sections are computed while iterating.
 - Property tests with `proptest` (dev-dependency of `core`): the
   invariant test now draws random operands, including nine-heavy
   ones with several `Sub n.` sections, and shrinks any failure.
 - `criterion` benchmarks for `get_table` and `estimate_table_bytes`
   (`cargo bench -p long-multiplication-core`, not run in CI).
 - CI runs `cargo test --workspace` on macOS and Windows too.
+
+### Changed
+
+- **The CLI streams its output.** The table is written to stdout or
+  the file while it is generated, so memory no longer grows with the
+  table: 200 nines times 200 nines (552 MiB of text) now peak at
+  about 6 MiB instead of 553 MiB. With `--output both`, stdout and
+  the file are written in one pass and "Saved to …" comes after the
+  table; a closed stdout pipe no longer stops the file.
+- `estimate_table_bytes` no longer builds every digit product in
+  memory (it used 8 bytes per digit pair), and is about 60 % faster.
+- `generate`'s section functions (internal API) draw from a
+  `&LongMultiplication` onto `&mut impl fmt::Write` and return
+  `fmt::Result`.
 
 ## [2.2.1] - 2026-11-23
 

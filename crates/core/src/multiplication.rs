@@ -1,8 +1,6 @@
 //! High-level orchestration of the long-multiplication table.
 
-use crate::breakdown::{break_down_addition, break_down_subtotal};
-use crate::generate::{self, inner_width, needs_subtotal};
-use crate::{CoreError, Result};
+use crate::{CoreError, LongMultiplication, Result};
 
 /// Return the table of the long multiplication.
 ///
@@ -26,19 +24,12 @@ use crate::{CoreError, Result};
 /// assert!(text.contains("Symbols"));
 /// ```
 pub fn get_table(multiplicand: &str, multiplier: &str) -> String {
-    let mut content: String = String::with_capacity(estimate_table_bytes(multiplicand, multiplier));
-
-    generate::symbols(&mut content);
-    generate::top_border(multiplicand, multiplier, &mut content);
-    generate::position_title(multiplicand, multiplier, &mut content);
-    generate::operation_title(multiplicand, multiplier, &mut content);
-    generate::multiplication(multiplicand, multiplier, &mut content);
-    generate::operations(multiplicand, multiplier, &mut content);
-    generate::sum_title(multiplicand, multiplier, &mut content);
-    generate::long_sum(multiplicand, multiplier, &mut content);
-    generate::bottom_border(multiplicand, multiplier, &mut content);
-    generate::author(&mut content);
-
+    let process = LongMultiplication::from_digits(multiplicand, multiplier);
+    let mut content: String = String::with_capacity(process.estimate_table_bytes());
+    // Writing to a `String` cannot fail.
+    if process.write_table(&mut content).is_err() {
+        content.clear();
+    }
     content
 }
 
@@ -63,36 +54,10 @@ pub fn get_table(multiplicand: &str, multiplier: &str) -> String {
 /// assert!(estimate_table_bytes(&nines, &nines) > 50 * 1024 * 1024);
 /// ```
 pub fn estimate_table_bytes(multiplicand: &str, multiplier: &str) -> usize {
-    let length: usize = multiplicand.len().saturating_add(multiplier.len());
     if multiplicand.is_empty() || multiplier.is_empty() {
         return 0;
     }
-
-    // Number of `Sub n.` sections, exactly as `generate::long_sum` loops.
-    let mut subtotals: usize = 0;
-    let mut sums: Vec<usize> = break_down_subtotal(&break_down_addition(multiplicand, multiplier));
-    while needs_subtotal(&sums) {
-        subtotals += 1;
-        sums = break_down_subtotal(&sums);
-    }
-
-    // Rows: borders and titles (16), four per multiplier digit, the
-    // column sums (2L - 1 plus the closing rule) and 2L + 2 per subtotal.
-    let rows: usize = 16_usize
-        .saturating_add(multiplier.len().saturating_mul(4))
-        .saturating_add(length.saturating_mul(2))
-        .saturating_add(subtotals.saturating_mul(length.saturating_mul(2).saturating_add(2)));
-
-    // The widest row is a rule: every character is 3 bytes in UTF-8.
-    // Add room for the row suffix (` 123 ^`) and the newline.
-    let row_bytes: usize =
-        inner_width(length).saturating_add(2).saturating_mul(3).saturating_add(24);
-
-    let mut frame: String = String::new();
-    generate::symbols(&mut frame);
-    generate::author(&mut frame);
-
-    rows.saturating_mul(row_bytes).saturating_add(frame.len())
+    LongMultiplication::from_digits(multiplicand, multiplier).estimate_table_bytes()
 }
 
 /// Check that the table for these operands fits in `max_bytes`.

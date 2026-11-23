@@ -79,7 +79,40 @@ long-multiplication 5 7 --output store --file result.txt
 
 # Show both stdout and file
 long-multiplication 99 99 --output both
+
+# Every step as JSON (rows, column sums, each `Sub n.`, product), for scripts
+long-multiplication --format json 123 456
 ```
+
+### JSON output
+
+`--format json` (or `LONG_MULTIPLICATION_FORMAT=json`) writes the
+whole process instead of the table. Every array indexed by column
+starts with column 1, the units, as the `Pos.` row numbers them;
+`units[k]` and `carries[k]` come from multiplicand digit `k` counted
+from the right, so they land in columns `k + row` and `k + row + 1`.
+`subtotals` holds the `Sub n.` sections the table shows, and
+`product` is the `P` row, leading zeros included.
+
+```json
+{
+  "format_version": 1,
+  "multiplicand": "123",
+  "multiplier": "456",
+  "columns": 6,
+  "rows": [
+    {"row": 1, "multiplier_digit": 6, "units": [8, 2, 6], "carries": [1, 1, 0]},
+    {"row": 2, "multiplier_digit": 5, "units": [5, 0, 5], "carries": [1, 1, 0]},
+    {"row": 3, "multiplier_digit": 4, "units": [2, 8, 4], "carries": [1, 0, 0]}
+  ],
+  "sum": [8, 8, 10, 15, 4, 0],
+  "subtotals": [],
+  "product": "056088"
+}
+```
+
+With `--output store` or `both`, the default file is
+`long-multiplication-output.json`.
 
 ## Limits
 
@@ -102,8 +135,10 @@ export LONG_MULTIPLICATION_UNLIMITED=true                          # same, for e
 
 `0` also means "no limit" for `--max-digits` / `--max-output-mib`
 (and for `LONG_MULTIPLICATION_MAX_DIGITS` /
-`LONG_MULTIPLICATION_MAX_OUTPUT_MIB`). Without limits, only your
-memory, disk and time are the limit.
+`LONG_MULTIPLICATION_MAX_OUTPUT_MIB`). The size limit applies to the
+JSON output too. The CLI streams its output, so memory stays small
+however big the table is: without limits, only your disk and time
+are the limit.
 
 ## Development
 

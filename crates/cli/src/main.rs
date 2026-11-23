@@ -1,17 +1,20 @@
 //! Long Multiplication Calculator - command-line binary.
 //!
-//! Thin wrapper over [`long_multiplication_core::get_table`]. Parses
-//! arguments, validates them, and either prints the table to stdout,
-//! stores it to a file, or does both.
+//! Thin wrapper over [`long_multiplication_core::LongMultiplication`].
+//! Parses arguments, validates them, and streams the table (or the
+//! JSON process) to stdout, to a file, or to both, without holding
+//! the whole output in memory.
+
+mod json;
+mod output;
 
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Parser, ValueEnum};
-use long_multiplication_core::{MAX_DIGITS, check_output_size, get_table, validate_input};
-use std::io::{self, Write};
+use long_multiplication_core::{CoreError, LongMultiplication, MAX_DIGITS, validate_input};
+use output::{Sink, SinkError};
+use std::fs::File;
+use std::io;
 use std::path::{Path, PathBuf};
-
-/// Default `--file` when `--output store` or `--output both` is used.
-const DEFAULT_FILE: &str = "long-multiplication-output.txt";
 
 /// Default `--max-output-mib`: 1 GiB, which fits in memory on any
 /// desktop computer.
@@ -29,6 +32,7 @@ EXAMPLES:\n  \
     long-multiplication 13597 8642\n  \
     long-multiplication 5 7 --output store --file result.txt\n  \
     long-multiplication 99 99 --output both\n  \
+    long-multiplication --format json 123 456\n  \
     long-multiplication --unlimited 999999 999999 > big.txt")]
 struct Args {
     /// Multiplicand (digits 0-9 only)
@@ -42,9 +46,13 @@ struct Args {
     output: OutputMode,
 
     /// Output file for `--output store` or `--output both`
-    /// [default: long-multiplication-output.txt]
+    /// [default: long-multiplication-output.txt, or .json with --format json]
     #[arg(short, long)]
     file: Option<PathBuf>,
+
+    /// What to write: the table, or every step of the process as JSON
+    #[arg(long, value_enum, env = "LONG_MULTIPLICATION_FORMAT", default_value_t = Format::Text)]
+    format: Format,
 
     /// Maximum digits per number (0 = no limit)
     #[arg(long, env = "LONG_MULTIPLICATION_MAX_DIGITS", default_value_t = MAX_DIGITS)]
@@ -59,7 +67,27 @@ struct Args {
     unlimited: bool,
 }
 
-/// Where the rendered table should be written.
+/// What the output contains.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
+#[value(rename_all = "lower")]
+enum Format {
+    /// The Unicode table.
+    Text,
+    /// The whole process as JSON: rows, column sums, subtotals, product.
+    Json,
+}
+
+impl Format {
+    /// Default `--file` when `--output store` or `--output both` is used.
+    fn default_file(self) -> &'static str {
+        match self {
+            Format::Text => "long-multiplication-output.txt",
+            Format::Json => "long-multiplication-output.json",
+        }
+    }
+}
+
+/// Where the output should be written.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
 #[value(rename_all = "lower")]
 enum OutputMode {
@@ -84,25 +112,51 @@ fn main() -> Result<()> {
     let multiplier = validate_input(&args.multiplier, max_digits)
         .with_context(|| format!("Invalid multiplier '{}'", shorten(&args.multiplier)))?;
 
+    let process = LongMultiplication::new(multiplicand, multiplier)?;
+
     let max_output_mib = limit(args.unlimited, args.max_output_mib);
     if max_output_mib != usize::MAX {
-        check_output_size(multiplicand, multiplier, max_output_mib.saturating_mul(1024 * 1024))
-            .map_err(|error| {
-                anyhow!("{error}; use --max-output-mib <MiB> or --unlimited to render it anyway")
-            })?;
+        let max = max_output_mib.saturating_mul(1024 * 1024);
+        let estimated = match args.format {
+            Format::Text => process.estimate_table_bytes(),
+            Format::Json => json::estimate_json_bytes(&process),
+        };
+        if estimated > max {
+            let error = CoreError::OutputTooLarge { estimated, max };
+            bail!("{error}; use --max-output-mib <MiB> or --unlimited to render it anyway");
+        }
     }
 
-    let table = get_table(multiplicand, multiplier);
-    let file = args.file.unwrap_or_else(|| PathBuf::from(DEFAULT_FILE));
+    let store = matches!(args.output, OutputMode::Store | OutputMode::Both);
+    let display = matches!(args.output, OutputMode::Display | OutputMode::Both);
+    let path = args.file.unwrap_or_else(|| PathBuf::from(args.format.default_file()));
+    let file = if store {
+        Some(File::create(&path).map_err(|error| file_error(&path, error))?)
+    } else {
+        None
+    };
 
-    if matches!(args.output, OutputMode::Store | OutputMode::Both) {
-        write_table(&file, &table)?;
-        eprintln!("Saved to {}", file.display());
+    let mut sink = Sink::new(display, file);
+    let written = match args.format {
+        Format::Text => process.write_table(&mut sink),
+        Format::Json => json::write_json(&process, &mut sink),
+    };
+    if written.is_ok() && args.format == Format::Text {
+        // The text format has always printed one more newline than it
+        // stores; both outputs stay byte for byte as in v1.0.0.
+        sink.stdout_only("\n");
     }
-    if matches!(args.output, OutputMode::Display | OutputMode::Both) {
-        print_table(&table)?;
+    // A failed write is reported here; a closed stdout pipe (for
+    // example `long-multiplication 99 99 | head`) ends quietly.
+    match sink.finish() {
+        Ok(()) => {}
+        Err(SinkError::File(error)) => return Err(file_error(&path, error)),
+        Err(SinkError::Stdout(error)) => return Err(error).context("Cannot write to stdout"),
     }
 
+    if store {
+        eprintln!("Saved to {}", path.display());
+    }
     Ok(())
 }
 
@@ -123,31 +177,19 @@ fn shorten(input: &str) -> String {
     }
 }
 
-/// Print the table to stdout. A closed pipe (for example
-/// `long-multiplication 99 99 | head`) is a normal way to stop
-/// reading, so it ends the program quietly instead of panicking.
-fn print_table(table: &str) -> Result<()> {
-    let mut stdout = io::stdout().lock();
-    match writeln!(stdout, "{table}").and_then(|()| stdout.flush()) {
-        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => Ok(()),
-        result => result.context("Cannot write to stdout"),
+/// The error for a file that cannot be written, with a `mkdir -p`
+/// hint when its directory does not exist. File I/O lives here, not
+/// in `core`, which stays I/O-free.
+fn file_error(path: &Path, error: io::Error) -> anyhow::Error {
+    let context = format!("Cannot write to '{}'", path.display());
+    match missing_parent(path, &error) {
+        Some(parent) => anyhow!(error).context(format!(
+            "{context}: the directory '{}' does not exist (create it with `mkdir -p {}`)",
+            parent.display(),
+            parent.display()
+        )),
+        None => anyhow!(error).context(context),
     }
-}
-
-/// Persist the rendered table to disk, attributing the path for context
-/// on failure. File I/O lives here, not in `core`, which stays I/O-free.
-fn write_table(path: &Path, table: &str) -> Result<()> {
-    std::fs::write(path, table).map_err(|error| {
-        let context = format!("Cannot write to '{}'", path.display());
-        match missing_parent(path, &error) {
-            Some(parent) => anyhow!(error).context(format!(
-                "{context}: the directory '{}' does not exist (create it with `mkdir -p {}`)",
-                parent.display(),
-                parent.display()
-            )),
-            None => anyhow!(error).context(context),
-        }
-    })
 }
 
 /// The parent directory of `path`, when a write failed because that

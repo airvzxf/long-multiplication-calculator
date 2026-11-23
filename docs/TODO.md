@@ -14,13 +14,13 @@
 
 Decisión del autor (2026-11-23): la herramienta existe para **mostrar el proceso**, no el resultado; cada `Sub n.` es un paso que se quiere ver, aunque los números hechos de nueves generen muchos. El objetivo principal es analizar cómo se descompone la multiplicación (por ejemplo, de números primos); enseñar a niños de primaria es un uso secundario. Reconstruir los factores a partir del producto (multiplicación inversa) queda fuera de este proyecto. Los límites por defecto de la CLI y la web ya evitan el caso extremo.
 
-### H0b. Salida en streaming para la CLI
+### H0b. ~~Salida en streaming para la CLI~~ — hecho en 2.3.0 (`LongMultiplication::write_table` sobre `fmt::Write`; la CLI escribe por bloques: 553 MiB → 6 MiB de memoria para 200 nueves)
 
 `get_table` construye la tabla completa en un `String`, así que la memoria usada es igual al tamaño de la salida. Para multiplicaciones `--unlimited` en escritorio convendría que `core` escribiera sobre `core::fmt::Write` y que la CLI la volcara directamente a stdout o al archivo. Exige cambiar los generadores de `&mut String` a `&mut impl fmt::Write` (ver H10).
 
 ---
 
-### H0c. Salida estructurada (`--format json`)
+### H0c. ~~Salida estructurada (`--format json`)~~ — hecho en 2.3.0 (serialización en la CLI, sin `serde` en `core`; filas y `Sub n.` perezosos; arrays desde la columna 1)
 
 Exportar el proceso completo, no solo el texto de la tabla: los dígitos de cada operando, por cada fila de la multiplicación las unidades y los acarreos de cada producto de dígitos, la suma de cada columna, cada sección `Sub n.` y el producto. Sirve para analizar con scripts cómo se descompone una multiplicación, sin tener que leer o parsear la tabla Unicode.
 
@@ -464,7 +464,7 @@ function run() {
 
 ## Tier 3 — Cosmético pero valioso cuando haya tiempo
 
-### H9. Refactor de `generate.rs` en submódulos
+### H9. ~~Refactor de `generate.rs` en submódulos~~ — resuelto en 2.3.0: el proceso vive en `process.rs` (`LongMultiplication`) y `generate.rs` solo dibuja la tabla a partir de él
 
 > Parcial: las reglas, títulos y filas ya pasan por los helpers `rule`, `title` y `Row`, lo que eliminó la mayor parte del código repetido.
 
@@ -494,7 +494,7 @@ crates/core/src/generate/
 
 ---
 
-### H10. Reemplazar `&mut String` con `String` returns en `get_table`
+### H10. ~~Reemplazar `&mut String` con `String` returns en `get_table`~~ — resuelto en 2.3.0: los generadores escriben sobre `&mut impl fmt::Write` y devuelven `fmt::Result`
 
 **Donde se mencionó:** 6soS (originalmente), pero con baja prioridad.
 
@@ -670,7 +670,7 @@ fn write_table(path: &std::path::Path, table: &str) -> Result<()> {
 
 ---
 
-### H15. Documentar decisiones YAGNI en el CHANGELOG
+### H15. ~~Documentar decisiones YAGNI en el CHANGELOG~~ — obsoleto en 2.3.0: la decisión nueva está en `docs/ARCHITECTURE.md` ("Process structs and output formats")
 
 **Donde se mencionó:** Documentos 8kjc, K3LK, Q0ER, p6gp, R7mK; y los `docs/ARCHITECTURE.md:81-95`.
 
@@ -718,8 +718,8 @@ Un `PKGBUILD` que descargue el binario de Linux de la GitHub Release y compruebe
 | # | Hallazgo | Esfuerzo | Valor | Docs |
 |---|---|---|---|---|
 | ~~H0a~~ | ~~Acarreos en una pasada~~ (descartado) | — | — | — |
-| H0b | Salida en streaming (CLI) | ~3h | Medio-Alto | — |
-| H0c | Salida estructurada (`--format json`) | ~1d | **Alto** | — |
+| ~~H0b~~ | ~~Salida en streaming (CLI)~~ (hecho) | ~3h | Medio-Alto | — |
+| ~~H0c~~ | ~~Salida estructurada (`--format json`)~~ (hecho) | ~1d | **Alto** | — |
 | ~~H1~~ | ~~`proptest` para invariante~~ (hecho) | ~30m | **Alto** | 6 |
 | ~~H2~~ | ~~`criterion` benchmark~~ (hecho) | ~30m | **Alto** | 6 |
 | ~~H3~~ | ~~MSRV test en CI~~ (hecho) | ~15m | **Alto** | 4 |
@@ -728,13 +728,13 @@ Un `PKGBUILD` que descargue el binario de Linux de la GitHub Release y compruebe
 | ~~H6~~ | ~~`release.yml` con binarios~~ (hecho) | ~1h | Medio | 5 |
 | ~~H7~~ | ~~Compartir por URL~~ (hecho) | ~30m | **Medio-Alto** | 4 |
 | ~~H8~~ | ~~Errores en español~~ (hecho: web bilingüe) | ~15m | Bajo-Medio | 3 |
-| H9 | Subdividir `generate.rs` | ~3h | Bajo (cosmético) | 4 |
-| H10 | Reemplazar `&mut String` | ~1h | Bajo (cosmético) | 1 |
+| ~~H9~~ | ~~Subdividir `generate.rs`~~ (resuelto) | ~3h | Bajo (cosmético) | 4 |
+| ~~H10~~ | ~~Reemplazar `&mut String`~~ (resuelto) | ~1h | Bajo (cosmético) | 1 |
 | ~~H11~~ | ~~Texto "Loading..."~~ (hecho) | ~5m | Bajo (cosmético) | 4 |
 | ~~H12~~ | ~~`aria-invalid` dinámico~~ (hecho) | ~10m | Bajo (cosmético) | 2 |
 | ~~H13~~ | ~~Sugerencia `mkdir -p`~~ (hecho) | ~5m | Bajo (cosmético) | 3 |
 | ~~H14~~ | ~~OG / Twitter meta tags~~ (hecho) | ~5m | Bajo (cosmético) | 2 |
-| H15 | Decisiones YAGNI en CHANGELOG | ~10m | Bajo (doc) | 5 |
+| ~~H15~~ | ~~Decisiones YAGNI en CHANGELOG~~ (obsoleto) | ~10m | Bajo (doc) | 5 |
 
 **Estimación total Tier 1 (H1-H4):** ~90 minutos. Aporta 4 mejoras estructurales reales.
 

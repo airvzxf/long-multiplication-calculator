@@ -61,6 +61,13 @@ pub fn get_table(multiplicand: &str, multiplier: &str) -> String;
 pub fn estimate_table_bytes(multiplicand: &str, multiplier: &str) -> usize;
 pub fn check_output_size(multiplicand: &str, multiplier: &str, max_bytes: usize) -> Result<usize, CoreError>;
 pub const MAX_DIGITS: usize = 1_000; // default, not a hard limit
+
+// The process as data (see "Process structs and output formats").
+pub struct LongMultiplication<'a>;  // new, multiplicand, multiplier, columns,
+                                    // rows, sum, subtotals, product,
+                                    // write_table, estimate_table_bytes
+pub struct PartialProduct { row, multiplier_digit, units, carries }
+pub struct Subtotals;               // iterator over the `Sub n.` sections
 ```
 
 ### Limits
@@ -96,43 +103,56 @@ are not part of the supported public API:
 - `generate` — the per-section Unicode emitters (`symbols`,
   `top_border`, `position_title`, `operation_title`,
   `multiplication`, `operations`, `sum_title`, `long_sum`,
-  `bottom_border`, `author`). These are the functions that actually
-  emit the box-drawing characters. They are intentionally
-  non-abstracted: there is one and only one output format (the
-  school layout).
-- `multiplication` — `get_table` itself, the public entry point.
+  `bottom_border`, `author`). Each one draws its part of the school
+  layout from a `&LongMultiplication` onto any `core::fmt::Write`.
+- `multiplication` — `get_table`, `estimate_table_bytes` and
+  `check_output_size`, the string-based entry points.
+- `process` (private; its types are re-exported) — the
+  `LongMultiplication` struct.
 
-### Why no `Renderer` trait?
+### Process structs and output formats
 
-A `Renderer` trait (with `UnicodeRenderer`, `JsonRenderer`,
-`HtmlRenderer`, etc.) was considered and rejected for the v2.0.0
-release. Today there is exactly one output format, and YAGNI applies:
-we will not pay the maintenance cost of an abstract interface until
-there is a second format to render. If and when a JSON or HTML output
-is added, the trait will be extracted at that point.
+Since 2.3.0, `core` computes the process once in
+`LongMultiplication` and every output is written from it:
 
-### Why no `serde`?
+- The Unicode table: `LongMultiplication::write_table` writes onto
+  any `core::fmt::Write` (`get_table` is that call on a `String`,
+  byte for byte the same as before).
+- The JSON of `--format json`, written by the CLI.
 
-Same reason. There is no structured data being passed between
-`core` and the outside world. If the web frontend eventually needs
-to highlight each step, the structured data will be added then and
-`serde` will be a feature-gated dependency of `core`.
+Only the column sums, the number of `Sub n.` sections and the
+product are stored, so memory grows with the number of columns.
+`rows()` and `subtotals()` recompute each row or section while they
+are iterated, which costs about as much as writing it. That is what
+lets the CLI stream a table of gigabytes with a few MiB of memory.
+Each slice indexed by column starts with column 1, the units, as the
+`Pos.` row numbers them.
+
+There is still no `Renderer` trait: two outputs, each one a plain
+function over the same struct, do not need an interface. `core`
+still has no `serde`: the JSON has a fixed, simple layout (numbers
+and strings of digits, nothing to escape), so the CLI writes it by
+hand while streaming, and `core` keeps a single dependency
+(`thiserror`). `serde_json` is only a test dependency of the CLI,
+used to check that the output is valid JSON.
 
 ## Crate: `long-multiplication` (the CLI)
 
-A thin wrapper over `core`. The `main.rs` is intentionally small:
+A thin wrapper over `core`:
 
 1. Parse with `clap` (derive API).
 2. Validate each argument via `core::validate_input` (returns
    `CoreError` which `anyhow` wraps for context).
-3. Call `core::get_table` once.
-4. Dispatch on `--output` (`display`, `store`, `both`).
+3. Build the `LongMultiplication` once and check the size of the
+   chosen format (`--format text|json`) against `--max-output-mib`.
+4. Stream the output: `output::Sink` gathers the small writes in a
+   256 KiB block and hands each block to stdout, to the `--file`, or
+   to both (`--output display|store|both`). A closed stdout pipe ends
+   quietly but never cuts the file short.
 
-The CLI is the only place that does I/O for this project: the
-`display` branch calls `println!`, and the `store` and `both`
-branches call `std::fs::write` on a private `write_table` helper.
-Keeping I/O in the adapter (not in `core`) is what lets `core` be
-embedded in `wasm32` without dragging in a filesystem or terminal.
+The CLI is the only place that does I/O for this project. Keeping
+I/O in the adapter (not in `core`) is what lets `core` be embedded
+in `wasm32` without dragging in a filesystem or terminal.
 
 ## Crate: `long-multiplication-wasm`
 

@@ -56,9 +56,10 @@ it to `cli` or `wasm` instead. `core` is a pure library.
 - **Doctests** are first-class: any new public function must have a
   `# Examples` section in its rustdoc. Run `cargo test --doc` to verify.
 - **Byte-for-byte output is contractual.** The v1.0.0 CLI output is
-  the golden reference. If you change the algorithm and the output
-  changes, document why in `CHANGELOG.md` and consider a major version
-  bump.
+  the golden reference, and so is the JSON layout of
+  `--format json` (`format_version` 1, `tests/fixtures/*.json`). If
+  you change the algorithm and the output changes, document why in
+  `CHANGELOG.md` and consider a major version bump.
 - **No `unwrap()` or `expect()` in production code** (i.e. anything
   that is not `#[cfg(test)]` or a doctest). Use `Result<T, CoreError>`
   in `core` and `anyhow::Result` in `cli`.

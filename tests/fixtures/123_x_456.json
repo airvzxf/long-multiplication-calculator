@@ -1,0 +1,14 @@
+{
+  "format_version": 1,
+  "multiplicand": "123",
+  "multiplier": "456",
+  "columns": 6,
+  "rows": [
+    {"row": 1, "multiplier_digit": 6, "units": [8, 2, 6], "carries": [1, 1, 0]},
+    {"row": 2, "multiplier_digit": 5, "units": [5, 0, 5], "carries": [1, 1, 0]},
+    {"row": 3, "multiplier_digit": 4, "units": [2, 8, 4], "carries": [1, 0, 0]}
+  ],
+  "sum": [8, 8, 10, 15, 4, 0],
+  "subtotals": [],
+  "product": "056088"
+}

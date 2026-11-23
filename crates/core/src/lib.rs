@@ -20,6 +20,23 @@
 //! assert!(table.contains("1 │ 1 │ 7 │ 5 │ 0 │ 5 │ 2 │ 7 │ 4 ┃ P"));
 //! ```
 //!
+//! # The process as data
+//!
+//! [`LongMultiplication`] holds every step of the table (the units and
+//! carries of each row, the column sums, each `Sub n.` section and the
+//! product) and writes the table onto any [`core::fmt::Write`], so a
+//! caller can stream it instead of building one big `String`.
+//!
+//! ```
+//! use long_multiplication_core::LongMultiplication;
+//!
+//! let process = LongMultiplication::new("13597", "8642")?;
+//! let product: String = process.product().iter().rev().map(|d| char::from(b'0' + d)).collect();
+//! assert_eq!(product, "117505274");
+//! assert_eq!(process.subtotals().len(), 1);
+//! # Ok::<(), long_multiplication_core::CoreError>(())
+//! ```
+//!
 //! # Errors
 //!
 //! Input validation is centralised in [`validate_input`]. It returns a
@@ -36,9 +53,11 @@ mod error;
 pub mod generate;
 pub mod length;
 mod multiplication;
+mod process;
 
 pub use error::{CoreError, Result};
 pub use multiplication::{check_output_size, estimate_table_bytes, get_table};
+pub use process::{LongMultiplication, PartialProduct, Subtotals};
 
 /// Default maximum number of digits in a single operand.
 ///
