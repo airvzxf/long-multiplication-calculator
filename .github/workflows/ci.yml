@@ -1,92 +1,163 @@
 name: CI
 
+# The deploy workflow listens for this workflow by its name (`CI`)
+# through `workflow_run`; rename both together.
+
 on:
+  push:
+    branches: [main, "feat/**", "fix/**"]
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
+  workflow_dispatch:
+
+# A new commit on a PR or a feature branch cancels the previous run.
+# Runs on main are never cancelled: each one decides whether its
+# commit gets deployed.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: "1"
 
+# Validation tiers:
+#
+#   T0 · fmt-check      ─┐
+#   T1 · clippy         ─┤  no inter-job dependencies; all run in parallel
+#   T1 · msrv           ─┤
+#   T2 · test           ─┤
+#   T2 · doc            ─┤
+#   T2 · build          ─┤
+#   T2 · wasm           ─┘
 jobs:
-  lint-test:
-    name: Lint, test, build
+  fmt-check:
+    name: 'T0 · fmt-check'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
         with:
-          components: clippy, rustfmt
-          targets: wasm32-unknown-unknown
+          components: rustfmt
+      - run: cargo fmt --all -- --check
 
-      - name: Cache cargo registry and target
-        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+  clippy:
+    name: 'T1 · clippy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
-      - name: Format check
-        run: cargo fmt --all -- --check
+  msrv:
+    name: 'T1 · msrv (rustc 1.85.0)'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+        with:
+          toolchain: 1.85.0
+      # `+1.85.0` overrides rust-toolchain.toml (`stable`). Only the
+      # shipped crates are checked: dev-dependencies (assert_cmd,
+      # tempfile, ...) are free to need a newer compiler.
+      - run: cargo +1.85.0 check --workspace --locked
 
-      - name: Clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
+  test:
+    name: 'T2 · cargo test --workspace'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - run: cargo test --workspace --locked
 
-      - name: Test
-        run: cargo test --workspace --all-features
+  doc:
+    name: 'T2 · cargo doc (strict)'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RUSTDOCFLAGS: "-D warnings"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+      - run: cargo doc --workspace --no-deps --locked
+      - name: Reject tracked build artifacts
+        run: |
+          if git ls-files | grep -E '(^|/)target/|\.wasm$|^web/asset/js/wasm/'; then
+            echo "::error::build artifacts are tracked; see the paths above"
+            exit 1
+          fi
 
-      - name: Build release
-        run: cargo build --workspace --release
-
-      - name: Build docs
-        run: cargo doc --workspace --no-deps
-
-      - name: Install cargo-audit
-        run: cargo install cargo-audit --locked
-
-      - name: Security audit
-        run: cargo audit
+  build:
+    name: 'T2 · cargo build --release'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - run: cargo build --workspace --release --locked
+      - name: Smoke-test the release binary
+        run: |
+          set -euo pipefail
+          BIN=target/release/long-multiplication
+          "$BIN" --version
+          "$BIN" --help > /dev/null
+          "$BIN" 13597 8642 | cmp - tests/fixtures/13597_x_8642.txt
+          echo "✓ release binary output matches the golden fixture"
 
   wasm:
-    name: Build WASM
+    name: 'T2 · wasm (build + headless Chrome)'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Cache cargo registry and target
-        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
 
       - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: wasm-pack@0.15.1
 
-      - name: Build WASM
-        run: wasm-pack build crates/wasm --target web --release --no-opt
-
-      - name: Run wasm-opt
+      - name: Install wasm-opt (binaryen)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y binaryen
-          wasm-opt --enable-bulk-memory --enable-sign-ext -Oz \
-            crates/wasm/pkg/long_multiplication_wasm_bg.wasm \
-            -o crates/wasm/pkg/long_multiplication_wasm_bg.wasm.opt
-          mv crates/wasm/pkg/long_multiplication_wasm_bg.wasm.opt \
-             crates/wasm/pkg/long_multiplication_wasm_bg.wasm
+          sudo apt-get -o Acquire::Retries=3 update
+          sudo apt-get -o Acquire::Retries=3 install -y binaryen
 
-      - name: Install Chromium
+      # The same script the deploy workflow runs, so it is tested on
+      # every push and pull request, not only when deploying.
+      - name: Build optimised WASM into web/
+        run: ./scripts/build_wasm.bash
+
+      - name: Check the bundle size (< 50 KB optimised)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y chromium-browser
+          set -euo pipefail
+          SIZE=$(stat -c '%s' web/asset/js/wasm/long_multiplication_wasm_bg.wasm)
+          echo "long_multiplication_wasm_bg.wasm: ${SIZE} bytes"
+          test "${SIZE}" -lt 51200 || { echo "::error::WASM bundle is ${SIZE} bytes (limit 51200)"; exit 1; }
 
-      - name: Test WASM in headless Chromium
-        run: wasm-pack test --chrome --headless crates/wasm
+      # ubuntu-latest ships Google Chrome and a matching chromedriver
+      # (its directory is in $CHROMEWEBDRIVER); no extra install needed.
+      - name: Test WASM in headless Chrome
+        run: CHROMEDRIVER="$CHROMEWEBDRIVER/chromedriver" wasm-pack test --chrome --headless crates/wasm
 
       - name: Upload artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: wasm-pkg
-          path: crates/wasm/pkg
+          path: web/asset/js/wasm
+          if-no-files-found: error

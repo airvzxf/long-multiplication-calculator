@@ -1,0 +1,18 @@
+# Trusted tag signers, read by the `verify-tag-signature` job of
+# `.github/workflows/release.yml`. A release is built only when its
+# tag is signed by a key listed here.
+#
+# The workflow reads this file from origin/main, never from the tagged
+# tree, so removing a key here revokes it for every future release.
+#
+# Format (`gpg.ssh.allowedsignersfile`): `<principal> <key-type> <key>`.
+# Matching is by key; the principal is only a label.
+#
+# ED25519 fingerprint: SHA256:POu2Sr8ILb1IM05Vh1cGU3xivjx05QjWoWYhdLc6YHA
+#
+# Verify locally with:
+#   git config gpg.format ssh
+#   git config gpg.ssh.allowedsignersfile .github/trusted-signers
+#   git verify-tag v2.2.0
+
+israel.alberto.rv@gmail.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPq6Zvvu+eTZQ0hUb/vHC5EfPEGvy1hTc0Psq9W2TMdz
