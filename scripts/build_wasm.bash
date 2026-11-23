@@ -11,16 +11,17 @@
 #      etc.) and wasm-pack's default `-O` invocation does not enable
 #      these features, so it fails validation.
 #
-# A third phase stamps the WASM package version (read from
-# Cargo.toml) as a `?v=<version>` cache-bust suffix on the two
-# files that reference the WASM glue: `web/asset/js/app.js` (the
-# import) and `web/index.html` (the modulepreload). The committed
-# source has the placeholder `?v=__WASM_VERSION__`; this script is
-# the only place that resolves it.
+# A third phase replaces every `__WASM_VERSION__` placeholder in the
+# web sources with the package version (read from Cargo.toml). The
+# placeholders are the `?v=<version>` cache-bust suffixes of every
+# asset URL (CSS, app.js, worker.js, the WASM glue and the `.wasm`
+# binary) and the site version shown in the footer. Because every
+# release gets new asset URLs, `web/_headers` can cache /asset/*
+# for a year without ever serving a stale file.
 #
-# By default, the stamp is reverted on EXIT so the working tree
-# stays clean after a local build. Pass `--no-revert` to keep the
-# stamp in place; the deploy workflow (CI) uses this so wrangler
+# By default, the stamped files are restored on EXIT so the working
+# tree stays clean after a local build. Pass `--no-revert` to keep
+# the stamp in place; the deploy workflow uses this so wrangler
 # uploads the version-baked files instead of the placeholder.
 #
 # Usage:
@@ -43,7 +44,7 @@ for arg in "$@"; do
         --no-opt) SKIP_OPT=1 ;;
         --no-revert) NO_REVERT=1 ;;
         -h|--help)
-            sed -n '2,35p' "${BASH_SOURCE[0]}"
+            sed -n '2,36p' "${BASH_SOURCE[0]}"
             exit 0
             ;;
         *) echo ">>> ERROR: unknown argument: $arg" >&2; exit 1 ;;
@@ -54,8 +55,9 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${REPO_ROOT}/web/asset/js/wasm"
 WASM_FILE="${OUT_DIR}/long_multiplication_wasm_bg.wasm"
 STAMP_FILES=(
-    "${REPO_ROOT}/web/asset/js/app.js"
     "${REPO_ROOT}/web/index.html"
+    "${REPO_ROOT}/web/asset/js/app.js"
+    "${REPO_ROOT}/web/asset/js/worker.js"
 )
 
 # Read the workspace version from Cargo.toml. This becomes the
@@ -92,21 +94,31 @@ else
     echo ">>> wasm-opt not found on \$PATH; bundle left unoptimised"
 fi
 
-# Stamp the cache-bust suffix into the two files that reference
-# the WASM glue. The committed source has `?v=__WASM_VERSION__`;
-# this is the only place it gets resolved to a real version.
-echo ">>> Stamping cache-bust: ?v=${WASM_VERSION}"
-sed -i "s|?v=__WASM_VERSION__|?v=${WASM_VERSION}|g" "${STAMP_FILES[@]}"
-
-# By default, revert the stamp at exit (success or failure) so the
-# working tree is left in the committed state for local builds.
-# `--no-revert` skips the trap so the stamped files survive until
-# the deploy step (wrangler pages deploy) reads them.
+# Stamp the version into the web sources. Keep a pristine copy first
+# so a local build can restore the committed placeholders on EXIT,
+# whether the build succeeds or fails.
 if [[ "${NO_REVERT}" -eq 0 ]]; then
-    trap 'sed -i "s|?v='"${WASM_VERSION}"'|?v=__WASM_VERSION__|g" "${STAMP_FILES[@]}"' EXIT
+    BACKUP_DIR="$(mktemp -d)"
+    for file in "${STAMP_FILES[@]}"; do
+        cp -p "${file}" "${BACKUP_DIR}/$(basename "${file}")"
+    done
+    restore_stamp() {
+        for file in "${STAMP_FILES[@]}"; do
+            cp -p "${BACKUP_DIR}/$(basename "${file}")" "${file}"
+        done
+        rm -rf "${BACKUP_DIR}"
+    }
+    trap restore_stamp EXIT
     echo ">>> Stamp will be reverted on EXIT (use --no-revert to keep it)"
 else
     echo ">>> Stamp will be kept (--no-revert); files are ready for deploy"
+fi
+
+echo ">>> Stamping version: ${WASM_VERSION}"
+sed -i "s|__WASM_VERSION__|${WASM_VERSION}|g" "${STAMP_FILES[@]}"
+if grep -l "__WASM_VERSION__" "${STAMP_FILES[@]}"; then
+    echo ">>> ERROR: placeholder left in the files above" >&2
+    exit 1
 fi
 
 echo ">>> Done. Files:"

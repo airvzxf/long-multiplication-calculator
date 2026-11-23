@@ -1,4 +1,4 @@
-/* Long Multiplication Calculator - styles v2.0 */
+/* Long Multiplication Calculator - styles */
 
 :root {
     /* Palette: WCAG AA contrast on both light and dark schemes. */
@@ -12,6 +12,9 @@
     --color-error-bg: #ffe8d6;
     --color-error-border: #b1452b;
     --color-error-text: #6e2814;
+    --color-info-bg: #e8f0fe;
+    --color-info-border: #2b5fb3;
+    --color-info-text: #173a73;
     --color-solution-bg: #fafafa;
     --color-focus: #2563eb;
 
@@ -38,6 +41,9 @@
         --color-error-bg: #3b1d10;
         --color-error-border: #b1452b;
         --color-error-text: #ffd5c2;
+        --color-info-bg: #14213a;
+        --color-info-border: #6f9bff;
+        --color-info-text: #d6e2ff;
         --color-solution-bg: #1c1c1c;
         --color-focus: #9ebbff;
     }
@@ -183,6 +189,12 @@ button:disabled {
     color: var(--color-error-text);
     font-style: italic;
     border-radius: var(--radius);
+}
+
+#status[data-kind="info"] {
+    background-color: var(--color-info-bg);
+    border-color: var(--color-info-border);
+    color: var(--color-info-text);
 }
 
 #status:not([hidden]) {
