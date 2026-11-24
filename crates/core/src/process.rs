@@ -376,7 +376,6 @@ fn digit(byte: u8) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::breakdown::{break_down_addition, break_down_multiplication};
     use proptest::prelude::*;
 
     fn operand(max_len: usize) -> impl Strategy<Value = String> {
@@ -384,28 +383,47 @@ mod tests {
             .prop_map(|digits| digits.into_iter().map(|d| char::from(b'0' + d)).collect())
     }
 
+    /// Units and carries of every row, row 1 first and each row in
+    /// multiplicand order (left to right): the layout of the table.
+    fn unit_and_carry_rows(multiplicand: &str, multiplier: &str) -> (Vec<usize>, Vec<usize>) {
+        let process = LongMultiplication::new(multiplicand, multiplier).unwrap();
+        let mut units = Vec::new();
+        let mut carries = Vec::new();
+        for row in process.rows() {
+            units.extend(row.units.iter().rev().map(|&d| usize::from(d)));
+            carries.extend(row.carries.iter().rev().map(|&d| usize::from(d)));
+        }
+        (units, carries)
+    }
+
     proptest! {
-        /// The process agrees with the original breakdown functions.
+        /// Rows are the digit products, the column sums add up the rows,
+        /// and the subtotals carry the sums until the product.
         #[test]
-        fn matches_the_breakdown_functions(a in operand(40), b in operand(40)) {
+        fn rows_sums_subtotals_and_product_agree(a in operand(40), b in operand(40)) {
             let process = LongMultiplication::new(&a, &b).expect("digits");
-            let addition = break_down_addition(&a, &b);
-            prop_assert_eq!(process.sum(), addition.as_slice());
-
-            // break_down_multiplication: row 1 first, multiplicand digits left to right.
-            let (units, carries) = break_down_multiplication(&a, &b);
-            for (row, (u, c)) in process.rows().zip(units.chunks(a.len()).zip(carries.chunks(a.len()))) {
-                let u: Vec<u8> = u.iter().rev().map(|&d| d as u8).collect();
-                let c: Vec<u8> = c.iter().rev().map(|&d| d as u8).collect();
-                prop_assert_eq!(&row.units, &u);
-                prop_assert_eq!(&row.carries, &c);
+            let (a_digits, b_digits) = (a.as_bytes(), b.as_bytes());
+            let mut sum = vec![0usize; a.len() + b.len()];
+            for row in process.rows() {
+                let y = usize::from(b_digits[b.len() - row.row] - b'0');
+                prop_assert_eq!(usize::from(row.multiplier_digit), y);
+                for k in 0..a.len() {
+                    let product = usize::from(a_digits[a.len() - 1 - k] - b'0') * y;
+                    prop_assert_eq!(usize::from(row.units[k]), product % 10);
+                    prop_assert_eq!(usize::from(row.carries[k]), product / 10);
+                    sum[k + row.row - 1] += usize::from(row.units[k]);
+                    sum[k + row.row] += usize::from(row.carries[k]);
+                }
             }
+            prop_assert_eq!(process.sum(), sum.as_slice());
 
-            let mut stage = break_down_subtotal(&process.sum().to_vec());
+            let mut stage = break_down_subtotal(process.sum());
             for subtotal in process.subtotals() {
+                prop_assert!(subtotal.iter().any(|&n| n > 9));
                 prop_assert_eq!(&subtotal, &stage);
                 stage = break_down_subtotal(&stage);
             }
+            prop_assert!(stage.iter().all(|&n| n < 10));
             let product: Vec<u8> = stage.iter().map(|&d| d as u8).collect();
             prop_assert_eq!(process.product(), product.as_slice());
         }
@@ -447,5 +465,167 @@ mod tests {
         let process = LongMultiplication::new("13597", "8642").expect("digits");
         assert!(process.write_table(&mut Full(500)).is_err());
         assert!(process.write_table(&mut Full(usize::MAX)).is_ok());
+    }
+
+    // # -----------------------------------------------------------------------
+    // # LongMultiplication::rows (cases of the former break_down_multiplication)
+    // # -----------------------------------------------------------------------
+    #[test]
+    fn rows_with_three_digits_multiplicand_is_greater() {
+        let multiplicand: &str = "25";
+        let multiplier: &str = "3";
+        let operation_unit: Vec<usize>;
+        let operation_carry: Vec<usize>;
+        let expected_unit: Vec<usize> = vec![6, 5];
+        let expected_carry: Vec<usize> = vec![0, 1];
+
+        (operation_unit, operation_carry) = unit_and_carry_rows(multiplicand, multiplier);
+
+        assert_eq!(expected_unit, operation_unit);
+        assert_eq!(expected_carry, operation_carry);
+    }
+
+    #[test]
+    fn rows_with_three_digits_multiplier_is_greater() {
+        let multiplicand: &str = "3";
+        let multiplier: &str = "25";
+        let operation_unit: Vec<usize>;
+        let operation_carry: Vec<usize>;
+        let expected_unit: Vec<usize> = vec![5, 6];
+        let expected_carry: Vec<usize> = vec![1, 0];
+
+        (operation_unit, operation_carry) = unit_and_carry_rows(multiplicand, multiplier);
+
+        assert_eq!(expected_unit, operation_unit);
+        assert_eq!(expected_carry, operation_carry);
+    }
+
+    #[test]
+    fn rows_with_four_digit() {
+        let multiplicand: &str = "13";
+        let multiplier: &str = "26";
+        let operation_unit: Vec<usize>;
+        let operation_carry: Vec<usize>;
+        let expected_unit: Vec<usize> = vec![6, 8, 2, 6];
+        let expected_carry: Vec<usize> = vec![0, 1, 0, 0];
+
+        (operation_unit, operation_carry) = unit_and_carry_rows(multiplicand, multiplier);
+
+        assert_eq!(expected_unit, operation_unit);
+        assert_eq!(expected_carry, operation_carry);
+    }
+
+    #[test]
+    fn rows_with_six_digit() {
+        let multiplicand: &str = "123";
+        let multiplier: &str = "456";
+        let operation_unit: Vec<usize>;
+        let operation_carry: Vec<usize>;
+        let expected_unit: Vec<usize> = vec![6, 2, 8, 5, 0, 5, 4, 8, 2];
+        let expected_carry: Vec<usize> = vec![0, 1, 1, 0, 1, 1, 0, 0, 1];
+
+        (operation_unit, operation_carry) = unit_and_carry_rows(multiplicand, multiplier);
+
+        assert_eq!(expected_unit, operation_unit);
+        assert_eq!(expected_carry, operation_carry);
+    }
+
+    // # -----------------------------------------------------------------------
+    // # LongMultiplication::sum (cases of the former break_down_addition)
+    // # -----------------------------------------------------------------------
+    #[test]
+    fn sum_product_one_digit() {
+        let multiplicand: &str = "2";
+        let multiplier: &str = "3";
+        let addition: Vec<usize>;
+        let expected_addition: Vec<usize> = vec![6, 0];
+
+        addition = LongMultiplication::new(multiplicand, multiplier).unwrap().sum().to_vec();
+
+        assert_eq!(expected_addition, addition);
+    }
+
+    #[test]
+    fn sum_product_two_digits() {
+        let multiplicand: &str = "9";
+        let multiplier: &str = "8";
+        let addition: Vec<usize>;
+        let expected_addition: Vec<usize> = vec![2, 7];
+
+        addition = LongMultiplication::new(multiplicand, multiplier).unwrap().sum().to_vec();
+
+        assert_eq!(expected_addition, addition);
+    }
+
+    #[test]
+    fn sum_with_three_digits() {
+        let multiplicand: &str = "37";
+        let multiplier: &str = "8";
+        let addition: Vec<usize>;
+        let expected_addition: Vec<usize> = vec![6, 9, 2];
+
+        addition = LongMultiplication::new(multiplicand, multiplier).unwrap().sum().to_vec();
+
+        assert_eq!(expected_addition, addition);
+    }
+
+    #[test]
+    fn sum_with_three_digits_switch() {
+        let multiplicand: &str = "8";
+        let multiplier: &str = "37";
+        let addition: Vec<usize>;
+        let expected_addition: Vec<usize> = vec![6, 9, 2];
+
+        addition = LongMultiplication::new(multiplicand, multiplier).unwrap().sum().to_vec();
+
+        assert_eq!(expected_addition, addition);
+    }
+
+    #[test]
+    fn sum_with_four_digit() {
+        let multiplicand: &str = "13";
+        let multiplier: &str = "26";
+        let addition: Vec<usize>;
+        let expected_addition: Vec<usize> = vec![8, 13, 2, 0];
+
+        addition = LongMultiplication::new(multiplicand, multiplier).unwrap().sum().to_vec();
+
+        assert_eq!(expected_addition, addition);
+    }
+
+    #[test]
+    fn sum_with_six_digit() {
+        let multiplicand: &str = "123";
+        let multiplier: &str = "456";
+        let addition: Vec<usize>;
+        let expected_addition: Vec<usize> = vec![8, 8, 10, 15, 4, 0];
+
+        addition = LongMultiplication::new(multiplicand, multiplier).unwrap().sum().to_vec();
+
+        assert_eq!(expected_addition, addition);
+    }
+
+    #[test]
+    fn sum_with_eleven_digits_multiplier_is_greater() {
+        let multiplicand: &str = "78924358";
+        let multiplier: &str = "357";
+        let addition: Vec<usize>;
+        let expected_addition: Vec<usize> = vec![6, 10, 17, 24, 17, 8, 25, 25, 19, 6, 2];
+
+        addition = LongMultiplication::new(multiplicand, multiplier).unwrap().sum().to_vec();
+
+        assert_eq!(expected_addition, addition);
+    }
+
+    #[test]
+    fn sum_with_eleven_digits_multiplier_is_less() {
+        let multiplicand: &str = "357";
+        let multiplier: &str = "78924358";
+        let addition: Vec<usize>;
+        let expected_addition: Vec<usize> = vec![6, 10, 17, 24, 17, 8, 25, 25, 19, 6, 2];
+
+        addition = LongMultiplication::new(multiplicand, multiplier).unwrap().sum().to_vec();
+
+        assert_eq!(expected_addition, addition);
     }
 }

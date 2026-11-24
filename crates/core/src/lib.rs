@@ -55,7 +55,7 @@ pub mod length;
 mod multiplication;
 mod process;
 
-pub use error::{CoreError, Result};
+pub use error::{CoreError, Result, format_bytes};
 pub use multiplication::{check_output_size, estimate_table_bytes, get_table};
 pub use process::{LongMultiplication, PartialProduct, Subtotals};
 
