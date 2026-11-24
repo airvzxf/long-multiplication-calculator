@@ -7,7 +7,7 @@
 // `scripts/build_wasm.bash`, so each release gets new URLs and the
 // long-lived browser cache never mixes an old `.wasm` with new glue.
 
-import init, { calculate, estimateTableBytes, maxDigits, maxOutputBytes, version } from './wasm/long_multiplication_wasm.js?v=__WASM_VERSION__';
+import init, { calculate, calculateJson, estimateTableBytes, maxDigits, maxOutputBytes, version } from './wasm/long_multiplication_wasm.js?v=__WASM_VERSION__';
 
 const wasmUrl = new URL('./wasm/long_multiplication_wasm_bg.wasm?v=__WASM_VERSION__', import.meta.url);
 
@@ -29,6 +29,17 @@ const ready = init({ module_or_path: wasmUrl }).then(
 
 self.addEventListener('message', async ({ data }) => {
     if (!(await ready)) {
+        return;
+    }
+    if (data.type === 'json') {
+        // The steps as JSON, for the download and the step-by-step
+        // walk: the same bytes as the CLI's `--format json`.
+        try {
+            const json = calculateJson(data.multiplicand, data.multiplier);
+            self.postMessage({ type: 'json', id: data.id, json });
+        } catch (err) {
+            self.postMessage({ type: 'json-error', id: data.id, message: String(err?.message ?? err) });
+        }
         return;
     }
     try {

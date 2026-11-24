@@ -10,6 +10,21 @@ The text table and the JSON output are byte for byte the same.
 
 ### Added
 
+- **Web: step by step.** "Step by step" walks through the table one
+  step at a time: each digit product (its two factors, its unit and
+  its carry), each column sum, each column of every `Sub n.` section
+  and of the product. The cells of each step are highlighted and
+  described in English or Spanish. It has first, previous, next and
+  last buttons, a section selector, and the ← and → keys on the
+  table. A step takes about 2 ms even on the biggest table the web
+  accepts.
+- **Web: Download JSON.** The process as JSON, the same bytes as
+  `long-multiplication --format json`.
+- WASM: `calculateJson`, the JSON of the process with the web limits.
+- `core`: `LongMultiplication::write_json`,
+  `LongMultiplication::estimate_json_bytes` and `JSON_FORMAT_VERSION`
+  (moved from the CLI, still without `serde`), so the CLI and the web
+  share one JSON writer.
 - **End-to-end test of the web page** (`scripts/e2e_web.py`, run by
   CI). It serves `web/` locally with the version stamped and the
   headers of `web/_headers`, and drives headless Chrome through
@@ -29,6 +44,8 @@ The text table and the JSON output are byte for byte the same.
   slower than building the table in memory.
 - Benchmarks: a `write_table in 256 KiB blocks` group measures the
   streaming path the CLI uses.
+- CI: the WASM size limit is 80 KB (was 50 KB); the bundle takes
+  about 56 KB with `calculateJson`, and the log shows its gzip size.
 
 ## [2.3.2] - 2026-11-24
 

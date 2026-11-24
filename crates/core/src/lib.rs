@@ -24,8 +24,10 @@
 //!
 //! [`LongMultiplication`] holds every step of the table (the units and
 //! carries of each row, the column sums, each `Sub n.` section and the
-//! product) and writes the table onto any [`core::fmt::Write`], so a
-//! caller can stream it instead of building one big `String`.
+//! product) and writes the table, or the same steps as JSON
+//! ([`LongMultiplication::write_json`], [`JSON_FORMAT_VERSION`]), onto
+//! any [`core::fmt::Write`], so a caller can stream them instead of
+//! building one big `String`.
 //!
 //! ```
 //! use long_multiplication_core::LongMultiplication;
@@ -51,11 +53,13 @@
 pub mod breakdown;
 mod error;
 pub mod generate;
+mod json;
 pub mod length;
 mod multiplication;
 mod process;
 
 pub use error::{CoreError, Result, format_bytes};
+pub use json::JSON_FORMAT_VERSION;
 pub use multiplication::{check_output_size, estimate_table_bytes, get_table};
 pub use process::{LongMultiplication, PartialProduct, Subtotals};
 

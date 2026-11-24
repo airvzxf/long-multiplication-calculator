@@ -1,7 +1,9 @@
 //! WebAssembly bindings for the long-multiplication calculator.
 //!
 //! Exposes the same primitives the CLI uses: [`calculate`] takes two
-//! digit strings and returns the Unicode table, [`estimate_table_bytes`]
+//! digit strings and returns the Unicode table, [`calculate_json`]
+//! returns the same steps as JSON (byte for byte the CLI's
+//! `--format json`), [`estimate_table_bytes`]
 //! gives the size of a table before building it, [`max_digits`] and
 //! [`max_output_bytes`] report the limits, and [`version`] returns
 //! the `CARGO_PKG_VERSION` baked into the binary.
@@ -10,7 +12,9 @@
 //! memory ceiling and cannot display hundreds of MiB of text. The
 //! desktop CLI is the place to run unlimited multiplications.
 
-use long_multiplication_core::{MAX_DIGITS, check_output_size, get_table, validate_input};
+use long_multiplication_core::{
+    LongMultiplication, MAX_DIGITS, check_output_size, format_bytes, get_table, validate_input,
+};
 use wasm_bindgen::prelude::*;
 
 /// Install a panic hook so that Rust panics surface readable
@@ -47,6 +51,36 @@ pub fn calculate(multiplicand: &str, multiplier: &str) -> Result<String, JsError
         JsError::new(&format!("{error}. Use the desktop CLI for bigger tables."))
     })?;
     Ok(get_table(a, b))
+}
+
+/// Every step of the multiplication as JSON, ending with a newline.
+///
+/// Byte for byte the output of the CLI's `--format json` (the same
+/// `LongMultiplication::write_json`, `format_version` 1). The web page
+/// asks for it only when the reader downloads it or walks through the
+/// table step by step. Same digit limit as [`calculate`]; the JSON of
+/// any table under [`MAX_OUTPUT_BYTES`] is smaller than the table.
+///
+/// # Errors
+///
+/// Invalid or too long operands, or JSON larger than
+/// [`MAX_OUTPUT_BYTES`], as a `JsError`.
+#[wasm_bindgen(js_name = calculateJson)]
+pub fn calculate_json(multiplicand: &str, multiplier: &str) -> Result<String, JsError> {
+    let a = validate_input(multiplicand, MAX_DIGITS).map_err(JsError::from)?;
+    let b = validate_input(multiplier, MAX_DIGITS).map_err(JsError::from)?;
+    let process = LongMultiplication::new(a, b).map_err(JsError::from)?;
+    let estimated = process.estimate_json_bytes();
+    if estimated > MAX_OUTPUT_BYTES {
+        return Err(JsError::new(&format!(
+            "The JSON output would take about {} (limit {}). Use the desktop CLI for bigger tables.",
+            format_bytes(estimated),
+            format_bytes(MAX_OUTPUT_BYTES)
+        )));
+    }
+    let mut json = String::with_capacity(estimated);
+    process.write_json(&mut json).map_err(|_| JsError::new("could not write the JSON"))?;
+    Ok(json)
 }
 
 /// Upper bound, in bytes, of the table for two validated operands.
@@ -137,6 +171,27 @@ mod tests {
         let nines = "9".repeat(200);
         assert!(estimate_table_bytes(&nines, &nines) > max_output_bytes());
         assert!(calculate(&nines, &nines).is_err());
+    }
+
+    /// The web's JSON is the CLI's: the same golden fixtures.
+    #[cfg(target_arch = "wasm32")]
+    #[wasm_bindgen_test::wasm_bindgen_test]
+    fn calculate_json_matches_the_cli_fixtures() {
+        let cases = [
+            ("5", "7", include_str!("../../../tests/fixtures/5_x_7.json")),
+            ("123", "456", include_str!("../../../tests/fixtures/123_x_456.json")),
+            ("13597", "8642", include_str!("../../../tests/fixtures/13597_x_8642.json")),
+            (
+                "999999999999",
+                "999999999999",
+                include_str!("../../../tests/fixtures/999999999999_x_999999999999.json"),
+            ),
+        ];
+        for (a, b, expected) in cases {
+            assert_eq!(calculate_json(a, b).expect("calculate_json"), expected, "{a} x {b}");
+        }
+        assert!(calculate_json("12a", "3").is_err());
+        assert!(calculate_json(&"1".repeat(1001), "3").is_err());
     }
 
     #[cfg(target_arch = "wasm32")]

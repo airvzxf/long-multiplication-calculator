@@ -14,7 +14,7 @@
 # A third phase replaces every `__WASM_VERSION__` placeholder in the
 # web sources with the package version (read from Cargo.toml). The
 # placeholders are the `?v=<version>` cache-bust suffixes of every
-# asset URL (CSS, app.js, i18n.js, worker.js, the WASM glue and the `.wasm`
+# asset URL (CSS, app.js, i18n.js, steps.js, worker.js, the WASM glue and the `.wasm`
 # binary) and the site version shown in the footer. Because every
 # release gets new asset URLs, `web/_headers` can cache /asset/*
 # for a year without ever serving a stale file.
@@ -58,6 +58,7 @@ STAMP_FILES=(
     "${REPO_ROOT}/web/index.html"
     "${REPO_ROOT}/web/asset/js/app.js"
     "${REPO_ROOT}/web/asset/js/i18n.js"
+    "${REPO_ROOT}/web/asset/js/steps.js"
     "${REPO_ROOT}/web/asset/js/worker.js"
 )
 

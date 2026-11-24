@@ -120,7 +120,10 @@ Since 2.3.0, `core` computes the process once in
 - The Unicode table: `LongMultiplication::write_table` writes onto
   any `core::fmt::Write` (`get_table` is that call on a `String`,
   byte for byte the same as before).
-- The JSON of `--format json`, written by the CLI.
+- The JSON: `LongMultiplication::write_json` (module `json`,
+  `JSON_FORMAT_VERSION`), also onto any `core::fmt::Write`. Since
+  2.4.0 it lives in `core` so the CLI's `--format json` and the
+  web's "Download JSON" are the same bytes by construction.
 
 Only the column sums, the number of `Sub n.` sections and the
 product are stored, so memory grows with the number of columns.
@@ -131,10 +134,10 @@ Each slice indexed by column starts with column 1, the units, as the
 `Pos.` row numbers them.
 
 There is still no `Renderer` trait: two outputs, each one a plain
-function over the same struct, do not need an interface. `core`
+method over the same struct, do not need an interface. `core`
 still has no `serde`: the JSON has a fixed, simple layout (numbers
-and strings of digits, nothing to escape), so the CLI writes it by
-hand while streaming, and `core` keeps a single dependency
+and strings of digits, nothing to escape), so it is written by hand
+while streaming, with no I/O, and `core` keeps a single dependency
 (`thiserror`). `serde_json` is only a test dependency of the CLI,
 used to check that the output is valid JSON.
 
@@ -164,6 +167,9 @@ Also a thin wrapper. Exports:
   — the actual computation, after checking the digit and size
   limits. Errors are converted to `JsError` so the JavaScript side
   can `try/catch` them.
+- `calculateJson(multiplicand, multiplier)` — the same steps as
+  JSON, byte for byte the CLI's `--format json` (a `wasm-bindgen`
+  test compares it with `tests/fixtures/*.json`).
 - `maxDigits()` and `maxOutputBytes()` — the limits, for friendlier
   client-side validation.
 - `version()` — the package version, shown in the page footer.
@@ -191,6 +197,21 @@ the form and calculates it with the same checks and limits, and
 each successful calculation writes its link to the address bar.
 Only a one-line summary (`Table ready: N rows.`) is announced to
 screen readers, never the table.
+
+Each table can be downloaded as JSON and walked through step by step
+(`steps.js`). The worker writes the JSON only when one of them asks
+for it. The walk takes the values from the JSON and finds the cells
+in the table text, whose layout is contractual: every row ends with
+its label (`r ^`, `r R`, `c C`, `P`), every `Sub n.` section starts
+with its title, and cells are separated by `│`. So neither the layout
+nor `core`'s API is duplicated in JavaScript. A step highlights a few
+cells with `<mark>`: the factors and the two cells of a digit
+product, the digits added up in a column, or the units and the
+carried tens that make each `Sub n.` value and the product. Only the
+lines of the current step are rebuilt, and the lines are grouped in
+blocks with `content-visibility: auto`, so a step takes about 2 ms
+even on a 20 MiB table. The text of the table never changes, and
+neither does what Copy copies.
 
 `_headers` (Cloudflare Pages configuration) sends the Content
 Security Policy (`'self'` scripts plus `'wasm-unsafe-eval'` for
