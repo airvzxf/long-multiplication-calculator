@@ -47,6 +47,13 @@ Antes 50 KB (51 200 bytes); el bundle ocupaba ~50,6 KB tras H19 y ocupa ~56 KB c
 - El JSON se escribe en `core` (`LongMultiplication::write_json`, sin `serde`), y lo usan la CLI y la exportación WASM `calculateJson`: los mismos bytes por construcción, comprobados contra `tests/fixtures/*.json` en `core`, en `wasm-bindgen-test` y en el e2e (descarga).
 - Web: botones "Download JSON" y "Step by step". Los pasos son cada producto de dígitos, la suma de cada columna, cada columna de cada `Sub n.` y el producto. Hay navegación ⏮ ◀ ▶ ⏭, selector de sección, ←/→ con el foco en la tabla y descripción `aria-live`, en es/en. Los valores salen del JSON y las celdas, de las etiquetas de la tabla. El resaltado se hace con `<mark>` solo en las líneas del paso, con bloques `content-visibility: auto`: unos 2 ms por paso y 0,2 s para abrirlo con la tabla más grande admitida.
 
+### H20. Caché de los assets entre releases — pendiente (decisión del autor)
+
+`/asset/*` se sirve con `immutable` y la URL solo cambia con la versión (`?v=<versión>`). Un deploy de `main` sin release, con la misma versión, puede mezclar en la caché de Cloudflare (y del navegador) archivos antiguos y nuevos. Visto el 2026-11-24 tras el merge de #39, todavía con la versión 2.3.2: `worker.js?v=2.3.2` salía de la edge (`cf-cache-status: HIT`, `age: 2914`) junto al `index.html` nuevo, así que "Download JSON" no respondía. La release 2.4.0 lo corrige por cambiar todas las URLs. Opciones:
+
+- Sustituir `__WASM_VERSION__` por `<versión>+<commit corto>` en las URLs (el pie seguiría mostrando solo la versión).
+- Desplegar a producción solo desde los tags.
+
 ### H19. ~~Escritura en streaming tan rápida como en memoria~~ — hecho
 
 Las celdas vacías y las reglas se escribían carácter a carácter (más de 100 millones de llamadas a `write_str` con 200 nueves); ahora cada sección precalcula una fila de celdas vacías y sus reglas (`Grid` en `generate.rs`) y cada tramo es una sola escritura. CLI, 200 nueves × 200 nueves hacia `/dev/null`: 0,71 s → 0,024 s, mismo RSS máximo (12,6 MiB, getrusage). `criterion` (`write_table in 256 KiB blocks`, nuevo): 200 dígitos mezclados 29,8 → 3,0 ms; 100 nueves 105 → 4,5 ms; `get_table` también baja un 40-88 %.
