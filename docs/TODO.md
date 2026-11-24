@@ -38,13 +38,14 @@ Notas de diseño:
 
 Cargar la página real (servidor local sobre `web/` con la versión sustituida y el WASM compilado) en Chrome sin interfaz y comprobar inglés y español, la tabla 13597×8642 igual al fixture, `Table ready: 89 rows.`, el enlace en la barra de direcciones y su limpieza con Clear, los errores de dígitos (con `aria-invalid` solo en el campo inválido), de longitud (< 5 s) y de tamaño (traducido), y que la consola no tenga errores (CSP).
 
-### H17. Límite de tamaño del WASM en la CI — pendiente
+### H17. ~~Límite de tamaño del WASM en la CI~~ — hecho: 80 KB (81 920 bytes, decisión del autor), con el tamaño gzip en el log
 
-Hoy 50 KB (51 200 bytes); el bundle ocupa ~50,8 KB tras H19 y el JSON de H18 añade ~4,4 KB.
+Antes 50 KB (51 200 bytes); el bundle ocupaba ~50,6 KB tras H19 y ocupa ~56 KB con `calculateJson` (H18).
 
-### H18. Aprovechar `LongMultiplication` en la web — pendiente
+### H18. ~~Aprovechar `LongMultiplication` en la web~~ — hecho
 
-Descargar el JSON del proceso (idéntico al de la CLI) y recorrer la tabla paso a paso resaltando fila, columna y `Sub n.`.
+- El JSON se escribe en `core` (`LongMultiplication::write_json`, sin `serde`), y lo usan la CLI y la exportación WASM `calculateJson`: los mismos bytes por construcción, comprobados contra `tests/fixtures/*.json` en `core`, en `wasm-bindgen-test` y en el e2e (descarga).
+- Web: botones "Download JSON" y "Step by step". Los pasos son cada producto de dígitos, la suma de cada columna, cada columna de cada `Sub n.` y el producto. Hay navegación ⏮ ◀ ▶ ⏭, selector de sección, ←/→ con el foco en la tabla y descripción `aria-live`, en es/en. Los valores salen del JSON y las celdas, de las etiquetas de la tabla. El resaltado se hace con `<mark>` solo en las líneas del paso, con bloques `content-visibility: auto`: unos 2 ms por paso y 0,2 s para abrirlo con la tabla más grande admitida.
 
 ### H19. ~~Escritura en streaming tan rápida como en memoria~~ — hecho
 

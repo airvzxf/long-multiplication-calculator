@@ -87,6 +87,8 @@
             <button id="calculate" type="submit" disabled data-i18n="form.calculate">Calculate</button>
             <button id="clear" type="reset" data-i18n="form.clear">Clear</button>
             <button id="copy" type="button" disabled data-i18n="form.copy">Copy result</button>
+            <button id="download" type="button" disabled data-i18n="form.download">Download JSON</button>
+            <button id="steps-toggle" type="button" disabled aria-pressed="false" aria-controls="steps" data-i18n="form.steps">Step by step</button>
         </div>
     </form>
 
@@ -98,6 +100,19 @@
 
     <section aria-labelledby="solution-label">
         <h2 id="solution-label" data-i18n="solution.heading">Solution</h2>
+        <div id="steps" class="steps" hidden>
+            <div class="steps-nav">
+                <button id="step-first" type="button" aria-label="First step" title="First step" data-i18n-label="steps.first">⏮</button>
+                <button id="step-prev" type="button" aria-label="Previous step" title="Previous step" data-i18n-label="steps.prev">◀</button>
+                <span id="step-counter"></span>
+                <button id="step-next" type="button" aria-label="Next step" title="Next step" data-i18n-label="steps.next">▶</button>
+                <button id="step-last" type="button" aria-label="Last step" title="Last step" data-i18n-label="steps.last">⏭</button>
+                <label for="step-section" data-i18n="steps.section">Section</label>
+                <select id="step-section"></select>
+            </div>
+            <p id="step-text" aria-live="polite"></p>
+            <p class="hint" data-i18n="steps.keys">Tip: with the table focused, ← and → move between steps.</p>
+        </div>
         <pre id="solution" tabindex="0"><span class="empty-state" data-i18n="solution.empty">The table will appear here.</span></pre>
     </section>
 

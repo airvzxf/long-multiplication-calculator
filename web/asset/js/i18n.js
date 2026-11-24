@@ -25,6 +25,27 @@ const MESSAGES = {
         'form.clear': 'Clear',
         'form.copy': 'Copy result',
         'form.copied': 'Copied!',
+        'form.download': 'Download JSON',
+        'form.steps': 'Step by step',
+        'form.stepsHide': 'Hide steps',
+        'steps.first': 'First step',
+        'steps.prev': 'Previous step',
+        'steps.next': 'Next step',
+        'steps.last': 'Last step',
+        'steps.section': 'Section',
+        'steps.keys': 'Tip: with the table focused, ← and → move between steps.',
+        'steps.counter': 'Step {n} of {total}',
+        'steps.products': 'Digit products',
+        'steps.sums': 'Column sums',
+        'steps.sub': 'Sub {n}',
+        'steps.final': 'Product',
+        'steps.product':
+            'Row {row}: {a} × {b} = {p}. The unit {unit} goes to column {unitColumn} (row {row} R) ' +
+            'and the carry {carry} to column {carryColumn} (row {row} ^).',
+        'steps.sum': 'Column {column}: {terms} = {sum}.',
+        'steps.sumMany': 'Column {column}: its {count} digits add up to {sum}.',
+        'steps.carry': '{label}, column {column}: {unit} + {carried} carried from column {previous} = {value}.',
+        'steps.carryFirst': '{label}, column 1: it keeps its units, {value}.',
         'solution.heading': 'Solution',
         'solution.empty': 'The table will appear here.',
         'footer.author': 'Author:',
@@ -37,6 +58,7 @@ const MESSAGES = {
         'status.calculating': 'Calculating… press Clear to cancel.',
         'status.ready': 'Table ready: {rows} rows.',
         'status.copyFailed': 'Could not copy to clipboard: {message}',
+        'status.jsonFailed': 'Could not prepare the JSON: {message}',
         'error.digitsOnly': 'Both values must contain digits 0-9 only.',
         'error.tooLong':
             'The web calculator accepts up to {max} digits per number. ' +
@@ -65,6 +87,27 @@ const MESSAGES = {
         'form.clear': 'Limpiar',
         'form.copy': 'Copiar resultado',
         'form.copied': '¡Copiado!',
+        'form.download': 'Descargar JSON',
+        'form.steps': 'Paso a paso',
+        'form.stepsHide': 'Ocultar pasos',
+        'steps.first': 'Primer paso',
+        'steps.prev': 'Paso anterior',
+        'steps.next': 'Paso siguiente',
+        'steps.last': 'Último paso',
+        'steps.section': 'Sección',
+        'steps.keys': 'Consejo: con el foco en la tabla, ← y → cambian de paso.',
+        'steps.counter': 'Paso {n} de {total}',
+        'steps.products': 'Productos de dígitos',
+        'steps.sums': 'Sumas de columnas',
+        'steps.sub': 'Sub {n}',
+        'steps.final': 'Producto',
+        'steps.product':
+            'Fila {row}: {a} × {b} = {p}. La unidad {unit} va a la columna {unitColumn} (fila {row} R) ' +
+            'y el acarreo {carry} a la columna {carryColumn} (fila {row} ^).',
+        'steps.sum': 'Columna {column}: {terms} = {sum}.',
+        'steps.sumMany': 'Columna {column}: sus {count} dígitos suman {sum}.',
+        'steps.carry': '{label}, columna {column}: {unit} + {carried} que se lleva de la columna {previous} = {value}.',
+        'steps.carryFirst': '{label}, columna 1: se quedan sus unidades, {value}.',
         'solution.heading': 'Solución',
         'solution.empty': 'La tabla aparecerá aquí.',
         'footer.author': 'Autor:',
@@ -77,6 +120,7 @@ const MESSAGES = {
         'status.calculating': 'Calculando… pulsa Limpiar para cancelar.',
         'status.ready': 'Tabla lista: {rows} filas.',
         'status.copyFailed': 'No se pudo copiar al portapapeles: {message}',
+        'status.jsonFailed': 'No se pudo preparar el JSON: {message}',
         'error.digitsOnly': 'Los dos valores solo pueden contener dígitos 0-9.',
         'error.tooLong':
             'La calculadora web acepta hasta {max} dígitos por número. ' +
@@ -127,7 +171,11 @@ export function formatBytes(bytes) {
     return `${number.format(value)} ${units[unit]}`;
 }
 
-/** Translate the static page: `lang`, the title and every `[data-i18n]` element. */
+/**
+ * Translate the static page: `lang`, the title, the text of every
+ * `[data-i18n]` element and the label (`aria-label` and `title`) of
+ * every `[data-i18n-label]` element, such as the icon buttons.
+ */
 export function translatePage() {
     document.documentElement.lang = lang;
     if (lang === 'en') {
@@ -136,5 +184,10 @@ export function translatePage() {
     document.title = t('page.title');
     for (const element of document.querySelectorAll('[data-i18n]')) {
         element.textContent = t(element.dataset.i18n);
+    }
+    for (const element of document.querySelectorAll('[data-i18n-label]')) {
+        const label = t(element.dataset.i18nLabel);
+        element.setAttribute('aria-label', label);
+        element.title = label;
     }
 }

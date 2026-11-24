@@ -10,8 +10,13 @@
 // once the calculator is ready, with the same checks and limits as
 // the form. After every successful calculation the address bar is
 // updated to the link of that table.
+//
+// Every table can be downloaded as JSON (the same bytes as the CLI's
+// `--format json`) and walked through step by step (`steps.js`). The
+// worker writes the JSON only when one of them asks for it.
 
 import { formatBytes, formatNumber, t, translatePage } from './i18n.js?v=__WASM_VERSION__';
+import { StepView, Steps } from './steps.js?v=__WASM_VERSION__';
 
 const $ = (id) => document.getElementById(id);
 
@@ -20,6 +25,16 @@ const multiplicand = $('multiplicand');
 const multiplier = $('multiplier');
 const calculateBtn = $('calculate');
 const copyBtn = $('copy');
+const downloadBtn = $('download');
+const stepsBtn = $('steps-toggle');
+const stepsPanel = $('steps');
+const stepFirst = $('step-first');
+const stepPrev = $('step-prev');
+const stepNext = $('step-next');
+const stepLast = $('step-last');
+const stepCounter = $('step-counter');
+const stepSection = $('step-section');
+const stepText = $('step-text');
 const status = $('status');
 const statusText = $('status-text');
 const solution = $('solution');
@@ -34,6 +49,13 @@ let limits = { maxDigits: Infinity };
 let lastResult = '';
 let pendingId = 0;
 let pendingInputs = null;
+// The operands of the table on screen, and its JSON once asked for.
+let shownInputs = null;
+let shownJson = null;
+let jsonId = 0;
+const jsonRequests = new Map();
+// The step-by-step walk, while it is open.
+let walk = null;
 
 translatePage();
 showEmptyState();
@@ -48,16 +70,19 @@ form.addEventListener('reset', () => {
     // Wait for the browser to clear the inputs, then reset the UI.
     queueMicrotask(() => {
         lastResult = '';
+        closeSteps();
+        forgetTable();
         showEmptyState();
         copyBtn.disabled = true;
         setInvalid(multiplicand, false);
         setInvalid(multiplier, false);
         hideStatus();
         clearSharedLink();
-        if (pendingId !== 0) {
+        if (pendingId !== 0 || jsonRequests.size > 0) {
             // Stop the calculation in progress: a fresh worker is cheaper
             // than waiting for a table nobody wants any more.
             pendingId = 0;
+            rejectJsonRequests();
             worker.terminate();
             startWorker();
         }
@@ -80,6 +105,72 @@ copyBtn.addEventListener('click', async () => {
         }, 1500);
     } catch (err) {
         showStatus(t('status.copyFailed', { message: err?.message ?? err }), 'error');
+    }
+});
+
+downloadBtn.addEventListener('click', async () => {
+    const inputs = shownInputs;
+    let json;
+    try {
+        json = await tableJson();
+    } catch (err) {
+        if (err) {
+            showStatus(t('status.jsonFailed', { message: err.message ?? err }), 'error');
+        }
+        return;
+    }
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+    link.download = jsonFileName(inputs);
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 0);
+});
+
+stepsBtn.addEventListener('click', async () => {
+    if (walk) {
+        closeSteps();
+        return;
+    }
+    const table = lastResult;
+    let json;
+    stepsBtn.disabled = true;
+    try {
+        json = await tableJson();
+    } catch (err) {
+        if (err) {
+            showStatus(t('status.jsonFailed', { message: err.message ?? err }), 'error');
+        }
+        return;
+    } finally {
+        stepsBtn.disabled = !lastResult;
+    }
+    if (table !== lastResult) {
+        return;
+    }
+    openSteps(JSON.parse(json), table);
+});
+
+stepFirst.addEventListener('click', () => goToStep(0));
+stepPrev.addEventListener('click', () => goToStep(walk.index - 1));
+stepNext.addEventListener('click', () => goToStep(walk.index + 1));
+stepLast.addEventListener('click', () => goToStep(walk.steps.count - 1));
+stepSection.addEventListener('change', () => goToStep(walk.steps.sections[Number(stepSection.value)].start));
+
+solution.addEventListener('keydown', (ev) => {
+    if (!walk) {
+        return;
+    }
+    const moves = {
+        ArrowLeft: walk.index - 1,
+        ArrowRight: walk.index + 1,
+        Home: 0,
+        End: walk.steps.count - 1,
+    };
+    if (ev.key in moves && !ev.altKey && !ev.ctrlKey && !ev.metaKey) {
+        ev.preventDefault();
+        goToStep(moves[ev.key]);
     }
 });
 
@@ -123,9 +214,14 @@ function onWorkerMessage({ data }) {
                 return;
             }
             finish();
+            closeSteps();
             lastResult = data.table;
             solution.textContent = data.table;
             copyBtn.disabled = false;
+            shownInputs = pendingInputs;
+            shownJson = null;
+            downloadBtn.disabled = false;
+            stepsBtn.disabled = false;
             // Announce a short summary, never the table itself: a
             // screen reader must not read megabytes of text aloud.
             showStatus(t('status.ready', { rows: formatNumber(data.rows) }), 'info');
@@ -138,7 +234,114 @@ function onWorkerMessage({ data }) {
             finish();
             showStatus(errorMessage(data), 'error');
             break;
+        case 'json':
+        case 'json-error': {
+            const request = jsonRequests.get(data.id);
+            if (!request) {
+                return;
+            }
+            jsonRequests.delete(data.id);
+            if (data.type === 'json') {
+                request.resolve(data.json);
+            } else {
+                request.reject(new Error(data.message));
+            }
+            break;
+        }
     }
+}
+
+/**
+ * The JSON of the table on screen, written by the worker the first
+ * time it is needed. Rejects with `null` when the table is cleared or
+ * replaced meanwhile.
+ */
+async function tableJson() {
+    const inputs = shownInputs;
+    if (!inputs) {
+        throw null;
+    }
+    if (shownJson?.inputs === inputs) {
+        return shownJson.json;
+    }
+    jsonId += 1;
+    const id = jsonId;
+    const json = await new Promise((resolve, reject) => {
+        jsonRequests.set(id, { resolve, reject });
+        worker.postMessage({ type: 'json', id, ...inputs });
+    });
+    if (shownInputs !== inputs) {
+        throw null;
+    }
+    shownJson = { inputs, json };
+    return json;
+}
+
+function rejectJsonRequests() {
+    for (const request of jsonRequests.values()) {
+        request.reject(null);
+    }
+    jsonRequests.clear();
+}
+
+/** `long-multiplication-13597x8642.json`, or the CLI's default name for long operands. */
+function jsonFileName(inputs) {
+    if (inputs && inputs.multiplicand.length + inputs.multiplier.length <= 80) {
+        return `long-multiplication-${inputs.multiplicand}x${inputs.multiplier}.json`;
+    }
+    return 'long-multiplication-output.json';
+}
+
+function forgetTable() {
+    shownInputs = null;
+    shownJson = null;
+    downloadBtn.disabled = true;
+    stepsBtn.disabled = true;
+}
+
+function openSteps(process, table) {
+    const steps = new Steps(process, table);
+    walk = { steps, view: new StepView(solution, table), index: -1 };
+    stepSection.replaceChildren(
+        ...steps.sections.map((section, index) => new Option(section.label, String(index))),
+    );
+    stepsPanel.hidden = false;
+    stepsBtn.setAttribute('aria-pressed', 'true');
+    stepsBtn.textContent = t('form.stepsHide');
+    goToStep(0);
+    solution.focus({ preventScroll: true });
+}
+
+function closeSteps() {
+    if (!walk) {
+        return;
+    }
+    walk.view.destroy();
+    walk = null;
+    stepsPanel.hidden = true;
+    stepText.textContent = '';
+    stepsBtn.setAttribute('aria-pressed', 'false');
+    stepsBtn.textContent = t('form.steps');
+}
+
+function goToStep(index) {
+    const { steps, view } = walk;
+    const next = Math.max(0, Math.min(index, steps.count - 1));
+    if (next === walk.index) {
+        return;
+    }
+    walk.index = next;
+    const step = steps.describe(next);
+    const focus = view.show(step.marks);
+    focus?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    stepText.textContent = step.text;
+    stepCounter.textContent = t('steps.counter', {
+        n: formatNumber(next + 1),
+        total: formatNumber(steps.count),
+    });
+    stepSection.value = String(steps.sectionOf(next));
+    stepFirst.disabled = stepPrev.disabled = next === 0;
+    stepNext.disabled = stepLast.disabled = next === steps.count - 1;
 }
 
 /** Fill the form from `?multiplicand=…&multiplier=…` and calculate it. */
@@ -195,6 +398,8 @@ function run() {
     pendingInputs = { multiplicand: a, multiplier: b };
     calculateBtn.disabled = true;
     copyBtn.disabled = true;
+    closeSteps();
+    forgetTable();
     showStatus(t('status.calculating'), 'info');
     worker.postMessage({ id: pendingId, multiplicand: a, multiplier: b });
 }

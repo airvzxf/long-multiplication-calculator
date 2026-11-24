@@ -17,6 +17,12 @@
     --color-info-text: #173a73;
     --color-solution-bg: #fafafa;
     --color-focus: #2563eb;
+    /* Step-by-step highlights: the factors, the digits that are
+       added up, and the cell they produce. */
+    --color-mark-factor: #fde68a;
+    --color-mark-source: #bfdbfe;
+    --color-mark-result: #bbf7d0;
+    --color-mark-text: #1a1a1a;
 
     --radius: 6px;
     --max-width: 720px;
@@ -46,6 +52,10 @@
         --color-info-text: #d6e2ff;
         --color-solution-bg: #1c1c1c;
         --color-focus: #9ebbff;
+        --color-mark-factor: #8a6d00;
+        --color-mark-source: #1e4b8f;
+        --color-mark-result: #17663a;
+        --color-mark-text: #ffffff;
     }
 }
 
@@ -85,7 +95,9 @@ a {
 
 a:focus-visible,
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible,
+#solution:focus-visible {
     outline: 2px solid var(--color-focus);
     outline-offset: 2px;
 }
@@ -171,13 +183,24 @@ button:disabled {
 }
 
 #clear,
-#copy {
+#copy,
+#download,
+#steps-toggle,
+.steps-nav button {
     background-color: transparent;
     color: var(--color-primary);
 }
 
+#steps-toggle[aria-pressed="true"] {
+    background-color: var(--color-primary);
+    color: var(--color-primary-text);
+}
+
 #clear:hover:not(:disabled),
-#copy:hover:not(:disabled) {
+#copy:hover:not(:disabled),
+#download:hover:not(:disabled),
+#steps-toggle:hover:not(:disabled),
+.steps-nav button:hover:not(:disabled) {
     background-color: var(--color-primary);
     color: var(--color-primary-text);
 }
@@ -213,6 +236,86 @@ button:disabled {
     line-height: 1.2;
     white-space: pre;
     margin: 0;
+}
+
+#solution mark {
+    color: var(--color-mark-text);
+    border-radius: 2px;
+    /* Keep a highlighted cell clear of the sticky step controls. */
+    scroll-margin: 10rem 2rem 2rem;
+}
+
+#solution mark.factor {
+    background-color: var(--color-mark-factor);
+}
+
+#solution mark.source {
+    background-color: var(--color-mark-source);
+}
+
+#solution mark.result {
+    background-color: var(--color-mark-result);
+    font-weight: 700;
+}
+
+/* The walk view: blocks of lines, laid out and painted only when
+   they change or come into view (see steps.js). */
+#solution .block {
+    display: block;
+    content-visibility: auto;
+}
+
+/* The step controls stay in view while the page scrolls to the
+   highlighted cells. */
+.steps {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm) 0;
+    background-color: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.steps:not([hidden]) {
+    display: block;
+}
+
+.steps-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.steps-nav button {
+    min-width: 2.75rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+#step-counter {
+    min-width: 9rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.steps-nav label {
+    margin-left: var(--spacing-sm);
+    font-weight: 600;
+}
+
+.steps-nav select {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 1rem;
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+}
+
+#step-text {
+    margin: var(--spacing-sm) 0 0 0;
+    min-height: 3em;
 }
 
 #solution .empty-state {

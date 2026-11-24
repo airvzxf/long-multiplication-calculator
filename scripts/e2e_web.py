@@ -21,7 +21,9 @@ Checks, in English and in Spanish: the 13597 x 8642 table equals the
 golden fixture, the summary line, the address bar link and Clear, a
 link with letters, a link with too many digits (answered in less than
 5 s), a link whose table is too large, and a console without errors
-(a Content Security Policy violation is one).
+(a Content Security Policy violation is one). The downloaded JSON
+must equal the CLI's golden fixture, and the step-by-step walk must
+highlight, at every step, exactly the digits its description names.
 """
 
 from __future__ import annotations
@@ -46,7 +48,7 @@ from typing import Any, Callable
 
 REPO = Path(__file__).resolve().parent.parent
 WASM = Path("asset/js/wasm/long_multiplication_wasm_bg.wasm")
-STAMPED = ["index.html", "asset/js/app.js", "asset/js/i18n.js", "asset/js/worker.js"]
+STAMPED = ["index.html", "asset/js/app.js", "asset/js/i18n.js", "asset/js/steps.js", "asset/js/worker.js"]
 
 
 class Failure(Exception):
@@ -181,12 +183,17 @@ class Driver:
 class Browser:
     """One Chrome session whose interface language is `lang`."""
 
-    def __init__(self, driver: Driver, base: str, lang: str, binary: str | None) -> None:
+    def __init__(self, driver: Driver, base: str, lang: str, binary: str | None, downloads: Path) -> None:
         self.driver = driver
         self.base = base
+        self.downloads = downloads
         options: dict[str, Any] = {
             "args": ["--headless=new", "--no-sandbox", "--disable-dev-shm-usage", f"--lang={lang}"],
-            "prefs": {"intl.accept_languages": lang},
+            "prefs": {
+                "intl.accept_languages": lang,
+                "download.default_directory": str(downloads),
+                "download.prompt_for_download": False,
+            },
         }
         if binary:
             options["binary"] = binary
@@ -214,6 +221,10 @@ class Browser:
 
     def click(self, css: str) -> None:
         self.driver.request("POST", f"{self.session}/element/{self.element(css)}/click", {})
+
+    def keys(self, css: str, text: str) -> None:
+        """Send keys to a focusable element that is not a text field."""
+        self.driver.request("POST", f"{self.session}/element/{self.element(css)}/value", {"text": text})
 
     def type(self, css: str, text: str) -> None:
         element = self.element(css)
@@ -282,6 +293,113 @@ def check_console(browser: Browser) -> None:
     check(not errors, "the console has no errors" + ("" if not errors else f": {errors}"))
 
 
+RIGHT_ARROW = "\ue014"
+
+# Every step, read in one call: its description and its <mark> cells.
+WALK_ALL_STEPS = """
+const next = document.getElementById('step-next');
+const read = () => ({
+    text: document.getElementById('step-text').textContent,
+    counter: document.getElementById('step-counter').textContent,
+    marks: [...document.querySelectorAll('#solution mark')].map((m) => [m.className, m.textContent]),
+});
+const steps = [read()];
+while (!next.disabled) {
+    next.click();
+    steps.push(read());
+}
+return steps;
+"""
+
+
+def digits_of(marks: list[list[str]], kind: str) -> list[str]:
+    """The number in each <mark> of `kind`, in page order (cells joined)."""
+    return [re.sub(r"[\s│]", "", text) for found, text in marks if found == kind]
+
+
+def check_walk(steps: list[dict[str, Any]], lang: str) -> int:
+    """Every highlighted cell holds the digits the description names."""
+    patterns = {
+        "en": (
+            r"Row (\d+): (\d) × (\d) = (\d+)\. The unit (\d) goes to column \d+ \(row \1 R\) "
+            r"and the carry (\d) to column \d+ \(row \1 \^\)\.",
+            r"Column \d+: ((?:\d+ \+ )*\d+) = (\d+)\.",
+            r"Column \d+: its (\d+) digits add up to (\d+)\.",
+            r"(?:Sub \d+|Product), column \d+: (\d) \+ (\d+) carried from column \d+ = (\d+)\.",
+            r"(?:Sub \d+|Product), column 1: it keeps its units, (\d+)\.",
+        ),
+        "es": (
+            r"Fila (\d+): (\d) × (\d) = (\d+)\. La unidad (\d) va a la columna \d+ \(fila \1 R\) "
+            r"y el acarreo (\d) a la columna \d+ \(fila \1 \^\)\.",
+            r"Columna \d+: ((?:\d+ \+ )*\d+) = (\d+)\.",
+            r"Columna \d+: sus (\d+) dígitos suman (\d+)\.",
+            r"(?:Sub \d+|Producto), columna \d+: (\d) \+ (\d+) que se lleva de la columna \d+ = (\d+)\.",
+            r"(?:Sub \d+|Producto), columna 1: se quedan sus unidades, (\d+)\.",
+        ),
+    }[lang]
+    for number, step in enumerate(steps, start=1):
+        text, marks = step["text"], step["marks"]
+        results, sources = digits_of(marks, "result"), digits_of(marks, "source")
+        where = f"step {number} ({text!r}, marks {marks})"
+        if match := re.fullmatch(patterns[0], text):
+            _, a, b, product, unit, carry = match.groups()
+            ok = (int(a) * int(b) == int(product) and int(unit) + 10 * int(carry) == int(product)
+                  and results == [carry, unit] and digits_of(marks, "factor") == [a, b])
+        elif match := re.fullmatch(patterns[1], text):
+            terms = match.group(1).split(" + ")
+            ok = sum(map(int, terms)) == int(match.group(2)) and sources == terms and results == [match.group(2)]
+        elif match := re.fullmatch(patterns[2], text):
+            ok = len(sources) == int(match.group(1)) and results == [match.group(2)]
+            ok = ok and sum(map(int, sources)) == int(match.group(2))
+        elif match := re.fullmatch(patterns[3], text):
+            unit, carried, value = match.groups()
+            ok = int(unit) + int(carried) == int(value) and results == [value]
+            # In page order: the tens carried from the column on the right
+            # (its line comes first), then the units of this column.
+            ok = ok and sources[-1] == unit and (sources[:-1] == [carried] if carried != "0" else len(sources) == 1)
+        elif match := re.fullmatch(patterns[4], text):
+            ok = results == [match.group(1)] and sources == [match.group(1)]
+        else:
+            raise Failure(f"unexpected description at {where}")
+        if not ok:
+            raise Failure(f"the highlighted cells do not match the description at {where}")
+    return len(steps)
+
+
+def check_steps(browser: Browser, fixture: str, lang: str, labels: dict[str, str]) -> None:
+    """Open the walk, check its labels and every step, then close it."""
+    browser.click("#steps-toggle")
+    browser.wait_for("the steps to open", lambda: browser.js("return !document.getElementById('steps').hidden"))
+    check(browser.js("return document.getElementById('steps-toggle').getAttribute('aria-pressed')") == "true"
+          and browser.js("return document.getElementById('steps-toggle').textContent") == labels["hide"],
+          f"'{labels['show']}' opens the step-by-step walk and becomes '{labels['hide']}'")
+    check(browser.js("return document.getElementById('step-next').getAttribute('aria-label')") == labels["next"],
+          f"the next-step button is labelled {labels['next']!r}")
+    first = browser.js("return document.getElementById('step-text').textContent")
+    check(first == labels["first"], f"step 1 reads {first!r}")
+    browser.keys("#solution", RIGHT_ARROW)
+    check(browser.js("return document.getElementById('step-counter').textContent") == labels["second"],
+          f"→ on the table moves to {labels['second']!r}")
+    browser.click("#step-first")
+    steps = browser.js(WALK_ALL_STEPS)
+    check(steps[-1]["counter"] == labels["last"], f"the walk ends at {labels['last']!r}")
+    check(check_walk(steps, lang) == len(steps), f"all {len(steps)} steps highlight the digits they describe")
+    table = browser.js("return document.getElementById('solution').textContent")
+    check(table == fixture[:-1], "the highlighted table still has the text of the fixture")
+    browser.click("#steps-toggle")
+    check(browser.js("return document.getElementById('steps').hidden && "
+                     "document.querySelectorAll('#solution mark').length === 0"),
+          "closing the walk removes every highlight")
+
+
+def check_download(browser: Browser, name: str, expected: str) -> None:
+    browser.click("#download")
+    path = browser.downloads / name
+    browser.wait_for(f"{name} to download", lambda: path.is_file() and path.read_text(encoding="utf-8") == expected,
+                     timeout=10)
+    check(True, f"Download JSON saves {name}, equal to the CLI's golden fixture")
+
+
 def english(browser: Browser, fixture: str, version: str) -> None:
     print("English (en-US):")
     browser.open("/")
@@ -303,11 +421,42 @@ def english(browser: Browser, fixture: str, version: str) -> None:
     check(browser.js("return location.search") == "?multiplicand=13597&multiplier=8642",
           "the address bar holds the link of the table")
 
+    check_download(browser, "long-multiplication-13597x8642.json", read_fixture("13597_x_8642.json"))
+    check_steps(browser, fixture, "en", {
+        "show": "Step by step",
+        "hide": "Hide steps",
+        "next": "Next step",
+        "first": "Row 1: 7 × 2 = 14. The unit 4 goes to column 1 (row 1 R) and the carry 1 to column 2 (row 1 ^).",
+        "second": "Step 2 of 47",
+        "last": "Step 47 of 47",
+    })
+
+    browser.click("#steps-toggle")
     browser.click("#clear")
     browser.wait_for("Clear to reset the page", lambda: browser.js(
         "return document.querySelector('#solution .empty-state') !== null"))
     check(browser.js("return location.search") == "" and browser.status() == "",
           "Clear empties the table, the status and the link")
+    check(browser.js("return document.getElementById('steps').hidden && "
+                     "document.getElementById('download').disabled && "
+                     "document.getElementById('steps-toggle').disabled"),
+          "Clear closes the walk and disables Download JSON and Step by step")
+
+    nines = "9" * 12
+    browser.open(f"/?multiplicand={nines}&multiplier={nines}")
+    browser.wait_ready()
+    rows = read_fixture("999999999999_x_999999999999.txt")[:-1].count("\n")
+    browser.wait_status(f"Table ready: {rows} rows.")
+    check_download(browser, f"long-multiplication-{nines}x{nines}.json",
+                   read_fixture("999999999999_x_999999999999.json"))
+    check_steps(browser, read_fixture("999999999999_x_999999999999.txt"), "en", {
+        "show": "Step by step",
+        "hide": "Hide steps",
+        "next": "Next step",
+        "first": "Row 1: 9 × 9 = 81. The unit 1 goes to column 1 (row 1 R) and the carry 8 to column 2 (row 1 ^).",
+        "second": "Step 2 of 432",
+        "last": "Step 432 of 432",
+    })
 
     browser.open("/?multiplicand=12a3&multiplier=45")
     browser.wait_ready()
@@ -338,6 +487,16 @@ def spanish(browser: Browser, fixture: str) -> None:
           == "Calculadora de multiplicación paso a paso", "the heading is in Spanish")
     check(True, "a shared link calculates the table: 'Tabla lista: 89 filas.'")
     check_table(browser, fixture)
+    check(browser.js("return document.getElementById('download').textContent") == "Descargar JSON",
+          "the download button reads 'Descargar JSON'")
+    check_steps(browser, fixture, "es", {
+        "show": "Paso a paso",
+        "hide": "Ocultar pasos",
+        "next": "Paso siguiente",
+        "first": "Fila 1: 7 × 2 = 14. La unidad 4 va a la columna 1 (fila 1 R) y el acarreo 1 a la columna 2 (fila 1 ^).",
+        "second": "Paso 2 de 47",
+        "last": "Paso 47 de 47",
+    })
 
     nines = "9" * 200
     browser.open(f"/?multiplicand={nines}&multiplier={nines}")
@@ -351,6 +510,10 @@ def spanish(browser: Browser, fixture: str) -> None:
     check_console(browser)
 
 
+def read_fixture(name: str) -> str:
+    return (REPO / "tests/fixtures" / name).read_text(encoding="utf-8")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--chromedriver", default=os.environ.get("CHROMEDRIVER") or shutil.which("chromedriver"))
@@ -361,14 +524,16 @@ def main() -> int:
         raise SystemExit("chromedriver not found: pass --chromedriver or set $CHROMEDRIVER")
 
     version = read_version()
-    fixture = (REPO / "tests/fixtures/13597_x_8642.txt").read_text(encoding="utf-8")
+    fixture = read_fixture("13597_x_8642.txt")
     with tempfile.TemporaryDirectory(prefix="e2e-web-") as tmp:
         server, base = serve(stage_site(args.web, version, Path(tmp)))
         driver = Driver(args.chromedriver)
         print(f"Serving {args.web} (version {version}) at {base}")
         try:
             for lang, scenario in (("en-US", lambda b: english(b, fixture, version)), ("es", lambda b: spanish(b, fixture))):
-                browser = Browser(driver, base, lang, args.chrome_binary)
+                downloads = Path(tmp) / f"downloads-{lang}"
+                downloads.mkdir()
+                browser = Browser(driver, base, lang, args.chrome_binary, downloads)
                 try:
                     scenario(browser)
                 finally:

@@ -18,6 +18,10 @@ table is readable in any terminal and on any device.
   in English or Spanish, and every table has a link you can share
   (`?multiplicand=13597&multiplier=8642`).
   No backend, no server, no third-party scripts.
+- **Step by step in the browser** — walk through the table one step
+  at a time (each digit product, each column sum, each `Sub n.`
+  column and the product), with the cells of every step highlighted,
+  or download the process as JSON.
 - **Identical CLI output** — `long-multiplication A B` produces the
   exact same Unicode table as the v1.0.0 binary, byte for byte.
 - **Centralised validation** — both the CLI and the WASM build use
@@ -121,7 +125,8 @@ from the right, so they land in columns `k + row` and `k + row + 1`.
 ```
 
 With `--output store` or `both`, the default file is
-`long-multiplication-output.json`.
+`long-multiplication-output.json`. The web page's **Download JSON**
+gives the same bytes (`long-multiplication-<a>x<b>.json`).
 
 ## Limits
 
@@ -168,7 +173,7 @@ crates/
   cli/    # `long-multiplication` binary
   wasm/   # browser bindings (wasm-bindgen)
 web/      # static site served by Cloudflare Pages
-scripts/  # helper shell scripts (e.g. build_wasm.bash)
+scripts/  # build_wasm.bash, e2e_web.py (the page in headless Chrome)
 .github/  # CI and CD workflows
 docs/     # ARCHITECTURE.md, DEPLOY.md, TESTING.md
 ```

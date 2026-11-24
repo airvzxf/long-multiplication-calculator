@@ -5,7 +5,6 @@
 //! JSON process) to stdout, to a file, or to both, without holding
 //! the whole output in memory.
 
-mod json;
 mod output;
 
 use anyhow::{Context, Result, anyhow, bail};
@@ -121,7 +120,7 @@ fn main() -> Result<()> {
         let max = max_output_mib.saturating_mul(1024 * 1024);
         let estimated = match args.format {
             Format::Text => process.estimate_table_bytes(),
-            Format::Json => json::estimate_json_bytes(&process),
+            Format::Json => process.estimate_json_bytes(),
         };
         if estimated > max {
             let error = match args.format {
@@ -148,7 +147,7 @@ fn main() -> Result<()> {
     let mut sink = Sink::new(display, file);
     let written = match args.format {
         Format::Text => process.write_table(&mut sink),
-        Format::Json => json::write_json(&process, &mut sink),
+        Format::Json => process.write_json(&mut sink),
     };
     if written.is_ok() && args.format == Format::Text {
         // The text format has always printed one more newline than it

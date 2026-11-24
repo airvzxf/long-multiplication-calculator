@@ -1,9 +1,11 @@
-//! The `--format json` output.
+//! The process as JSON: the CLI's `--format json` and the web's
+//! "Download JSON" write the same bytes through
+//! [`LongMultiplication::write_json`].
 //!
 //! Written by hand, one piece at a time, so a huge process never has
 //! to fit in memory: every value is a number or a string of digits,
-//! so nothing needs escaping. The layout is fixed (golden fixtures in
-//! `tests/fixtures/*.json`):
+//! so nothing needs escaping, and `core` needs no `serde`. The layout
+//! is fixed (golden fixtures in `tests/fixtures/*.json`):
 //!
 //! ```text
 //! {
@@ -26,16 +28,78 @@
 //! counted from the right. `product` is the `P` row of the table,
 //! leading zeros included.
 
-use long_multiplication_core::LongMultiplication;
-use std::fmt::{self, Write};
+use core::fmt::{self, Write};
 
-/// Version of the JSON layout; bumped on any incompatible change.
-pub const FORMAT_VERSION: u32 = 1;
+use crate::LongMultiplication;
 
-/// Write the whole process as JSON, ending with a newline.
-pub fn write_json<W: Write + ?Sized>(process: &LongMultiplication, out: &mut W) -> fmt::Result {
+/// Version of the JSON layout written by
+/// [`LongMultiplication::write_json`]; bumped on any incompatible
+/// change.
+///
+/// # Examples
+///
+/// ```
+/// use long_multiplication_core::{JSON_FORMAT_VERSION, LongMultiplication};
+///
+/// let mut json = String::new();
+/// LongMultiplication::new("5", "7")?.write_json(&mut json).expect("a String never fails");
+/// assert!(json.contains(&format!("\"format_version\": {JSON_FORMAT_VERSION},")));
+/// # Ok::<(), long_multiplication_core::CoreError>(())
+/// ```
+pub const JSON_FORMAT_VERSION: u32 = 1;
+
+impl LongMultiplication<'_> {
+    /// Write the whole process as JSON, ending with a newline.
+    ///
+    /// The layout is documented in the README ("JSON output") and
+    /// pinned by `tests/fixtures/*.json`. Like
+    /// [`write_table`](Self::write_table), it writes onto any
+    /// [`fmt::Write`] while the rows and `Sub n.` sections are
+    /// computed, so the output never has to fit in memory.
+    ///
+    /// # Errors
+    ///
+    /// Only the errors returned by `out`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use long_multiplication_core::LongMultiplication;
+    ///
+    /// let mut json = String::new();
+    /// LongMultiplication::new("5", "7")?.write_json(&mut json).expect("a String never fails");
+    /// assert!(json.starts_with("{\n  \"format_version\": 1,\n"));
+    /// assert!(json.ends_with("  \"product\": \"35\"\n}\n"));
+    /// # Ok::<(), long_multiplication_core::CoreError>(())
+    /// ```
+    pub fn write_json<W: Write + ?Sized>(&self, out: &mut W) -> fmt::Result {
+        write_json(self, out)
+    }
+
+    /// Upper bound of the size, in bytes, of
+    /// [`write_json`](Self::write_json)'s output.
+    ///
+    /// Cheap: it uses the stored column sums, never the rows.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use long_multiplication_core::LongMultiplication;
+    ///
+    /// let process = LongMultiplication::new("13597", "8642")?;
+    /// let mut json = String::new();
+    /// process.write_json(&mut json).expect("a String never fails");
+    /// assert!(process.estimate_json_bytes() >= json.len());
+    /// # Ok::<(), long_multiplication_core::CoreError>(())
+    /// ```
+    pub fn estimate_json_bytes(&self) -> usize {
+        estimate_json_bytes(self)
+    }
+}
+
+fn write_json<W: Write + ?Sized>(process: &LongMultiplication, out: &mut W) -> fmt::Result {
     writeln!(out, "{{")?;
-    writeln!(out, "  \"format_version\": {FORMAT_VERSION},")?;
+    writeln!(out, "  \"format_version\": {JSON_FORMAT_VERSION},")?;
     writeln!(out, "  \"multiplicand\": \"{}\",", process.multiplicand())?;
     writeln!(out, "  \"multiplier\": \"{}\",", process.multiplier())?;
     writeln!(out, "  \"columns\": {},", process.columns())?;
@@ -82,12 +146,9 @@ pub fn write_json<W: Write + ?Sized>(process: &LongMultiplication, out: &mut W) 
     out.write_str("\"\n}\n")
 }
 
-/// Upper bound of the size, in bytes, of [`write_json`]'s output.
-///
-/// Cheap: it uses the stored column sums, never the rows. Every
-/// `Sub n.` value is at most the largest column sum (a column keeps
-/// its unit, at most 9, plus a tenth of its neighbour).
-pub fn estimate_json_bytes(process: &LongMultiplication) -> usize {
+/// Every `Sub n.` value is at most the largest column sum (a column
+/// keeps its unit, at most 9, plus a tenth of its neighbour).
+fn estimate_json_bytes(process: &LongMultiplication) -> usize {
     let a = process.multiplicand().len();
     let b = process.multiplier().len();
     let columns = process.columns();
@@ -145,6 +206,23 @@ mod tests {
     fn matches_the_documented_layout() {
         let expected = "{\n  \"format_version\": 1,\n  \"multiplicand\": \"123\",\n  \"multiplier\": \"456\",\n  \"columns\": 6,\n  \"rows\": [\n    {\"row\": 1, \"multiplier_digit\": 6, \"units\": [8, 2, 6], \"carries\": [1, 1, 0]},\n    {\"row\": 2, \"multiplier_digit\": 5, \"units\": [5, 0, 5], \"carries\": [1, 1, 0]},\n    {\"row\": 3, \"multiplier_digit\": 4, \"units\": [2, 8, 4], \"carries\": [1, 0, 0]}\n  ],\n  \"sum\": [8, 8, 10, 15, 4, 0],\n  \"subtotals\": [],\n  \"product\": \"056088\"\n}\n";
         assert_eq!(json("123", "456"), expected);
+    }
+
+    #[test]
+    fn matches_the_golden_fixtures() {
+        let cases = [
+            ("5", "7", include_str!("../../../tests/fixtures/5_x_7.json")),
+            ("123", "456", include_str!("../../../tests/fixtures/123_x_456.json")),
+            ("13597", "8642", include_str!("../../../tests/fixtures/13597_x_8642.json")),
+            (
+                "999999999999",
+                "999999999999",
+                include_str!("../../../tests/fixtures/999999999999_x_999999999999.json"),
+            ),
+        ];
+        for (a, b, expected) in cases {
+            assert_eq!(json(a, b), expected, "{a} x {b}");
+        }
     }
 
     #[test]

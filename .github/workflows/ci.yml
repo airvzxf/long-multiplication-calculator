@@ -165,12 +165,16 @@ jobs:
       - name: Build optimised WASM into web/
         run: ./scripts/build_wasm.bash
 
-      - name: Check the bundle size (< 50 KB optimised)
+      # About 56 KB with the JSON export (2.4.0); the limit leaves room
+      # for new exports without letting the bundle grow unnoticed.
+      - name: Check the bundle size (< 80 KB optimised)
         run: |
           set -euo pipefail
-          SIZE=$(stat -c '%s' web/asset/js/wasm/long_multiplication_wasm_bg.wasm)
-          echo "long_multiplication_wasm_bg.wasm: ${SIZE} bytes"
-          test "${SIZE}" -lt 51200 || { echo "::error::WASM bundle is ${SIZE} bytes (limit 51200)"; exit 1; }
+          WASM=web/asset/js/wasm/long_multiplication_wasm_bg.wasm
+          SIZE=$(stat -c '%s' "${WASM}")
+          GZIP=$(gzip -9c "${WASM}" | wc -c)
+          echo "long_multiplication_wasm_bg.wasm: ${SIZE} bytes (${GZIP} bytes with gzip -9)"
+          test "${SIZE}" -lt 81920 || { echo "::error::WASM bundle is ${SIZE} bytes (limit 81920)"; exit 1; }
 
       # ubuntu-latest ships Google Chrome and a matching chromedriver
       # (its directory is in $CHROMEWEBDRIVER); no extra install needed.
