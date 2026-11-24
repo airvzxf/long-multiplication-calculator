@@ -11,13 +11,18 @@
 #      etc.) and wasm-pack's default `-O` invocation does not enable
 #      these features, so it fails validation.
 #
-# A third phase replaces every `__WASM_VERSION__` placeholder in the
-# web sources with the package version (read from Cargo.toml). The
-# placeholders are the `?v=<version>` cache-bust suffixes of every
-# asset URL (CSS, app.js, i18n.js, steps.js, worker.js, the WASM glue and the `.wasm`
-# binary) and the site version shown in the footer. Because every
-# release gets new asset URLs, `web/_headers` can cache /asset/*
-# for a year without ever serving a stale file.
+# A third phase stamps the web sources:
+#   * `__ASSET_VERSION__`, the `?v=` cache-bust suffix of every asset
+#     URL (CSS, app.js, i18n.js, steps.js, worker.js, the WASM glue and
+#     the `.wasm` binary), becomes `<version>-<commit>` (for example
+#     `2.4.0-15e5355a1b2c`), or just the version outside a git
+#     checkout;
+#   * `__WASM_VERSION__`, the site version shown in the footer, becomes
+#     the package version (read from Cargo.toml).
+# Because every deployed commit gets new asset URLs, `web/_headers`
+# can cache /asset/* for a year without ever serving a stale file,
+# even when `main` is deployed between two releases. (`-`, not `+`:
+# a `+` in a query string reads as a space.)
 #
 # By default, the stamped files are restored on EXIT so the working
 # tree stays clean after a local build. Pass `--no-revert` to keep
@@ -62,16 +67,23 @@ STAMP_FILES=(
     "${REPO_ROOT}/web/asset/js/worker.js"
 )
 
-# Read the workspace version from Cargo.toml. This becomes the
-# `?v=<version>` cache-bust suffix on the WASM glue references,
-# so the browser always re-fetches the glue (and its modulepreload)
-# whenever the package version changes.
+# Read the workspace version from Cargo.toml: the footer shows it,
+# and it starts the `?v=` cache-bust suffix of every asset URL.
 WASM_VERSION=$(grep -E '^version = ' "${REPO_ROOT}/Cargo.toml" | head -1 | sed -E 's/^version = "(.*)"/\1/')
 if [[ -z "${WASM_VERSION}" ]]; then
     echo ">>> ERROR: could not read version from ${REPO_ROOT}/Cargo.toml" >&2
     exit 1
 fi
 echo ">>> WASM version: ${WASM_VERSION}"
+
+# The asset URLs change with every commit, not only with every
+# release: the edge and the browsers cache /asset/* as immutable.
+if COMMIT=$(git -C "${REPO_ROOT}" rev-parse --short=12 HEAD 2>/dev/null); then
+    ASSET_VERSION="${WASM_VERSION}-${COMMIT}"
+else
+    ASSET_VERSION="${WASM_VERSION}"
+fi
+echo ">>> Asset version: ${ASSET_VERSION}"
 
 echo ">>> Building WASM (target: web, release, out: ${OUT_DIR})"
 wasm-pack build \
@@ -117,8 +129,8 @@ else
 fi
 
 echo ">>> Stamping version: ${WASM_VERSION}"
-sed -i "s|__WASM_VERSION__|${WASM_VERSION}|g" "${STAMP_FILES[@]}"
-if grep -l "__WASM_VERSION__" "${STAMP_FILES[@]}"; then
+sed -i -e "s|__ASSET_VERSION__|${ASSET_VERSION}|g" -e "s|__WASM_VERSION__|${WASM_VERSION}|g" "${STAMP_FILES[@]}"
+if grep -lE "__(ASSET|WASM)_VERSION__" "${STAMP_FILES[@]}"; then
     echo ">>> ERROR: placeholder left in the files above" >&2
     exit 1
 fi

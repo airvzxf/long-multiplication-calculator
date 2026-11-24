@@ -15,8 +15,8 @@
 // `--format json`) and walked through step by step (`steps.js`). The
 // worker writes the JSON only when one of them asks for it.
 
-import { formatBytes, formatNumber, t, translatePage } from './i18n.js?v=__WASM_VERSION__';
-import { StepView, Steps } from './steps.js?v=__WASM_VERSION__';
+import { formatBytes, formatNumber, t, translatePage } from './i18n.js?v=__ASSET_VERSION__';
+import { StepView, Steps } from './steps.js?v=__ASSET_VERSION__';
 
 const $ = (id) => document.getElementById(id);
 
@@ -178,7 +178,7 @@ function startWorker() {
     calculateBtn.disabled = true;
     loading = true;
     showStatus(t('status.loading'), 'info');
-    worker = new Worker(new URL('./worker.js?v=__WASM_VERSION__', import.meta.url), { type: 'module' });
+    worker = new Worker(new URL('./worker.js?v=__ASSET_VERSION__', import.meta.url), { type: 'module' });
     worker.addEventListener('message', onWorkerMessage);
     worker.addEventListener('error', (ev) => {
         loading = false;

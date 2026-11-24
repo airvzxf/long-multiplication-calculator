@@ -2,7 +2,8 @@
 """End-to-end test of the web calculator in headless Chrome.
 
 Serves a copy of ``web/`` on a local port, with the version stamped
-into the ``__WASM_VERSION__`` placeholders and the headers of
+into the ``__WASM_VERSION__`` and ``__ASSET_VERSION__`` placeholders
+(as ``scripts/build_wasm.bash`` does) and the headers of
 ``web/_headers`` (the Content Security Policy included), and drives
 Chrome through chromedriver's WebDriver HTTP API. Only the Python
 standard library is used.
@@ -67,6 +68,18 @@ def read_version() -> str:
     return match.group(1)
 
 
+def read_asset_version(version: str) -> str:
+    """`<version>-<commit>`, the `?v=` of the asset URLs (see build_wasm.bash)."""
+    try:
+        commit = subprocess.run(
+            ["git", "-C", str(REPO), "rev-parse", "--short=12", "HEAD"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return version
+    return f"{version}-{commit}"
+
+
 def stage_site(web: Path, version: str, into: Path) -> Path:
     """Copy `web` into `into/web` and stamp the version placeholders."""
     if not (web / WASM).is_file():
@@ -75,7 +88,9 @@ def stage_site(web: Path, version: str, into: Path) -> Path:
     shutil.copytree(web, site)
     for name in STAMPED:
         path = site / name
-        path.write_text(path.read_text(encoding="utf-8").replace("__WASM_VERSION__", version), encoding="utf-8")
+        text = path.read_text(encoding="utf-8")
+        text = text.replace("__ASSET_VERSION__", read_asset_version(version)).replace("__WASM_VERSION__", version)
+        path.write_text(text, encoding="utf-8")
     return site
 
 
@@ -411,6 +426,11 @@ def english(browser: Browser, fixture: str, version: str) -> None:
     check(f"Site version: {version}." in footer and browser.js(
         "return document.getElementById('app-version').textContent") == version,
         f"the footer shows version {version} for the site and the WASM module")
+    asset = read_asset_version(version)
+    urls = browser.js("return [...document.querySelectorAll('script[src], link[rel=stylesheet]')]"
+                      ".map((e) => e.src || e.href)")
+    check(bool(urls) and all(url.endswith(f"?v={asset}") for url in urls),
+          f"the asset URLs carry the commit: ?v={asset}")
 
     browser.type("#multiplicand", "13597")
     browser.type("#multiplier", "8642")
