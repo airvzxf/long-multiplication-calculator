@@ -61,6 +61,30 @@ Las celdas vacías y las reglas se escribían carácter a carácter (más de 100
 
 ---
 
+## Tier 0c — Después de 2.4.0 (revisión 2026-11-24)
+
+### H22. ~~Verificación de producción después de cada deploy~~ — hecho (`scripts/e2e_web.py --base-url`; último paso de `deploy.yml`)
+
+`e2e_web.py --base-url https://multiplication.rovisoft.net --wait 300` espera hasta que la página nombra el commit desplegado (el `data-commit` del pie), comprueba que `/` y un asset llevan las cabeceras de `web/_headers` y ejecuta el e2e completo contra el sitio real. Las versiones esperadas salen del checkout, que debe ser el commit desplegado. Si falla, el deploy queda en rojo (el sitio ya está publicado; se puede volver atrás desde Cloudflare).
+
+### H23. Job de CI `T0 · lint` (actionlint y shellcheck)
+
+`actionlint` sobre `.github/workflows/` y `shellcheck` sobre `scripts/*.bash` y `packaging/aur/*.bash`, con `.github/actionlint.yaml` para los falsos positivos conocidos (`concurrency.queue: max`, la etiqueta `macos-15-intel`).
+
+### H24. Selector de idioma en la web
+
+Inglés por defecto, selector es/en visible, `?lang=es|en` en los enlaces y la elección recordada en `localStorage` (con `try/catch`); sin elección explícita, el idioma del navegador. Diseño pendiente de la decisión del autor.
+
+### H25. Idioma de la tabla en el WASM
+
+Los errores ya se traducen en la página; la tabla (`Symbols`, `Pos.`, `Ops.`, `Sum.`, `Sub n.`, `Pro.`, leyenda, autor) está en inglés y es contractual. Opciones (parámetro de idioma solo para la web o dejarla en inglés) pendientes de la decisión del autor.
+
+### H26. Cloudflare Pages conectado a GitHub
+
+Sustituir la subida directa con API token (`deploy.yml` + wrangler) por la integración de Pages con Git. Pendiente: investigar si el proyecto actual puede conectarse, el build en Pages (Rust, wasm-pack, binaryen), `git describe` en su clon, la pérdida de «solo se despliega si pasa la CI», y qué hacer con `deploy.yml` y el secreto.
+
+---
+
 ## Tier 1 — Valor alto, recomendado para el próximo ciclo
 
 ### H1. ~~`proptest` para invariante del algoritmo~~ — hecho (`tables_are_aligned_and_correct` y `tables_with_subtotals_are_aligned_and_correct` en `multiplication.rs`)
@@ -764,6 +788,17 @@ funciones puras simples:
 | ~~H13~~ | ~~Sugerencia `mkdir -p`~~ (hecho) | ~5m | Bajo (cosmético) | 3 |
 | ~~H14~~ | ~~OG / Twitter meta tags~~ (hecho) | ~5m | Bajo (cosmético) | 2 |
 | ~~H15~~ | ~~Decisiones YAGNI en CHANGELOG~~ (obsoleto) | ~10m | Bajo (doc) | 5 |
+| ~~H16~~ | ~~e2e de la web en la CI~~ (hecho) | ~3h | **Alto** | — |
+| ~~H17~~ | ~~Límite de tamaño del WASM (80 KB)~~ (hecho) | ~10m | Medio | — |
+| ~~H18~~ | ~~JSON en `core`, descarga y paso a paso en la web~~ (hecho) | ~1d | **Alto** | — |
+| ~~H19~~ | ~~Streaming tan rápido como en memoria~~ (hecho) | ~2h | Medio | — |
+| ~~H20~~ | ~~Commit en el `?v=` de los assets~~ (hecho) | ~30m | **Alto** (bug) | — |
+| ~~H21~~ | ~~Commit de la web en el pie~~ (hecho) | ~1h | Medio | — |
+| ~~H22~~ | ~~e2e contra producción tras cada deploy~~ (hecho) | ~1h | **Alto** | — |
+| H23 | Job `T0 · lint` (actionlint, shellcheck) | ~30m | Medio | — |
+| H24 | Selector de idioma es/en en la web | ~2h | Medio | — |
+| H25 | Idioma de la tabla en el WASM | ~2h-1d | Bajo-Medio | — |
+| H26 | Cloudflare Pages conectado a GitHub | ~2h | Bajo-Medio | — |
 
 **Estimación total Tier 1 (H1-H4):** ~90 minutos. Aporta 4 mejoras estructurales reales.
 

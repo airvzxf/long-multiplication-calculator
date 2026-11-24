@@ -11,7 +11,7 @@
 | Other platforms | CI `T2 · test (macOS)`, `T2 · test (Windows)` | the whole `cargo test --workspace`, golden fixtures included |
 | CLI integration | `assert_cmd` + `predicates` + `tempfile` + `serde_json` | `crates/cli/tests/cli.rs` (text and JSON golden fixtures, limits, closed pipe, stored file) |
 | WASM smoke | `wasm-pack test --headless --chrome` | `crates/wasm/src/lib.rs` (the `#[cfg(target_arch = "wasm32")]` tests; `calculateJson` must equal `tests/fixtures/*.json`) |
-| Web end to end | `python3 scripts/e2e_web.py` (standard library only, chromedriver over HTTP) | the real page, served locally from a copy of `web/` with the version stamped and `web/_headers` applied, in English and Spanish: the 13597 x 8642 table against its fixture, the summary line, the shared link and Clear, the digit, length (< 5 s) and size errors, and no console errors (CSP violations included). It also checks that "Download JSON" saves the CLI's golden JSON, and walks every step of 13597 x 8642 and of twelve nines times twelve nines (10 `Sub n.` sections): each step must highlight exactly the digits its description names. CI runs it in `T2 · wasm` |
+| Web end to end | `python3 scripts/e2e_web.py` (standard library only, chromedriver over HTTP) | the real page, served locally from a copy of `web/` with the version stamped and `web/_headers` applied, in English and Spanish: the 13597 x 8642 table against its fixture, the summary line, the shared link and Clear, the digit, length (< 5 s) and size errors, and no console errors (CSP violations included). It also checks that "Download JSON" saves the CLI's golden JSON, and walks every step of 13597 x 8642 and of twelve nines times twelve nines (10 `Sub n.` sections): each step must highlight exactly the digits its description names. CI runs it in `T2 · wasm`; with `--base-url` it tests a deployed site instead (it waits for the checked-out commit and checks the `web/_headers` headers), and the deploy workflow runs it against production after every deploy |
 | Security audit | `cargo audit` | CI step |
 
 ## Running everything locally
@@ -34,6 +34,10 @@ cargo build --workspace --release
 # The page end to end, after the WASM build (chromedriver and Chrome
 # or Chromium; add --chrome-binary /usr/bin/chromium if needed).
 python3 scripts/e2e_web.py
+
+# The same test against production, from a checkout of the deployed
+# commit (the deploy workflow does this after every deploy).
+python3 scripts/e2e_web.py --base-url https://multiplication.rovisoft.net
 
 # Security audit.
 cargo install cargo-audit --locked
