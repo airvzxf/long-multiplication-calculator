@@ -8,6 +8,17 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 The text table and the JSON output are byte for byte the same.
 
+### Added
+
+- **End-to-end test of the web page** (`scripts/e2e_web.py`, run by
+  CI). It serves `web/` locally with the version stamped and the
+  headers of `web/_headers`, and drives headless Chrome through
+  chromedriver in English and in Spanish. It checks the 13597 x 8642
+  table against its fixture, the summary line, the shared link and
+  Clear, the digit, length and size errors, and a console without
+  errors (Content Security Policy violations included). Only the
+  Python standard library is used.
+
 ### Changed
 
 - **Faster tables.** Runs of empty cells and the rules between rows

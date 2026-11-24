@@ -138,7 +138,7 @@ jobs:
           echo "✓ release binary output matches the golden fixture"
 
   wasm:
-    name: 'T2 · wasm (build + headless Chrome)'
+    name: 'T2 · wasm (build + headless Chrome + e2e)'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -176,6 +176,11 @@ jobs:
       # (its directory is in $CHROMEWEBDRIVER); no extra install needed.
       - name: Test WASM in headless Chrome
         run: CHROMEDRIVER="$CHROMEWEBDRIVER/chromedriver" wasm-pack test --chrome --headless crates/wasm
+
+      # The real page, served locally with web/_headers (CSP included),
+      # in English and Spanish; any console error fails the job.
+      - name: End-to-end test of the web page in headless Chrome
+        run: python3 scripts/e2e_web.py --chromedriver "$CHROMEWEBDRIVER/chromedriver"
 
       - name: Upload artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

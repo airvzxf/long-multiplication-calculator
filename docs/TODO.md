@@ -34,7 +34,7 @@ Notas de diseño:
 
 ## Tier 0b — Después de 2.3.2 (revisión 2026-11-24)
 
-### H16. Prueba e2e de la web en la CI — pendiente
+### H16. ~~Prueba e2e de la web en la CI~~ — hecho (`scripts/e2e_web.py`: Python sin dependencias + chromedriver por HTTP; servidor local que aplica `web/_headers`; paso de `T2 · wasm`)
 
 Cargar la página real (servidor local sobre `web/` con la versión sustituida y el WASM compilado) en Chrome sin interfaz y comprobar inglés y español, la tabla 13597×8642 igual al fixture, `Table ready: 89 rows.`, el enlace en la barra de direcciones y su limpieza con Clear, los errores de dígitos (con `aria-invalid` solo en el campo inválido), de longitud (< 5 s) y de tamaño (traducido), y que la consola no tenga errores (CSP).
 
