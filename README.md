@@ -27,6 +27,15 @@ table is readable in any terminal and on any device.
 
 ## Installation
 
+### CLI: Arch Linux (AUR)
+
+```bash
+yay -S long-multiplication-bin      # or paru, or any AUR helper
+```
+
+The package installs the same static binary as the release archive
+(x86_64 and aarch64) and is updated automatically with every release.
+
 ### CLI: pre-built binary (no Rust needed)
 
 Download the archive for your system from the

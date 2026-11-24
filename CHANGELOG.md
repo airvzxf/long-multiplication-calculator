@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/) and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Arch Linux package** `long-multiplication-bin` in the AUR
+  (x86_64 and aarch64, the static release binary). The PKGBUILD
+  lives in `packaging/aur/`; every release updates it from the
+  published `SHA256SUMS`, builds and tests it with makepkg and pushes
+  it to the AUR. Pull requests build it as a dry run.
+
 ## [2.3.1] - 2026-11-23
 
 The text table and the JSON output are byte for byte the same.
