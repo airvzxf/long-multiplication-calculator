@@ -15,6 +15,10 @@ project adheres to [Semantic Versioning](https://semver.org/).
   that visit, and the link in the address bar keeps an explicit
   language. Without a choice the page follows the browser, in
   English by default.
+- Web: in Spanish, "Referencias de traducción de la tabla" (collapsed
+  above the table) translates every English term of the table, its
+  legend and its signature. The table itself stays in English, the
+  same text as the command-line version.
 - Web: the footer's site version names the commit the page was built
   from, with a link to it on GitHub, and how many commits it is ahead
   of the last release, for example "2.4.0 + 1 commit (009d485)", or

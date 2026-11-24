@@ -522,6 +522,7 @@ return {
     current: [...document.querySelectorAll('a[data-lang][aria-current="true"]')].map((a) => a.dataset.lang),
     links: [...document.querySelectorAll('a[data-lang]')].map((a) => a.getAttribute('href')),
     search: location.search,
+    glossary: !document.getElementById('glossary').hidden,
 };
 """
 
@@ -532,6 +533,8 @@ def check_language(browser: Browser, lang: str, search: str, why: str) -> None:
     state = browser.js(LANGUAGE_STATE)
     check(state["lang"] == lang and state["heading"] == HEADINGS[lang] and state["current"] == [lang],
           f"{why}: the page is in {lang!r} and the selector marks it")
+    check(state["glossary"] == (lang == "es"),
+          "the translation references of the table are " + ("shown" if lang == "es" else "hidden"))
     check(state["search"] == search, f"the address is {search or 'without a query'!r}")
     query = search.lstrip("?")
     expected = []
@@ -539,6 +542,18 @@ def check_language(browser: Browser, lang: str, search: str, why: str) -> None:
         params = [part for part in query.split("&") if part and not part.startswith("lang=")]
         expected.append("?" + "&".join([*params, f"lang={other}"]))
     check(state["links"] == expected, f"the selector links keep the address: {expected}")
+
+
+def check_glossary(browser: Browser, fixture: str) -> None:
+    """The Spanish references translate every English term of the table."""
+    terms = browser.js("return [...document.querySelectorAll('#glossary code')].map((c) => c.textContent)")
+    legend = fixture.split("=======\n", 1)[1].split("\n┏", 1)[0].splitlines()
+    needed = {line.split(" = ", 1)[0] for line in legend if " = " in line}
+    needed |= {"Symbols", "* Replace 'n' for a number.", "Author", "E-mail", "License", "Project"}
+    missing = needed - set(terms)
+    unknown = [term for term in terms if term not in fixture]
+    check(not missing and not unknown, f"the {len(terms)} translation references match the table's terms"
+          + ("" if not missing and not unknown else f"; missing {sorted(missing)}, not in the table {unknown}"))
 
 
 def language_selector(browser: Browser, fixture: str, version: str) -> None:
@@ -680,6 +695,7 @@ def spanish(browser: Browser, fixture: str, version: str) -> None:
     check(True, "a shared link calculates the table: 'Tabla lista: 89 filas.'")
     check_site_version(browser, version, "es")
     check_table(browser, fixture)
+    check_glossary(browser, fixture)
     check(browser.js("return document.getElementById('download').textContent") == "Descargar JSON",
           "the download button reads 'Descargar JSON'")
     check_steps(browser, fixture, "es", {

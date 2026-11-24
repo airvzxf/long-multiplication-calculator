@@ -75,11 +75,11 @@ Las celdas vacías y las reglas se escribían carácter a carácter (más de 100
 
 Enlaces «English | Español» a la derecha del título (debajo en pantallas estrechas), con `href="?lang=…"` reales y `aria-current`. Prioridad: `?lang=` (se aplica a esa visita, no se guarda) > elección guardada en `localStorage` (solo al pulsar el selector, con `try/catch`) > `navigator.languages` > inglés. El cambio se hace sin recargar: estado, paso a paso (en el mismo paso), pie y tabla vacía. El enlace de la barra de direcciones lleva `lang=` solo si el idioma es explícito; Clear lo conserva. El e2e lo comprueba en los dos navegadores.
 
-### H25. Idioma de la tabla en el WASM
+### H25. ~~Idioma de la tabla en el WASM~~ — hecho como decidió el autor: tabla en inglés, referencias de traducción en la web en español
 
 Los errores ya se traducen en la página; la tabla (`Symbols`, `Pos.`, `Ops.`, `Sum.`, `Sub n.`, `Pro.`, leyenda, autor) está en inglés y es contractual.
 
-Decisión del autor (2026-11-24): la tabla sigue en inglés en el WASM, la CLI y la web (sin cambios en fixtures, JSON ni tamaño del WASM). En la web en español se añaden referencias de traducción de las etiquetas de la tabla. Descartados: un parámetro de idioma en `calculate`/`calculateJson` (nuevos fixtures, ~1-2 KB más de WASM, `steps.js` con dos idiomas, la tabla de la web dejaría de ser la de la CLI) y traducir el texto de la tabla en JS (frágil con los anchos de columna).
+Decisión del autor (2026-11-24): la tabla sigue en inglés en el WASM, la CLI y la web (sin cambios en fixtures, JSON ni tamaño del WASM). En la web en español, un `<details>` plegado sobre la tabla («Referencias de traducción de la tabla», `data-lang-only="es"`) traduce cada término de la tabla, de su leyenda y de la firma; el e2e comprueba que cubre exactamente los términos del fixture. Descartados: un parámetro de idioma en `calculate`/`calculateJson` (nuevos fixtures, ~1-2 KB más de WASM, `steps.js` con dos idiomas, la tabla de la web dejaría de ser la de la CLI) y traducir el texto de la tabla en JS (frágil con los anchos de columna).
 
 ### H26. ~~Cloudflare Pages conectado a GitHub~~ — descartado (decisión del autor, 2026-11-24: se queda la subida directa)
 
@@ -799,7 +799,7 @@ funciones puras simples:
 | ~~H22~~ | ~~e2e contra producción tras cada deploy~~ (hecho) | ~1h | **Alto** | — |
 | ~~H23~~ | ~~Job `T0 · lint` (actionlint, shellcheck)~~ (hecho) | ~30m | Medio | — |
 | ~~H24~~ | ~~Selector de idioma es/en en la web~~ (hecho) | ~2h | Medio | — |
-| H25 | Tabla en inglés; referencias de traducción en la web en español | ~1h | Bajo-Medio | — |
+| ~~H25~~ | ~~Tabla en inglés; referencias de traducción en la web en español~~ (hecho) | ~1h | Bajo-Medio | — |
 | ~~H26~~ | ~~Cloudflare Pages conectado a GitHub~~ (descartado) | ~2h | Bajo-Medio | — |
 
 **Estimación total Tier 1 (H1-H4):** ~90 minutos. Aporta 4 mejoras estructurales reales.

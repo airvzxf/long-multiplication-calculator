@@ -111,6 +111,40 @@ h1 {
     text-decoration: underline;
 }
 
+/* The translation of the table's English terms (Spanish page only). */
+.glossary {
+    margin-bottom: var(--spacing-md);
+    font-size: 0.9rem;
+}
+
+.glossary summary {
+    cursor: pointer;
+    color: var(--color-primary);
+}
+
+.glossary table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.glossary th,
+.glossary td {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.glossary code {
+    font-family: var(--font-mono);
+    white-space: nowrap;
+}
+
+.glossary td span {
+    color: var(--color-muted);
+}
+
 .language a[aria-current="true"] {
     background-color: var(--color-primary);
     border-color: var(--color-primary);
