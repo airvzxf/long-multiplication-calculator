@@ -11,6 +11,7 @@
 | Other platforms | CI `T2 · test (macOS)`, `T2 · test (Windows)` | the whole `cargo test --workspace`, golden fixtures included |
 | CLI integration | `assert_cmd` + `predicates` + `tempfile` + `serde_json` | `crates/cli/tests/cli.rs` (text and JSON golden fixtures, limits, closed pipe, stored file) |
 | WASM smoke | `wasm-pack test --headless --chrome` | `crates/wasm/src/lib.rs` (the `#[cfg(target_arch = "wasm32")]` tests) |
+| Web end to end | `python3 scripts/e2e_web.py` (standard library only, chromedriver over HTTP) | the real page, served locally from a copy of `web/` with the version stamped and `web/_headers` applied, in English and Spanish: the 13597 x 8642 table against its fixture, the summary line, the shared link and Clear, the digit, length (< 5 s) and size errors, and no console errors (CSP violations included). CI runs it in `T2 · wasm` |
 | Security audit | `cargo audit` | CI step |
 
 ## Running everything locally
@@ -29,6 +30,10 @@ cargo build --workspace --release
 
 # WASM bundle (the same script CI and the deploy use).
 ./scripts/build_wasm.bash
+
+# The page end to end, after the WASM build (chromedriver and Chrome
+# or Chromium; add --chrome-binary /usr/bin/chromium if needed).
+python3 scripts/e2e_web.py
 
 # Security audit.
 cargo install cargo-audit --locked

@@ -15,12 +15,14 @@ cargo doc --workspace --no-deps
 cargo audit
 ./scripts/build_wasm.bash      # build + wasm-opt -Oz into web/asset/js/wasm/
 wasm-pack test --chrome --headless crates/wasm   # or --firefox --headless
+python3 scripts/e2e_web.py     # the page in headless Chrome (needs chromedriver)
 ```
 
 The CI workflow (`.github/workflows/ci.yml`) runs the same checks on
 every push, and the deploy workflow only runs after CI passes on
-`main`. Locally you can skip `cargo audit` and the WASM build if
-you are not touching dependencies or `crates/wasm`.
+`main`. Locally you can skip `cargo audit`, the WASM build and the
+end-to-end test if you are not touching dependencies, `core`,
+`crates/wasm` or `web/`.
 
 > **Note on the WASM test runner:** the `calculate_smoke` test is
 > configured with `wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser)`,
@@ -125,6 +127,10 @@ with pre-built CLI binaries (`.github/workflows/release.yml`).
   `build.rustflags = ["-C", "target-cpu=native"]` (for example in
   `~/.cargo/config.toml`) also applies to `wasm32`. Run the WASM
   commands with `RUSTFLAGS=""`, which overrides it.
+- **`e2e_web.py` cannot find Chrome:** pass the browser with
+  `--chrome-binary /usr/bin/chromium` (or `$CHROME_BIN`) and
+  chromedriver with `--chromedriver` (or `$CHROMEDRIVER`); their major
+  versions must match.
 - **Clippy lints failing:** see the per-crate `[lints.clippy]`
   sections in `Cargo.toml`. The project allows a small set of
   `clippy::all` lints that match the original 2021 code style
