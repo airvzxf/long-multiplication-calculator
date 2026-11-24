@@ -67,7 +67,7 @@ Las celdas vacías y las reglas se escribían carácter a carácter (más de 100
 
 `e2e_web.py --base-url https://multiplication.rovisoft.net --wait 300` espera hasta que la página nombra el commit desplegado (el `data-commit` del pie), comprueba que `/` y un asset llevan las cabeceras de `web/_headers` y ejecuta el e2e completo contra el sitio real. Las versiones esperadas salen del checkout, que debe ser el commit desplegado. Si falla, el deploy queda en rojo (el sitio ya está publicado; se puede volver atrás desde Cloudflare).
 
-### H23. Job de CI `T0 · lint` (actionlint y shellcheck)
+### H23. ~~Job de CI `T0 · lint` (actionlint y shellcheck)~~ — hecho (actionlint 1.7.12 con checksum, shellcheck 0.11.0)
 
 `actionlint` sobre `.github/workflows/` y `shellcheck` sobre `scripts/*.bash` y `packaging/aur/*.bash`, con `.github/actionlint.yaml` para los falsos positivos conocidos (`concurrency.queue: max`, la etiqueta `macos-15-intel`).
 
@@ -795,7 +795,7 @@ funciones puras simples:
 | ~~H20~~ | ~~Commit en el `?v=` de los assets~~ (hecho) | ~30m | **Alto** (bug) | — |
 | ~~H21~~ | ~~Commit de la web en el pie~~ (hecho) | ~1h | Medio | — |
 | ~~H22~~ | ~~e2e contra producción tras cada deploy~~ (hecho) | ~1h | **Alto** | — |
-| H23 | Job `T0 · lint` (actionlint, shellcheck) | ~30m | Medio | — |
+| ~~H23~~ | ~~Job `T0 · lint` (actionlint, shellcheck)~~ (hecho) | ~30m | Medio | — |
 | H24 | Selector de idioma es/en en la web | ~2h | Medio | — |
 | H25 | Idioma de la tabla en el WASM | ~2h-1d | Bajo-Medio | — |
 | H26 | Cloudflare Pages conectado a GitHub | ~2h | Bajo-Medio | — |

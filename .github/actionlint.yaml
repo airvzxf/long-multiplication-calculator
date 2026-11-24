@@ -1,0 +1,16 @@
+# actionlint configuration (the `T0 · lint` job in ci.yml).
+#
+# Known false positives of actionlint; remove an entry when actionlint
+# learns about it.
+self-hosted-runner:
+  labels:
+    # A GitHub-hosted runner (macOS 15 on Intel) that actionlint does
+    # not list yet; release.yml builds x86_64-apple-darwin on it.
+    - macos-15-intel
+
+paths:
+  .github/workflows/*.yml:
+    ignore:
+      # `concurrency.queue: max` keeps every waiting run instead of
+      # only the newest one; actionlint does not know the key yet.
+      - 'unexpected key "queue" for "concurrency" section'
