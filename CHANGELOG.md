@@ -4,7 +4,9 @@ All notable changes to this project are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/) and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [2.3.2] - 2026-11-24
+
+The binary behaves as in 2.3.1; this release ships the AUR package.
 
 ### Added
 
@@ -13,6 +15,10 @@ project adheres to [Semantic Versioning](https://semver.org/).
   lives in `packaging/aur/`; every release updates it from the
   published `SHA256SUMS`, builds and tests it with makepkg and pushes
   it to the AUR. Pull requests build it as a dry run.
+
+### Changed
+
+- `clap` 4.6.9.
 
 ## [2.3.1] - 2026-11-23
 
