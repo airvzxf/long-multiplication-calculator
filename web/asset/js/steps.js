@@ -11,7 +11,7 @@
 // make each `Sub n.` value and the product. Only the lines of the
 // current step are rebuilt, so even the biggest table stays fast.
 
-import { t } from './i18n.js?v=__WASM_VERSION__';
+import { t } from './i18n.js?v=__ASSET_VERSION__';
 
 /** Most terms written out in the description of a column sum. */
 const MAX_TERMS = 12;

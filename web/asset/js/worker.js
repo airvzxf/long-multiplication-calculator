@@ -3,13 +3,13 @@
 // Runs the WebAssembly module off the main thread, so a large table
 // never freezes the page and the user can cancel it at any time.
 //
-// Every `?v=__WASM_VERSION__` is replaced with the package version by
-// `scripts/build_wasm.bash`, so each release gets new URLs and the
-// long-lived browser cache never mixes an old `.wasm` with new glue.
+// Every `?v=__ASSET_VERSION__` is replaced with `<version>-<commit>` by
+// `scripts/build_wasm.bash`, so each deploy gets new URLs and the
+// long-lived cache never mixes an old `.wasm` with new glue.
 
-import init, { calculate, calculateJson, estimateTableBytes, maxDigits, maxOutputBytes, version } from './wasm/long_multiplication_wasm.js?v=__WASM_VERSION__';
+import init, { calculate, calculateJson, estimateTableBytes, maxDigits, maxOutputBytes, version } from './wasm/long_multiplication_wasm.js?v=__ASSET_VERSION__';
 
-const wasmUrl = new URL('./wasm/long_multiplication_wasm_bg.wasm?v=__WASM_VERSION__', import.meta.url);
+const wasmUrl = new URL('./wasm/long_multiplication_wasm_bg.wasm?v=__ASSET_VERSION__', import.meta.url);
 
 const ready = init({ module_or_path: wasmUrl }).then(
     () => {

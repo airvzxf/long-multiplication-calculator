@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/) and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- Web: every asset URL carries the commit as well as the version
+  (`?v=2.4.0-<commit>`). A deploy of `main` between two releases kept
+  the same URLs, so the cache could serve an old script next to the
+  new page; in 2.4.0's case "Download JSON" did not respond until the
+  release. The footer still shows the version.
+
 ## [2.4.0] - 2026-11-24
 
 The text table and the JSON output are byte for byte the same.

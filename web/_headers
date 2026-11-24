@@ -1,10 +1,10 @@
 # Cloudflare Pages headers for multiplication.rovisoft.net
 #
-# Every file under /asset/ is requested with a `?v=<version>` query
-# string (stamped by scripts/build_wasm.bash), including the `.wasm`
-# binary, which worker.js loads by an explicit versioned URL. A new
-# release therefore always uses new URLs, so these files can be
-# cached for a year. The HTML entry point is revalidated on every
+# Every file under /asset/ is requested with a `?v=<version>-<commit>`
+# query string (stamped by scripts/build_wasm.bash), including the
+# `.wasm` binary, which worker.js loads by an explicit versioned URL.
+# Every deploy therefore uses new URLs, so these files can be cached
+# for a year. The HTML entry point is revalidated on every
 # visit (Cloudflare's default for HTML) so deploys are picked up.
 
 /asset/*

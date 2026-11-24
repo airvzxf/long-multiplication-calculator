@@ -218,8 +218,9 @@ Security Policy (`'self'` scripts plus `'wasm-unsafe-eval'` for
 WebAssembly; `index.html` repeats it in a meta tag for local
 servers), standard security headers, and a one-year `immutable`
 cache for `/asset/*`. That cache is safe because every asset URL
-carries the release version (`?v=<version>`), stamped by
-`scripts/build_wasm.bash`. `404.html` gives unknown URLs a real 404
+carries the version and the commit (`?v=<version>-<commit>`),
+stamped by `scripts/build_wasm.bash`, so every deploy, not only
+every release, gets new URLs. `404.html` gives unknown URLs a real 404
 instead of the page.
 
 ## Deployment

@@ -51,8 +51,9 @@ commit:
    target), `wasm-pack` (pinned version, via `taiki-e/install-action`)
    and `wasm-opt` (`binaryen`).
 2. Runs `scripts/build_wasm.bash --no-revert` to compile and optimise
-   the WASM module into `web/asset/js/wasm/` and stamp the package
-   version into every asset URL (`?v=<version>`).
+   the WASM module into `web/asset/js/wasm/`, stamp the version and
+   the commit into every asset URL (`?v=<version>-<commit>`) and the
+   version into the footer.
 3. Publishes the `web/` directory to Cloudflare Pages with
    `cloudflare/wrangler-action`.
 
@@ -96,9 +97,13 @@ After the workflow finishes:
 
 `web/_headers` caches everything under `/asset/` for a year
 (`immutable`). That is safe only because every asset URL carries the
-release version (`?v=<version>`), including the `.wasm` binary, which
-`worker.js` loads by an explicit versioned URL. If you add a new
-asset, reference it with `?v=__WASM_VERSION__` and add its file to
+version and the commit it was built from (`?v=<version>-<commit>`,
+for example `?v=2.4.0-15e5355a1b2c`), including the `.wasm` binary,
+which `worker.js` loads by an explicit versioned URL. With the
+version alone, a deploy of `main` between two releases kept the old
+URLs, and the Cloudflare edge served a cached `worker.js` next to the
+new page. If you add a new asset, reference it with
+`?v=__ASSET_VERSION__` and add its file to
 `STAMP_FILES` in `scripts/build_wasm.bash` if the reference lives in
 a new file. The HTML is revalidated on every visit.
 
