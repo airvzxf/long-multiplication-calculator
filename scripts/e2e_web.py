@@ -80,6 +80,54 @@ def read_asset_version(version: str) -> str:
     return f"{version}-{commit}"
 
 
+def git(*args: str) -> str | None:
+    try:
+        return subprocess.run(
+            ["git", "-C", str(REPO), *args], capture_output=True, text=True, check=True
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def read_build() -> dict[str, str]:
+    """The footer's build data, as build_wasm.bash stamps it."""
+    build = {"commit": git("rev-parse", "HEAD") or "", "release": "", "ahead": ""}
+    describe = git("describe", "--tags", "--long", "--match", "v[0-9]*") if build["commit"] else None
+    if describe:
+        match = re.fullmatch(r"v(.+)-(\d+)-g[0-9a-f]+", describe)
+        if match:
+            build["release"], build["ahead"] = match.groups()
+    return build
+
+
+def expected_site_version(version: str, lang: str) -> str:
+    """The footer's site version, in `lang`, for the current checkout."""
+    build = read_build()
+    if not build["commit"]:
+        return version
+    short = build["commit"][:7]
+    if not build["release"]:
+        return f"{version}, commit {short}"
+    ahead = int(build["ahead"])
+    plural = "s" if ahead != 1 else ""
+    if ahead == 0:
+        return f"{build['release']} ({short})"
+    if lang == "es":
+        return f"{build['release']} y {ahead} commit{plural} más ({short})"
+    return f"{build['release']} + {ahead} commit{plural} ({short})"
+
+
+def check_site_version(browser: Browser, version: str, lang: str) -> None:
+    expected = expected_site_version(version, lang)
+    shown = browser.js("return document.getElementById('site-version').textContent")
+    check(shown == expected, f"the footer's site version reads {expected!r}")
+    commit = read_build()["commit"]
+    if commit:
+        href = browser.js("const a = document.querySelector('#site-version a'); return a && a.href")
+        check(href == f"https://github.com/airvzxf/long-multiplication-calculator/commit/{commit}",
+              "its commit links to GitHub")
+
+
 def stage_site(web: Path, version: str, into: Path) -> Path:
     """Copy `web` into `into/web` and stamp the version placeholders."""
     if not (web / WASM).is_file():
@@ -89,7 +137,10 @@ def stage_site(web: Path, version: str, into: Path) -> Path:
     for name in STAMPED:
         path = site / name
         text = path.read_text(encoding="utf-8")
+        build = read_build()
         text = text.replace("__ASSET_VERSION__", read_asset_version(version)).replace("__WASM_VERSION__", version)
+        text = text.replace("__SITE_COMMIT__", build["commit"]).replace("__SITE_RELEASE__", build["release"])
+        text = text.replace("__SITE_AHEAD__", build["ahead"])
         path.write_text(text, encoding="utf-8")
     return site
 
@@ -422,10 +473,9 @@ def english(browser: Browser, fixture: str, version: str) -> None:
     check(browser.js("return document.documentElement.lang") == "en", "the page is in English")
     check(browser.js("return document.querySelector('h1').textContent") == "Long Multiplication Calculator",
           "the heading is in English")
-    footer = browser.js("return document.querySelector('footer').textContent")
-    check(f"Site version: {version}." in footer and browser.js(
-        "return document.getElementById('app-version').textContent") == version,
-        f"the footer shows version {version} for the site and the WASM module")
+    check(browser.js("return document.getElementById('app-version').textContent") == version,
+          f"the footer shows version {version} for the WASM module")
+    check_site_version(browser, version, "en")
     asset = read_asset_version(version)
     urls = browser.js("return [...document.querySelectorAll('script[src], link[rel=stylesheet]')]"
                       ".map((e) => e.src || e.href)")
@@ -497,7 +547,7 @@ def english(browser: Browser, fixture: str, version: str) -> None:
     check_console(browser)
 
 
-def spanish(browser: Browser, fixture: str) -> None:
+def spanish(browser: Browser, fixture: str, version: str) -> None:
     print("Spanish (es):")
     browser.open("/?multiplicand=13597&multiplier=8642")
     browser.wait_ready()
@@ -506,6 +556,7 @@ def spanish(browser: Browser, fixture: str) -> None:
     check(browser.js("return document.querySelector('h1').textContent")
           == "Calculadora de multiplicación paso a paso", "the heading is in Spanish")
     check(True, "a shared link calculates the table: 'Tabla lista: 89 filas.'")
+    check_site_version(browser, version, "es")
     check_table(browser, fixture)
     check(browser.js("return document.getElementById('download').textContent") == "Descargar JSON",
           "the download button reads 'Descargar JSON'")
@@ -550,7 +601,7 @@ def main() -> int:
         driver = Driver(args.chromedriver)
         print(f"Serving {args.web} (version {version}) at {base}")
         try:
-            for lang, scenario in (("en-US", lambda b: english(b, fixture, version)), ("es", lambda b: spanish(b, fixture))):
+            for lang, scenario in (("en-US", lambda b: english(b, fixture, version)), ("es", lambda b: spanish(b, fixture, version))):
                 downloads = Path(tmp) / f"downloads-{lang}"
                 downloads.mkdir()
                 browser = Browser(driver, base, lang, args.chrome_binary, downloads)

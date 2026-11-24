@@ -6,6 +6,13 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Web: the footer's site version names the commit the page was built
+  from, with a link to it on GitHub, and how many commits it is ahead
+  of the last release, for example "2.4.0 + 1 commit (009d485)", or
+  "2.4.0 y 1 commit más (009d485)" in Spanish.
+
 ### Fixed
 
 - Web: every asset URL carries the commit as well as the version

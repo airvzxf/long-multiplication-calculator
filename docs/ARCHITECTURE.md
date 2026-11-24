@@ -172,7 +172,11 @@ Also a thin wrapper. Exports:
   test compares it with `tests/fixtures/*.json`).
 - `maxDigits()` and `maxOutputBytes()` — the limits, for friendlier
   client-side validation.
-- `version()` — the package version, shown in the page footer.
+- `version()` — the package version, shown in the page footer as
+  the app version. The site version next to it comes from git at
+  build time: the last release tag, how many commits the deployed
+  page is ahead of it, and a link to its commit (for example
+  "2.4.0 + 1 commit (009d485)").
 
 A `#[wasm_bindgen(start)]` hook installs `console_error_panic_hook`
 so that any Rust panic surfaces in the browser dev tools as a readable

@@ -58,6 +58,7 @@ const jsonRequests = new Map();
 let walk = null;
 
 translatePage();
+showSiteVersion();
 showEmptyState();
 startWorker();
 
@@ -426,6 +427,36 @@ function setInvalid(input, invalid) {
     } else {
         input.removeAttribute('aria-invalid');
     }
+}
+
+/**
+ * The footer's site version: the last release, how many commits the
+ * page is ahead of it and a link to the commit, for example
+ * "2.4.0 + 1 commit (009d485)". `build_wasm.bash` stamps the data;
+ * without it (a build outside git) the plain version stays.
+ */
+function showSiteVersion() {
+    const site = $('site-version');
+    const { commit = '', release = '', ahead = '', commitUrl = '' } = site?.dataset ?? {};
+    if (!/^[0-9a-f]{40}$/.test(commit)) {
+        return;
+    }
+    let template;
+    if (release && /^\d+$/.test(ahead)) {
+        const count = Number(ahead);
+        const key = count === 0 ? 'footer.release' : count === 1 ? 'footer.aheadOne' : 'footer.ahead';
+        template = t(key, { version: release, count: formatNumber(count) });
+    } else {
+        template = t('footer.build', { version: site.textContent.trim() });
+    }
+    const link = document.createElement('a');
+    link.href = commitUrl;
+    link.textContent = commit.slice(0, 7);
+    link.title = t('footer.commitTitle', { sha: commit });
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    const [before, after = ''] = template.split('{commit}');
+    site.replaceChildren(before, link, after);
 }
 
 function showEmptyState() {
