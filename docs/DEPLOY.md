@@ -52,8 +52,11 @@ commit:
    and `wasm-opt` (`binaryen`).
 2. Runs `scripts/build_wasm.bash --no-revert` to compile and optimise
    the WASM module into `web/asset/js/wasm/`, stamp the version and
-   the commit into every asset URL (`?v=<version>-<commit>`) and the
-   version into the footer.
+   the commit into every asset URL (`?v=<version>-<commit>`), and the
+   version and `git describe --tags` into the footer: it reads, for
+   example, "Site version: 2.4.0 + 1 commit (009d485)", with a link
+   to the commit. The checkout fetches the whole history
+   (`fetch-depth: 0`) so the tags are there.
 3. Publishes the `web/` directory to Cloudflare Pages with
    `cloudflare/wrangler-action`.
 

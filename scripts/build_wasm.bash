@@ -18,7 +18,14 @@
 #     `2.4.0-15e5355a1b2c`), or just the version outside a git
 #     checkout;
 #   * `__WASM_VERSION__`, the site version shown in the footer, becomes
-#     the package version (read from Cargo.toml).
+#     the package version (read from Cargo.toml);
+#   * `__SITE_COMMIT__`, `__SITE_RELEASE__` and `__SITE_AHEAD__`, data
+#     attributes of the footer, become the full commit, the last
+#     release tag before it (without the `v`) and how many commits it
+#     is ahead of that tag (`git describe --tags --long`). app.js then
+#     shows, for example, "2.4.0 + 1 commit (009d485)" with a link to
+#     the commit. Outside git, or without tags, they stay empty and the
+#     footer shows the package version alone (or with the commit).
 # Because every deployed commit gets new asset URLs, `web/_headers`
 # can cache /asset/* for a year without ever serving a stale file,
 # even when `main` is deployed between two releases. (`-`, not `+`:
@@ -85,6 +92,23 @@ else
 fi
 echo ">>> Asset version: ${ASSET_VERSION}"
 
+# What the footer says about the build. A shallow clone has no tags:
+# the deploy and CI check out the whole history (`fetch-depth: 0`).
+SITE_RELEASE=""
+SITE_AHEAD=""
+if SITE_COMMIT=$(git -C "${REPO_ROOT}" rev-parse HEAD 2>/dev/null); then
+    if DESCRIBE=$(git -C "${REPO_ROOT}" describe --tags --long --match 'v[0-9]*' 2>/dev/null); then
+        # v2.4.0-1-g009d485 -> release 2.4.0, 1 commit ahead.
+        SITE_AHEAD="${DESCRIBE%-g*}"
+        SITE_AHEAD="${SITE_AHEAD##*-}"
+        SITE_RELEASE="${DESCRIBE%-*-g*}"
+        SITE_RELEASE="${SITE_RELEASE#v}"
+    fi
+else
+    SITE_COMMIT=""
+fi
+echo ">>> Site build: commit ${SITE_COMMIT:-none}, release ${SITE_RELEASE:-none}, ahead ${SITE_AHEAD:-none}"
+
 echo ">>> Building WASM (target: web, release, out: ${OUT_DIR})"
 wasm-pack build \
     "${REPO_ROOT}/crates/wasm" \
@@ -129,8 +153,14 @@ else
 fi
 
 echo ">>> Stamping version: ${WASM_VERSION}"
-sed -i -e "s|__ASSET_VERSION__|${ASSET_VERSION}|g" -e "s|__WASM_VERSION__|${WASM_VERSION}|g" "${STAMP_FILES[@]}"
-if grep -lE "__(ASSET|WASM)_VERSION__" "${STAMP_FILES[@]}"; then
+sed -i \
+    -e "s|__ASSET_VERSION__|${ASSET_VERSION}|g" \
+    -e "s|__WASM_VERSION__|${WASM_VERSION}|g" \
+    -e "s|__SITE_COMMIT__|${SITE_COMMIT}|g" \
+    -e "s|__SITE_RELEASE__|${SITE_RELEASE}|g" \
+    -e "s|__SITE_AHEAD__|${SITE_AHEAD}|g" \
+    "${STAMP_FILES[@]}"
+if grep -lE "__(ASSET_VERSION|WASM_VERSION|SITE_COMMIT|SITE_RELEASE|SITE_AHEAD)__" "${STAMP_FILES[@]}"; then
     echo ">>> ERROR: placeholder left in the files above" >&2
     exit 1
 fi
