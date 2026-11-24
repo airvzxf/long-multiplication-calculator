@@ -7,7 +7,7 @@
 | Unit (algorithm) | `cargo test` | `#[cfg(test)] mod tests` inside each `crates/core/src/*.rs` module |
 | Doctests | `cargo test --doc` | `///` examples in every public function |
 | Invariants (property tests) | `cargo test` + `proptest` | `crates/core/src/multiplication.rs`: every row has the same width, the product is right, the size estimate is an upper bound (256 random pairs of up to 60 digits, 64 nine-heavy pairs that need several `Sub n.` sections, plus fixed edge cases); a failure is shrunk to the smallest operands |
-| Benchmarks | `cargo bench -p long-multiplication-core` (`criterion`) | `crates/core/benches/get_table.rs`; local only, not in CI |
+| Benchmarks | `cargo bench -p long-multiplication-core` (`criterion`) | `crates/core/benches/get_table.rs`: `get_table` (in memory), `write_table` in 256 KiB blocks (the CLI's streaming path) and `estimate_table_bytes`; local only, not in CI |
 | Other platforms | CI `T2 · test (macOS)`, `T2 · test (Windows)` | the whole `cargo test --workspace`, golden fixtures included |
 | CLI integration | `assert_cmd` + `predicates` + `tempfile` + `serde_json` | `crates/cli/tests/cli.rs` (text and JSON golden fixtures, limits, closed pipe, stored file) |
 | WASM smoke | `wasm-pack test --headless --chrome` | `crates/wasm/src/lib.rs` (the `#[cfg(target_arch = "wasm32")]` tests) |
