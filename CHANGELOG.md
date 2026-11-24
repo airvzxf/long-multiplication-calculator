@@ -8,6 +8,13 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Web: language selector.** "English | Español" at the top of the
+  page switches the language in place (the status line, the
+  step-by-step walk and the footer included) and remembers the
+  choice. `?lang=en` or `?lang=es` in a link picks the language for
+  that visit, and the link in the address bar keeps an explicit
+  language. Without a choice the page follows the browser, in
+  English by default.
 - Web: the footer's site version names the commit the page was built
   from, with a link to it on GitHub, and how many commits it is ahead
   of the last release, for example "2.4.0 + 1 commit (009d485)", or

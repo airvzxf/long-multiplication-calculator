@@ -11,11 +11,16 @@
 // the form. After every successful calculation the address bar is
 // updated to the link of that table.
 //
+// The language selector (`[data-lang]` links in the header) switches
+// the page between English and Spanish in place and saves the choice
+// (see i18n.js). An explicit language stays in the links the page
+// builds: `/?multiplicand=13597&multiplier=8642&lang=es`.
+//
 // Every table can be downloaded as JSON (the same bytes as the CLI's
 // `--format json`) and walked through step by step (`steps.js`). The
 // worker writes the JSON only when one of them asks for it.
 
-import { formatBytes, formatNumber, t, translatePage } from './i18n.js?v=__ASSET_VERSION__';
+import { explicit, formatBytes, formatNumber, lang, setLanguage, t, translatePage } from './i18n.js?v=__ASSET_VERSION__';
 import { StepView, Steps } from './steps.js?v=__ASSET_VERSION__';
 
 const $ = (id) => document.getElementById(id);
@@ -39,6 +44,10 @@ const status = $('status');
 const statusText = $('status-text');
 const solution = $('solution');
 const appVersion = $('app-version');
+const languageLinks = document.querySelectorAll('a[data-lang]');
+// The package version stamped into the footer, before showSiteVersion
+// replaces the text.
+const siteVersionText = $('site-version')?.textContent.trim() ?? '';
 
 const DIGIT_RE = /^[0-9]+$/;
 
@@ -56,11 +65,24 @@ let jsonId = 0;
 const jsonRequests = new Map();
 // The step-by-step walk, while it is open.
 let walk = null;
+// The status line, as a function so it can be shown in another language.
+let statusMessage = null;
 
 translatePage();
+updateLanguageLinks();
 showSiteVersion();
 showEmptyState();
 startWorker();
+
+for (const link of languageLinks) {
+    link.addEventListener('click', (ev) => {
+        if (ev.button !== 0 || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) {
+            return; // A new tab or window follows the link itself.
+        }
+        ev.preventDefault();
+        switchLanguage(link.dataset.lang);
+    });
+}
 
 form.addEventListener('submit', (ev) => {
     ev.preventDefault();
@@ -105,7 +127,7 @@ copyBtn.addEventListener('click', async () => {
             copyBtn.textContent = t('form.copy');
         }, 1500);
     } catch (err) {
-        showStatus(t('status.copyFailed', { message: err?.message ?? err }), 'error');
+        showStatus(() => t('status.copyFailed', { message: err?.message ?? err }), 'error');
     }
 });
 
@@ -116,7 +138,7 @@ downloadBtn.addEventListener('click', async () => {
         json = await tableJson();
     } catch (err) {
         if (err) {
-            showStatus(t('status.jsonFailed', { message: err.message ?? err }), 'error');
+            showStatus(() => t('status.jsonFailed', { message: err.message ?? err }), 'error');
         }
         return;
     }
@@ -141,7 +163,7 @@ stepsBtn.addEventListener('click', async () => {
         json = await tableJson();
     } catch (err) {
         if (err) {
-            showStatus(t('status.jsonFailed', { message: err.message ?? err }), 'error');
+            showStatus(() => t('status.jsonFailed', { message: err.message ?? err }), 'error');
         }
         return;
     } finally {
@@ -178,12 +200,12 @@ solution.addEventListener('keydown', (ev) => {
 function startWorker() {
     calculateBtn.disabled = true;
     loading = true;
-    showStatus(t('status.loading'), 'info');
+    showStatus(() => t('status.loading'), 'info');
     worker = new Worker(new URL('./worker.js?v=__ASSET_VERSION__', import.meta.url), { type: 'module' });
     worker.addEventListener('message', onWorkerMessage);
     worker.addEventListener('error', (ev) => {
         loading = false;
-        showStatus(t('status.loadFailed', { message: ev.message ?? 'unknown error' }), 'error');
+        showStatus(() => t('status.loadFailed', { message: ev.message ?? 'unknown error' }), 'error');
     });
 }
 
@@ -208,7 +230,7 @@ function onWorkerMessage({ data }) {
             break;
         case 'fatal':
             loading = false;
-            showStatus(t('status.loadFailed', { message: data.message }), 'error');
+            showStatus(() => t('status.loadFailed', { message: data.message }), 'error');
             break;
         case 'result':
             if (data.id !== pendingId) {
@@ -225,7 +247,7 @@ function onWorkerMessage({ data }) {
             stepsBtn.disabled = false;
             // Announce a short summary, never the table itself: a
             // screen reader must not read megabytes of text aloud.
-            showStatus(t('status.ready', { rows: formatNumber(data.rows) }), 'info');
+            showStatus(() => t('status.ready', { rows: formatNumber(data.rows) }), 'info');
             updateSharedLink(pendingInputs);
             break;
         case 'error':
@@ -233,7 +255,7 @@ function onWorkerMessage({ data }) {
                 return;
             }
             finish();
-            showStatus(errorMessage(data), 'error');
+            showStatus(() => errorMessage(data), 'error');
             break;
         case 'json':
         case 'json-error': {
@@ -300,17 +322,19 @@ function forgetTable() {
     stepsBtn.disabled = true;
 }
 
-function openSteps(process, table) {
+function openSteps(process, table, { index = 0, focus = true } = {}) {
     const steps = new Steps(process, table);
-    walk = { steps, view: new StepView(solution, table), index: -1 };
+    walk = { steps, view: new StepView(solution, table), index: -1, process, table };
     stepSection.replaceChildren(
         ...steps.sections.map((section, index) => new Option(section.label, String(index))),
     );
     stepsPanel.hidden = false;
     stepsBtn.setAttribute('aria-pressed', 'true');
     stepsBtn.textContent = t('form.stepsHide');
-    goToStep(0);
-    solution.focus({ preventScroll: true });
+    goToStep(index);
+    if (focus) {
+        solution.focus({ preventScroll: true });
+    }
 }
 
 function closeSteps() {
@@ -361,15 +385,18 @@ function updateSharedLink(inputs) {
         return;
     }
     const url = new URL(window.location.href);
-    url.search = new URLSearchParams(inputs).toString();
+    url.search = linkQuery(inputs);
     window.history.replaceState(null, '', url);
+    updateLanguageLinks();
 }
 
+/** Drop the table from the address; an explicit language stays. */
 function clearSharedLink() {
-    if (window.location.search) {
-        const url = new URL(window.location.href);
-        url.search = '';
+    const url = new URL(window.location.href);
+    url.search = linkQuery(null);
+    if (url.href !== window.location.href) {
         window.history.replaceState(null, '', url);
+        updateLanguageLinks();
     }
 }
 
@@ -382,7 +409,7 @@ function run() {
     setInvalid(multiplicand, !aDigits);
     setInvalid(multiplier, !bDigits);
     if (!aDigits || !bDigits) {
-        showStatus(t('error.digitsOnly'), 'error');
+        showStatus(() => t('error.digitsOnly'), 'error');
         return;
     }
 
@@ -391,7 +418,7 @@ function run() {
     setInvalid(multiplicand, aTooLong);
     setInvalid(multiplier, bTooLong);
     if (aTooLong || bTooLong) {
-        showStatus(t('error.tooLong', { max: limits.maxDigits }), 'error');
+        showStatus(() => t('error.tooLong', { max: limits.maxDigits }), 'error');
         return;
     }
 
@@ -401,7 +428,7 @@ function run() {
     copyBtn.disabled = true;
     closeSteps();
     forgetTable();
-    showStatus(t('status.calculating'), 'info');
+    showStatus(() => t('status.calculating'), 'info');
     worker.postMessage({ id: pendingId, multiplicand: a, multiplier: b });
 }
 
@@ -447,7 +474,7 @@ function showSiteVersion() {
         const key = count === 0 ? 'footer.release' : count === 1 ? 'footer.aheadOne' : 'footer.ahead';
         template = t(key, { version: release, count: formatNumber(count) });
     } else {
-        template = t('footer.build', { version: site.textContent.trim() });
+        template = t('footer.build', { version: siteVersionText });
     }
     const link = document.createElement('a');
     link.href = commitUrl;
@@ -466,13 +493,64 @@ function showEmptyState() {
     solution.replaceChildren(empty);
 }
 
+/** Show the status line; `message` returns its text in the current language. */
 function showStatus(message, kind) {
-    statusText.textContent = message;
+    statusMessage = message;
+    statusText.textContent = message();
     status.dataset.kind = kind;
     status.hidden = false;
 }
 
 function hideStatus() {
+    statusMessage = null;
     status.hidden = true;
     statusText.textContent = '';
+}
+
+/** Show the page in `next` (`en` or `es`), chosen in the selector. */
+function switchLanguage(next) {
+    if (next === lang && explicit) {
+        return;
+    }
+    setLanguage(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set('lang', next);
+    window.history.replaceState(null, '', url);
+    updateLanguageLinks();
+    showSiteVersion();
+    if (solution.querySelector('.empty-state')) {
+        showEmptyState();
+    }
+    copyBtn.textContent = t('form.copy');
+    stepsBtn.textContent = t(walk ? 'form.stepsHide' : 'form.steps');
+    if (walk) {
+        // Rebuild the walk: its sections and descriptions are text.
+        const { process, table, index } = walk;
+        closeSteps();
+        openSteps(process, table, { index, focus: false });
+    }
+    if (statusMessage) {
+        statusText.textContent = statusMessage();
+    }
+}
+
+/**
+ * The query string of a link to `inputs` (none: no table), with the
+ * language when it was chosen rather than taken from the browser.
+ */
+function linkQuery(inputs) {
+    const params = new URLSearchParams(inputs ?? {});
+    if (explicit) {
+        params.set('lang', lang);
+    }
+    return params.toString();
+}
+
+/** Point each selector link at the current address in its language. */
+function updateLanguageLinks() {
+    for (const link of languageLinks) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('lang', link.dataset.lang);
+        link.href = `?${params}`;
+    }
 }

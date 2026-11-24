@@ -1,14 +1,24 @@
 // Long Multiplication Calculator - interface language.
 //
-// The page is written in English. When the browser prefers Spanish,
-// every element with `data-i18n="key"` gets the Spanish text, and the
-// messages built by app.js use the same dictionary. No reload and no
-// network request: both languages ship in this file.
+// The page is written in English and can be shown in Spanish. Every
+// element with `data-i18n="key"` gets the text of the interface
+// language, and the messages built by app.js use the same dictionary.
+// No reload and no network request: both languages ship in this file.
+//
+// The language, from the first source that names a known one:
+//   1. `?lang=en` or `?lang=es` in the address (a shared link); it
+//      applies to this visit and is not saved;
+//   2. the visitor's choice in the language selector, saved in
+//      localStorage;
+//   3. the browser's preferred languages (`navigator.languages`);
+//   4. English.
+// The first two are explicit: the links the page builds keep them.
 
 const MESSAGES = {
     en: {
         'page.title': 'Long Multiplication Calculator',
         'page.heading': 'Long Multiplication Calculator',
+        'language.label': 'Language',
         'intro.heading': 'Introduction',
         'intro.text':
             'The long multiplication is the same as you did in the school when you were a kid. ' +
@@ -75,6 +85,7 @@ const MESSAGES = {
     es: {
         'page.title': 'Calculadora de multiplicación paso a paso',
         'page.heading': 'Calculadora de multiplicación paso a paso',
+        'language.label': 'Idioma',
         'intro.heading': 'Introducción',
         'intro.text':
             'Es la misma multiplicación que aprendiste en la escuela. ' +
@@ -141,17 +152,64 @@ const MESSAGES = {
     },
 };
 
-/** The interface language: `es` when the browser prefers Spanish, else `en`. */
-export const lang = pickLanguage(navigator.languages ?? [navigator.language]);
+/** The languages of the interface. */
+export const LANGUAGES = Object.keys(MESSAGES);
 
-function pickLanguage(preferred) {
+const STORAGE_KEY = 'lang';
+
+const initial = initialLanguage();
+
+/** The interface language, `en` or `es`. */
+export let lang = initial.lang;
+
+/** Whether the language was chosen (in the address or the selector), not taken from the browser. */
+export let explicit = initial.explicit;
+
+function initialLanguage() {
+    const fromUrl = new URLSearchParams(window.location.search).get('lang');
+    if (LANGUAGES.includes(fromUrl)) {
+        return { lang: fromUrl, explicit: true };
+    }
+    const saved = readSaved();
+    if (LANGUAGES.includes(saved)) {
+        return { lang: saved, explicit: true };
+    }
+    return { lang: browserLanguage(navigator.languages ?? [navigator.language]), explicit: false };
+}
+
+function browserLanguage(preferred) {
     for (const tag of preferred) {
         const base = String(tag ?? '').toLowerCase().split('-')[0];
-        if (base in MESSAGES) {
+        if (LANGUAGES.includes(base)) {
             return base;
         }
     }
     return 'en';
+}
+
+// localStorage can be missing or throw (private windows, blocked
+// site data); the choice then lasts until the page is closed.
+function readSaved() {
+    try {
+        return window.localStorage.getItem(STORAGE_KEY);
+    } catch {
+        return null;
+    }
+}
+
+/** Switch to `next`, chosen in the selector: save it and translate the static page. */
+export function setLanguage(next) {
+    if (!LANGUAGES.includes(next)) {
+        return;
+    }
+    lang = next;
+    explicit = true;
+    try {
+        window.localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+        // Not saved; see readSaved.
+    }
+    translatePage();
 }
 
 /** The message `key` in the interface language, with `{name}` placeholders filled in. */
@@ -183,17 +241,26 @@ export function formatBytes(bytes) {
 
 /**
  * Translate the static page: `lang`, the title, the text of every
- * `[data-i18n]` element and the label (`aria-label` and `title`) of
- * every `[data-i18n-label]` element, such as the icon buttons.
+ * `[data-i18n]` element, the label (`aria-label` and `title`) of
+ * every `[data-i18n-label]` element, such as the icon buttons, the
+ * `aria-label` alone of every `[data-i18n-aria]` element, and
+ * `aria-current` in the language selector (`[data-lang]` links).
  */
 export function translatePage() {
     document.documentElement.lang = lang;
-    if (lang === 'en') {
-        return;
-    }
     document.title = t('page.title');
+    for (const link of document.querySelectorAll('a[data-lang]')) {
+        if (link.dataset.lang === lang) {
+            link.setAttribute('aria-current', 'true');
+        } else {
+            link.removeAttribute('aria-current');
+        }
+    }
     for (const element of document.querySelectorAll('[data-i18n]')) {
         element.textContent = t(element.dataset.i18n);
+    }
+    for (const element of document.querySelectorAll('[data-i18n-aria]')) {
+        element.setAttribute('aria-label', t(element.dataset.i18nAria));
     }
     for (const element of document.querySelectorAll('[data-i18n-label]')) {
         const label = t(element.dataset.i18nLabel);

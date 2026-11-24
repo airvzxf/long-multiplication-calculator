@@ -71,17 +71,19 @@ Las celdas vacías y las reglas se escribían carácter a carácter (más de 100
 
 `actionlint` sobre `.github/workflows/` y `shellcheck` sobre `scripts/*.bash` y `packaging/aur/*.bash`, con `.github/actionlint.yaml` para los falsos positivos conocidos (`concurrency.queue: max`, la etiqueta `macos-15-intel`).
 
-### H24. Selector de idioma en la web
+### H24. ~~Selector de idioma en la web~~ — hecho (diseño aprobado por el autor)
 
-Inglés por defecto, selector es/en visible, `?lang=es|en` en los enlaces y la elección recordada en `localStorage` (con `try/catch`); sin elección explícita, el idioma del navegador. Diseño pendiente de la decisión del autor.
+Enlaces «English | Español» a la derecha del título (debajo en pantallas estrechas), con `href="?lang=…"` reales y `aria-current`. Prioridad: `?lang=` (se aplica a esa visita, no se guarda) > elección guardada en `localStorage` (solo al pulsar el selector, con `try/catch`) > `navigator.languages` > inglés. El cambio se hace sin recargar: estado, paso a paso (en el mismo paso), pie y tabla vacía. El enlace de la barra de direcciones lleva `lang=` solo si el idioma es explícito; Clear lo conserva. El e2e lo comprueba en los dos navegadores.
 
 ### H25. Idioma de la tabla en el WASM
 
-Los errores ya se traducen en la página; la tabla (`Symbols`, `Pos.`, `Ops.`, `Sum.`, `Sub n.`, `Pro.`, leyenda, autor) está en inglés y es contractual. Opciones (parámetro de idioma solo para la web o dejarla en inglés) pendientes de la decisión del autor.
+Los errores ya se traducen en la página; la tabla (`Symbols`, `Pos.`, `Ops.`, `Sum.`, `Sub n.`, `Pro.`, leyenda, autor) está en inglés y es contractual.
 
-### H26. Cloudflare Pages conectado a GitHub
+Decisión del autor (2026-11-24): la tabla sigue en inglés en el WASM, la CLI y la web (sin cambios en fixtures, JSON ni tamaño del WASM). En la web en español se añaden referencias de traducción de las etiquetas de la tabla. Descartados: un parámetro de idioma en `calculate`/`calculateJson` (nuevos fixtures, ~1-2 KB más de WASM, `steps.js` con dos idiomas, la tabla de la web dejaría de ser la de la CLI) y traducir el texto de la tabla en JS (frágil con los anchos de columna).
 
-Sustituir la subida directa con API token (`deploy.yml` + wrangler) por la integración de Pages con Git. Pendiente: investigar si el proyecto actual puede conectarse, el build en Pages (Rust, wasm-pack, binaryen), `git describe` en su clon, la pérdida de «solo se despliega si pasa la CI», y qué hacer con `deploy.yml` y el secreto.
+### H26. ~~Cloudflare Pages conectado a GitHub~~ — descartado (decisión del autor, 2026-11-24: se queda la subida directa)
+
+Investigado: un proyecto de subida directa no se puede pasar a Git («If you choose Direct Upload, you cannot switch to Git integration later»), así que habría que crear otro proyecto y mover multiplication.rovisoft.net (con un corte breve). La imagen de build v3 no trae Rust, wasm-pack ni binaryen y no cachea cargo (2-3 min por build, límite 20 min). La profundidad del clon (tags para `git describe`) no está documentada. Pages despliega en cada push y no puede esperar a la CI, y las vistas previas con Cloudflare Access no son accesibles para el e2e sin un service token. El `deploy.yml` actual despliega exactamente el commit que pasó la CI, con caché de cargo y verificación de producción (H22).
 
 ---
 
@@ -796,9 +798,9 @@ funciones puras simples:
 | ~~H21~~ | ~~Commit de la web en el pie~~ (hecho) | ~1h | Medio | — |
 | ~~H22~~ | ~~e2e contra producción tras cada deploy~~ (hecho) | ~1h | **Alto** | — |
 | ~~H23~~ | ~~Job `T0 · lint` (actionlint, shellcheck)~~ (hecho) | ~30m | Medio | — |
-| H24 | Selector de idioma es/en en la web | ~2h | Medio | — |
-| H25 | Idioma de la tabla en el WASM | ~2h-1d | Bajo-Medio | — |
-| H26 | Cloudflare Pages conectado a GitHub | ~2h | Bajo-Medio | — |
+| ~~H24~~ | ~~Selector de idioma es/en en la web~~ (hecho) | ~2h | Medio | — |
+| H25 | Tabla en inglés; referencias de traducción en la web en español | ~1h | Bajo-Medio | — |
+| ~~H26~~ | ~~Cloudflare Pages conectado a GitHub~~ (descartado) | ~2h | Bajo-Medio | — |
 
 **Estimación total Tier 1 (H1-H4):** ~90 minutos. Aporta 4 mejoras estructurales reales.
 

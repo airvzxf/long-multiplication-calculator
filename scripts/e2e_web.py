@@ -35,6 +35,9 @@ link with letters, a link with too many digits (answered in less than
 (a Content Security Policy violation is one). The downloaded JSON
 must equal the CLI's golden fixture, and the step-by-step walk must
 highlight, at every step, exactly the digits its description names.
+The language selector must switch the page in place (status, walk
+and footer included), keep the language in the links, remember the
+choice, and let ``?lang=`` win without being saved.
 """
 
 from __future__ import annotations
@@ -512,6 +515,78 @@ def check_download(browser: Browser, name: str, expected: str) -> None:
     check(True, f"Download JSON saves {name}, equal to the CLI's golden fixture")
 
 
+LANGUAGE_STATE = """
+return {
+    lang: document.documentElement.lang,
+    heading: document.querySelector('h1').textContent,
+    current: [...document.querySelectorAll('a[data-lang][aria-current="true"]')].map((a) => a.dataset.lang),
+    links: [...document.querySelectorAll('a[data-lang]')].map((a) => a.getAttribute('href')),
+    search: location.search,
+};
+"""
+
+HEADINGS = {"en": "Long Multiplication Calculator", "es": "Calculadora de multiplicación paso a paso"}
+
+
+def check_language(browser: Browser, lang: str, search: str, why: str) -> None:
+    state = browser.js(LANGUAGE_STATE)
+    check(state["lang"] == lang and state["heading"] == HEADINGS[lang] and state["current"] == [lang],
+          f"{why}: the page is in {lang!r} and the selector marks it")
+    check(state["search"] == search, f"the address is {search or 'without a query'!r}")
+    query = search.lstrip("?")
+    expected = []
+    for other in ("en", "es"):
+        params = [part for part in query.split("&") if part and not part.startswith("lang=")]
+        expected.append("?" + "&".join([*params, f"lang={other}"]))
+    check(state["links"] == expected, f"the selector links keep the address: {expected}")
+
+
+def language_selector(browser: Browser, fixture: str, version: str) -> None:
+    """An English browser with nothing saved: switch, remember, override."""
+    print("Language selector:")
+    browser.open("/")
+    browser.wait_ready()
+    check_language(browser, "en", "", "an English browser")
+    browser.type("#multiplicand", "13597")
+    browser.type("#multiplier", "8642")
+    browser.click("#calculate")
+    browser.wait_status("Table ready: 89 rows.")
+    browser.click("#steps-toggle")
+    browser.click("#step-next")
+    browser.click('a[data-lang="es"]')
+    check_language(browser, "es", "?multiplicand=13597&multiplier=8642&lang=es", "Español")
+    check(browser.status() == "Tabla lista: 89 filas.", "the status line is translated in place")
+    check(browser.js("return [document.getElementById('step-counter').textContent, "
+                     "document.getElementById('steps-toggle').textContent, "
+                     "document.getElementById('step-text').textContent.startsWith('Fila 1: ')]")
+          == ["Paso 2 de 47", "Ocultar pasos", True],
+          "the open walk stays at step 2, now in Spanish")
+    check_site_version(browser, version, "es")
+    check_table(browser, fixture)
+    browser.click("#steps-toggle")
+    browser.click("#clear")
+    browser.wait_for("Clear", lambda: browser.js("return document.querySelector('#solution .empty-state') !== null"))
+    check(browser.js("return document.querySelector('#solution .empty-state').textContent")
+          == "La tabla aparecerá aquí.", "Clear shows the empty table in Spanish")
+    check_language(browser, "es", "?lang=es", "after Clear")
+
+    browser.open("/")
+    browser.wait_ready()
+    check_language(browser, "es", "", "the saved choice on a new visit")
+    browser.open("/?lang=en&multiplicand=13597&multiplier=8642")
+    browser.wait_ready()
+    browser.wait_status("Table ready: 89 rows.")
+    check_language(browser, "en", "?multiplicand=13597&multiplier=8642&lang=en", "?lang=en over the saved choice")
+    browser.open("/")
+    browser.wait_ready()
+    check_language(browser, "es", "", "?lang= is not saved")
+    browser.click('a[data-lang="en"]')
+    check_language(browser, "en", "?lang=en", "English")
+    browser.open("/")
+    browser.wait_ready()
+    check_language(browser, "en", "", "the new choice is saved")
+
+
 def english(browser: Browser, fixture: str, version: str) -> None:
     print("English (en-US):")
     browser.open("/")
@@ -590,6 +665,7 @@ def english(browser: Browser, fixture: str, version: str) -> None:
     elapsed = time.monotonic() - start
     check(elapsed < 5, f"a link with 2000 digits is refused in {elapsed:.2f} s (< 5 s)")
     check(browser.invalid() == ("true", None), "the 2000-digit operand is the one marked invalid")
+    language_selector(browser, fixture, version)
     check_console(browser)
 
 
@@ -624,6 +700,12 @@ def spanish(browser: Browser, fixture: str, version: str) -> None:
                      r"Usa la versión de línea de comandos para tablas más grandes\.", status) is not None,
         f"200 nines are refused with a Spanish size error: {status!r}",
     )
+    browser.open("/?lang=en")
+    browser.wait_ready()
+    check_language(browser, "en", "?lang=en", "a Spanish browser with ?lang=en")
+    browser.open("/")
+    browser.wait_ready()
+    check_language(browser, "es", "", "without ?lang=, the browser's language")
     check_console(browser)
 
 
