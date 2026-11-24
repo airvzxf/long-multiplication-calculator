@@ -97,7 +97,14 @@ with pre-built CLI binaries (`.github/workflows/release.yml`).
 5. Wait for the `release` workflow: it checks the tag, builds and
    smoke-tests five targets, publishes the Release with
    `SHA256SUMS` and an SBOM, then downloads the published assets
-   and verifies them (`Verify · published assets`).
+   and verifies them (`Verify · published assets`). Finally it
+   updates the AUR package `long-multiplication-bin`
+   (`Publish · AUR`): `packaging/aur/update.bash` takes the version
+   and the published checksums, makepkg builds and tests it, and
+   PKGBUILD + .SRCINFO are pushed with the `AUR_SSH_PRIVATE_KEY`
+   secret. Nothing to do by hand; the copy in `packaging/aur/` can be
+   synced in the next release PR (`update.bash X.Y.Z`, then
+   `makepkg --printsrcinfo > .SRCINFO`).
 6. If it fails after the tag exists, fix on `main` and either
    re-run it (`Actions → release → Run workflow`, tag `vX.Y.Z`) or
    delete and re-create the tag on the new commit.

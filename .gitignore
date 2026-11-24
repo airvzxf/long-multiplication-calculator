@@ -29,3 +29,9 @@ Cargo.lock.bak
 # Old binary artifacts in web/ (intentionally not in web/asset/bin any more)
 web/asset/bin/
 web/asset/bash/
+
+# Local makepkg runs in packaging/aur/
+/packaging/aur/src/
+/packaging/aur/pkg/
+/packaging/aur/*.tar.gz
+/packaging/aur/*.pkg.tar.*

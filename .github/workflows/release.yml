@@ -11,10 +11,14 @@ name: release
 #        git push origin vX.Y.Z
 #   3. This workflow validates the tag, builds, publishes, then
 #      downloads the published assets and checks them again.
+#   4. The AUR package `long-multiplication-bin` is pointed at the new
+#      release, built and tested with makepkg, and pushed to the AUR
+#      (secret `AUR_SSH_PRIVATE_KEY`; skipped for pre-releases).
 #
 # Dry run: a pull request that touches the release inputs runs the
-# build matrix and the SBOM (no tag checks, nothing published), so a
-# broken release is caught before anyone pushes a tag.
+# build matrix, the SBOM and a makepkg build of packaging/aur (no tag
+# checks, nothing published), so a broken release is caught before
+# anyone pushes a tag.
 
 on:
   push:
@@ -31,6 +35,7 @@ on:
       - 'crates/cli/**'
       - '.cargo/**'
       - 'rust-toolchain.toml'
+      - 'packaging/aur/**'
   workflow_dispatch:
     inputs:
       tag:
@@ -428,3 +433,98 @@ jobs:
           tar -xzf "${NAME}.tar.gz"
           "${NAME}/long-multiplication" 13597 8642 | cmp - ../tests/fixtures/13597_x_8642.txt
           echo "✓ published Linux binary matches the golden fixture"
+
+  # Build the AUR package from packaging/aur exactly as committed (it
+  # points at the last published release) and check that .SRCINFO is
+  # in sync. Pull requests only; nothing is pushed.
+  aur-check:
+    name: 'Build · AUR package (dry run)'
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: archlinux:base-devel
+    steps:
+      - name: Install git
+        run: pacman -Syu --noconfirm --needed git
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: makepkg (build, check, package)
+        run: packaging/aur/makepkg-ci.bash
+
+      - name: .SRCINFO matches the PKGBUILD
+        run: |
+          set -euo pipefail
+          diff -u packaging/aur/.SRCINFO /tmp/aur-build/.SRCINFO \
+            || { echo "::error::run 'makepkg --printsrcinfo > .SRCINFO' in packaging/aur"; exit 1; }
+
+  # Point the AUR package at the release that was just published and
+  # verified, build and test it with makepkg, then push PKGBUILD and
+  # .SRCINFO to ssh://aur@aur.archlinux.org/long-multiplication-bin.git.
+  # Re-running it for the same version is a no-op.
+  aur:
+    name: 'Publish · AUR (long-multiplication-bin)'
+    needs: [validate-tag-input, verify-published]
+    if: >-
+      github.event_name != 'pull_request' &&
+      !contains(needs.validate-tag-input.outputs.version, '-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: archlinux:base-devel
+    env:
+      VERSION: ${{ needs.validate-tag-input.outputs.version }}
+    steps:
+      - name: Install git and ssh
+        run: pacman -Syu --noconfirm --needed git openssh
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.validate-tag-input.outputs.tag }}
+          persist-credentials: false
+
+      - name: Point the PKGBUILD at the release
+        # Checksums come from the published SHA256SUMS, not from makepkg.
+        run: packaging/aur/update.bash "${VERSION}"
+
+      - name: makepkg (build, check, package)
+        run: |
+          set -euo pipefail
+          packaging/aur/makepkg-ci.bash
+          cp /tmp/aur-build/.SRCINFO packaging/aur/.SRCINFO
+
+      - name: Push to the AUR
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          # Ed25519 host key of aur.archlinux.org, fingerprint
+          # SHA256:RFzBCUItH9LZS0cKB5UE6ceAYhBD5C8GeOBip8Z11+4 (as listed
+          # on https://aur.archlinux.org). Pinned: never trust on first use.
+          AUR_HOST_KEY: 'aur.archlinux.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEuBKrPzbawxA/k2g6NcyV5jmqwJ2s+zpgZGZ7tpLIcN'
+        run: |
+          set -euo pipefail
+          if [[ -z "${AUR_SSH_PRIVATE_KEY}" ]]; then
+            echo "::error::secret AUR_SSH_PRIVATE_KEY is not set"
+            exit 1
+          fi
+          SSH_DIR="$(mktemp -d)"
+          trap 'rm -rf "${SSH_DIR}"' EXIT
+          printf '%s\n' "${AUR_SSH_PRIVATE_KEY}" > "${SSH_DIR}/key"
+          chmod 600 "${SSH_DIR}/key"
+          printf '%s\n' "${AUR_HOST_KEY}" > "${SSH_DIR}/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i ${SSH_DIR}/key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=${SSH_DIR}/known_hosts"
+
+          git clone ssh://aur@aur.archlinux.org/long-multiplication-bin.git aur-repo
+          cp packaging/aur/PKGBUILD packaging/aur/.SRCINFO aur-repo/
+          cd aur-repo
+          git add PKGBUILD .SRCINFO
+          if git diff --cached --quiet; then
+            echo "The AUR package is already at ${VERSION}; nothing to push."
+            exit 0
+          fi
+          git -c user.name='Israel Roldan' -c user.email='israel.alberto.rv@gmail.com' \
+            commit --quiet -m "Update to ${VERSION}"
+          git push origin HEAD:master
+          echo "✓ https://aur.archlinux.org/packages/long-multiplication-bin is at ${VERSION}"

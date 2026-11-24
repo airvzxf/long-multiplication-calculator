@@ -707,9 +707,9 @@ funciones puras simples:
 
 ---
 
-### Idea opcional: paquete AUR `long-multiplication-bin`
+### ~~Paquete AUR `long-multiplication-bin`~~ — hecho (`packaging/aur/`, publicado por `release.yml` en cada versión)
 
-Un `PKGBUILD` que descargue el binario de Linux de la GitHub Release y compruebe `SHA256SUMS`, como en telora. Aplazado por decisión del autor (2026-11-23).
+`PKGBUILD` que descarga el binario musl de la GitHub Release (x86_64 y aarch64) con los checksums de `SHA256SUMS`; el job `Publish · AUR` lo actualiza, lo prueba con `makepkg` y lo sube al AUR.
 
 ---
 
