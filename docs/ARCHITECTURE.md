@@ -190,9 +190,14 @@ the WASM bindings, so a big table never freezes the page and
 **Clear** cancels it. The user never makes a network request to
 compute anything.
 
-The interface is English, or Spanish when the browser prefers it:
-`i18n.js` holds both dictionaries and translates every
-`data-i18n` element. The worker reports a refused table as numbers
+The interface is English or Spanish: `i18n.js` holds both
+dictionaries and translates every `data-i18n` element. The language
+comes from `?lang=en|es` in the address (not saved), else the choice
+made in the selector at the top of the page (saved in
+`localStorage`), else the browser's preferred languages, else
+English. The selector switches the page in place, status line and
+step-by-step walk included, and an explicit language stays in the
+links the page writes to the address bar. The worker reports a refused table as numbers
 (`code: "too-large"`, the estimate and the limit, from the
 `estimateTableBytes` export) so the page can word it in either
 language; the table itself is the contractual output and stays as
