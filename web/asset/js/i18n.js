@@ -243,7 +243,9 @@ export function formatBytes(bytes) {
  * Translate the static page: `lang`, the title, the text of every
  * `[data-i18n]` element, the label (`aria-label` and `title`) of
  * every `[data-i18n-label]` element, such as the icon buttons, the
- * `aria-label` alone of every `[data-i18n-aria]` element, and
+ * `aria-label` alone of every `[data-i18n-aria]` element, the
+ * visibility of every `[data-lang-only]` element (shown in that
+ * language only), and
  * `aria-current` in the language selector (`[data-lang]` links).
  */
 export function translatePage() {
@@ -258,6 +260,9 @@ export function translatePage() {
     }
     for (const element of document.querySelectorAll('[data-i18n]')) {
         element.textContent = t(element.dataset.i18n);
+    }
+    for (const element of document.querySelectorAll('[data-lang-only]')) {
+        element.hidden = element.dataset.langOnly !== lang;
     }
     for (const element of document.querySelectorAll('[data-i18n-aria]')) {
         element.setAttribute('aria-label', t(element.dataset.i18nAria));
