@@ -12,6 +12,10 @@ project adheres to [Semantic Versioning](https://semver.org/).
   from, with a link to it on GitHub, and how many commits it is ahead
   of the last release, for example "2.4.0 + 1 commit (009d485)", or
   "2.4.0 y 1 commit más (009d485)" in Spanish.
+- Every deploy is verified in production: the deploy workflow waits
+  until https://multiplication.rovisoft.net serves the new commit,
+  checks the headers of `web/_headers`, and runs the end-to-end test
+  against it (`scripts/e2e_web.py --base-url`).
 
 ### Fixed
 

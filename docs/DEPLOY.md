@@ -59,12 +59,20 @@ commit:
    (`fetch-depth: 0`) so the tags are there.
 3. Publishes the `web/` directory to Cloudflare Pages with
    `cloudflare/wrangler-action`.
+4. Verifies production: `scripts/e2e_web.py --base-url
+   https://multiplication.rovisoft.net --wait 300` waits until the
+   page names the deployed commit (the footer's `data-commit`),
+   checks that `/` and an asset carry the headers of `web/_headers`,
+   and runs the whole end-to-end test against the live site. A
+   failure marks the deploy run as failed (the site is already
+   published; roll back if needed, see below).
 
 A push whose CI fails is never deployed. Deploys run one at a time
 (`concurrency` with `queue: max`), and a waiting deploy is never
 cancelled.
 
-Total time: typically under two minutes.
+Total time: typically three to four minutes, half of it the
+end-to-end test of production.
 
 ## Manual deploys
 
@@ -86,15 +94,18 @@ choose **Rollback to this deploy**.
 
 ## Verifying a deploy
 
-After the workflow finishes:
+The workflow's last step, "End-to-end test of production", already
+checks the live site. To run the same check by hand, from a checkout
+of the deployed commit:
 
-1. The Actions run page shows the deploy URL.
-2. Open <https://multiplication.rovisoft.net> and run a quick
-   multiplication (e.g. `12345 × 6789`) to confirm WASM loaded and
-   the table renders.
-3. Open the browser dev tools → **Network** → reload. The page
-   should make zero outbound network calls for the calculation
-   (only the static asset requests for HTML, CSS, JS, and WASM).
+```bash
+python3 scripts/e2e_web.py --base-url https://multiplication.rovisoft.net \
+    --chrome-binary /usr/bin/chromium   # if chromedriver does not find Chrome
+```
+
+By hand you can also open the browser dev tools → **Network** →
+reload: the page makes no outbound calls for the calculation (only
+the static asset requests for HTML, CSS, JS, and WASM).
 
 ## Caching
 

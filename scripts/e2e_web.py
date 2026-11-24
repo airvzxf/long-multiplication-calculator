@@ -18,6 +18,16 @@ The WASM module must be built first::
 chromedriver does not find it on its own, for example
 ``/usr/bin/chromium``.
 
+``--base-url`` tests a deployed site instead of the local copy, for
+example production after a deploy::
+
+    python3 scripts/e2e_web.py --base-url https://multiplication.rovisoft.net --wait 300
+
+The checkout must be the deployed commit: the expected footer and
+asset versions come from it. The page must name that commit (its
+footer's ``data-commit``) within ``--wait`` seconds, and the
+responses must carry the headers of ``web/_headers``.
+
 Checks, in English and in Spanish: the 13597 x 8642 table equals the
 golden fixture, the summary line, the address bar link and Clear, a
 link with letters, a link with too many digits (answered in less than
@@ -143,6 +153,42 @@ def stage_site(web: Path, version: str, into: Path) -> Path:
         text = text.replace("__SITE_AHEAD__", build["ahead"])
         path.write_text(text, encoding="utf-8")
     return site
+
+
+def fetch(url: str) -> tuple[dict[str, str], str]:
+    """GET `url`, bypassing caches; return its headers and its text."""
+    request = urllib.request.Request(url, headers={"Cache-Control": "no-cache", "User-Agent": "e2e-web"})
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return dict(response.headers.items()), response.read().decode("utf-8", errors="replace")
+
+
+def wait_for_deploy(base: str, commit: str, timeout: float) -> None:
+    """Wait until the page at `base` was built from `commit`."""
+    deadline = time.monotonic() + timeout
+    marker = f'data-commit="{commit}"'
+    while True:
+        try:
+            seen = re.search(r'data-commit="([^"]*)"', fetch(base + "/")[1])
+            if seen and seen.group(0) == marker:
+                check(True, f"{base} serves commit {commit[:12]}")
+                return
+            found = seen.group(1) if seen else "no footer"
+        except OSError as error:
+            found = str(error)
+        if time.monotonic() > deadline:
+            raise Failure(f"{base} still serves {found!r}, not commit {commit} (waited {timeout:.0f} s)")
+        time.sleep(5)
+
+
+def check_remote_headers(base: str, rules: list[tuple[str, list[tuple[str, str]]]], asset: str) -> None:
+    """The deployed responses carry the headers of web/_headers."""
+    for path in ("/", f"/asset/js/app.js?v={asset}"):
+        headers = {name.lower(): value for name, value in fetch(base + path)[0].items()}
+        expected = [(name, value) for pattern, pairs in rules if matches(pattern, path.split("?", 1)[0])
+                    for name, value in pairs]
+        wrong = [name for name, value in expected if headers.get(name.lower()) != value]
+        check(not wrong, f"{path} carries the {len(expected)} headers of web/_headers"
+              + ("" if not wrong else f"; wrong or missing: {wrong}"))
 
 
 def parse_headers(path: Path) -> list[tuple[str, list[tuple[str, str]]]]:
@@ -590,6 +636,10 @@ def main() -> int:
     parser.add_argument("--chromedriver", default=os.environ.get("CHROMEDRIVER") or shutil.which("chromedriver"))
     parser.add_argument("--chrome-binary", default=os.environ.get("CHROME_BIN"))
     parser.add_argument("--web", type=Path, default=REPO / "web")
+    parser.add_argument("--base-url", help="test this deployed site (built from the checked-out commit) "
+                        "instead of serving --web locally")
+    parser.add_argument("--wait", type=float, default=0, metavar="SECONDS",
+                        help="with --base-url, how long to wait for the site to serve the checked-out commit")
     args = parser.parse_args()
     if not args.chromedriver:
         raise SystemExit("chromedriver not found: pass --chromedriver or set $CHROMEDRIVER")
@@ -597,9 +647,23 @@ def main() -> int:
     version = read_version()
     fixture = read_fixture("13597_x_8642.txt")
     with tempfile.TemporaryDirectory(prefix="e2e-web-") as tmp:
-        server, base = serve(stage_site(args.web, version, Path(tmp)))
+        server = None
+        if args.base_url:
+            base = args.base_url.rstrip("/")
+            commit = read_build()["commit"]
+            if not commit:
+                raise SystemExit("--base-url needs a git checkout of the deployed commit")
+            print(f"Testing {base} (version {version}, commit {commit[:12]})")
+            try:
+                wait_for_deploy(base, commit, args.wait)
+                check_remote_headers(base, parse_headers(REPO / "web/_headers"), read_asset_version(version))
+            except Failure as failure:
+                print(f"  ✗ {failure}", file=sys.stderr)
+                return 1
+        else:
+            server, base = serve(stage_site(args.web, version, Path(tmp)))
+            print(f"Serving {args.web} (version {version}) at {base}")
         driver = Driver(args.chromedriver)
-        print(f"Serving {args.web} (version {version}) at {base}")
         try:
             for lang, scenario in (("en-US", lambda b: english(b, fixture, version)), ("es", lambda b: spanish(b, fixture, version))):
                 downloads = Path(tmp) / f"downloads-{lang}"
@@ -614,7 +678,8 @@ def main() -> int:
             return 1
         finally:
             driver.stop()
-            server.shutdown()
+            if server:
+                server.shutdown()
     print("All web checks passed.")
     return 0
 
