@@ -13,6 +13,8 @@ cargo test --workspace
 cargo build --workspace --release
 cargo doc --workspace --no-deps
 cargo audit
+actionlint                     # workflows (.github/actionlint.yaml)
+git ls-files -z '*.bash' '*.sh' | xargs -0 shellcheck
 ./scripts/build_wasm.bash      # build + wasm-opt -Oz into web/asset/js/wasm/
 wasm-pack test --chrome --headless crates/wasm   # or --firefox --headless
 python3 scripts/e2e_web.py     # the page in headless Chrome (needs chromedriver)
@@ -22,7 +24,9 @@ The CI workflow (`.github/workflows/ci.yml`) runs the same checks on
 every push, and the deploy workflow only runs after CI passes on
 `main`. Locally you can skip `cargo audit`, the WASM build and the
 end-to-end test if you are not touching dependencies, `core`,
-`crates/wasm` or `web/`.
+`crates/wasm` or `web/`, and `actionlint` and `shellcheck` if you
+are not touching `.github/workflows/` or a shell script (the
+`T0 · lint` CI job runs both).
 
 > **Note on the WASM test runner:** the `calculate_smoke` test is
 > configured with `wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser)`,

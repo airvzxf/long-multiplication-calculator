@@ -16,6 +16,10 @@ project adheres to [Semantic Versioning](https://semver.org/).
   until https://multiplication.rovisoft.net serves the new commit,
   checks the headers of `web/_headers`, and runs the end-to-end test
   against it (`scripts/e2e_web.py --base-url`).
+- CI: a `T0 · lint` job runs actionlint on the workflows and
+  shellcheck on the shell scripts; `.github/actionlint.yaml` lists
+  the known false positives (`concurrency.queue`, the
+  `macos-15-intel` runner).
 
 ### Fixed
 
