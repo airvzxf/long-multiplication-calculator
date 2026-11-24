@@ -32,6 +32,26 @@ Notas de diseño:
 
 ---
 
+## Tier 0b — Después de 2.3.2 (revisión 2026-11-24)
+
+### H16. Prueba e2e de la web en la CI — pendiente
+
+Cargar la página real (servidor local sobre `web/` con la versión sustituida y el WASM compilado) en Chrome sin interfaz y comprobar inglés y español, la tabla 13597×8642 igual al fixture, `Table ready: 89 rows.`, el enlace en la barra de direcciones y su limpieza con Clear, los errores de dígitos (con `aria-invalid` solo en el campo inválido), de longitud (< 5 s) y de tamaño (traducido), y que la consola no tenga errores (CSP).
+
+### H17. Límite de tamaño del WASM en la CI — pendiente
+
+Hoy 50 KB (51 200 bytes); el bundle ocupa ~50,8 KB tras H19 y el JSON de H18 añade ~4,4 KB.
+
+### H18. Aprovechar `LongMultiplication` en la web — pendiente
+
+Descargar el JSON del proceso (idéntico al de la CLI) y recorrer la tabla paso a paso resaltando fila, columna y `Sub n.`.
+
+### H19. ~~Escritura en streaming tan rápida como en memoria~~ — hecho
+
+Las celdas vacías y las reglas se escribían carácter a carácter (más de 100 millones de llamadas a `write_str` con 200 nueves); ahora cada sección precalcula una fila de celdas vacías y sus reglas (`Grid` en `generate.rs`) y cada tramo es una sola escritura. CLI, 200 nueves × 200 nueves hacia `/dev/null`: 0,71 s → 0,024 s, mismo RSS máximo (12,6 MiB, getrusage). `criterion` (`write_table in 256 KiB blocks`, nuevo): 200 dígitos mezclados 29,8 → 3,0 ms; 100 nueves 105 → 4,5 ms; `get_table` también baja un 40-88 %.
+
+---
+
 ## Tier 1 — Valor alto, recomendado para el próximo ciclo
 
 ### H1. ~~`proptest` para invariante del algoritmo~~ — hecho (`tables_are_aligned_and_correct` y `tables_with_subtotals_are_aligned_and_correct` en `multiplication.rs`)

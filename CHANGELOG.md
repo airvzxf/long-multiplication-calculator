@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/) and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+The text table and the JSON output are byte for byte the same.
+
+### Changed
+
+- **Faster tables.** Runs of empty cells and the rules between rows
+  are drawn once per section and written in one piece, instead of
+  one character at a time. The CLI writes 200 nines times 200 nines
+  (578 MB) to `/dev/null` in 0.02 s instead of 0.7 s, with the same
+  memory; `get_table` is 40-88 % faster. Streaming is no longer
+  slower than building the table in memory.
+- Benchmarks: a `write_table in 256 KiB blocks` group measures the
+  streaming path the CLI uses.
+
 ## [2.3.2] - 2026-11-24
 
 The binary behaves as in 2.3.1; this release ships the AUR package.

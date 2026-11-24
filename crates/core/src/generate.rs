@@ -144,7 +144,7 @@ pub fn bottom_border<W: fmt::Write + ?Sized>(
     process: &LongMultiplication,
     out: &mut W,
 ) -> fmt::Result {
-    rule(out, process.columns(), ['┗', '━', '┷', '┛'])
+    rule(out, &Grid::new(process.columns()), ['┗', '━', '┷', '┛'])
 }
 
 /// Store the position title of the long multiplication.
@@ -194,10 +194,11 @@ pub fn position_title<W: fmt::Write + ?Sized>(
     out: &mut W,
 ) -> fmt::Result {
     let length: usize = process.columns();
-    let width: usize = cell_width(length);
+    let grid = Grid::new(length);
+    let width: usize = grid.width;
 
     title(out, length, "Pos.")?;
-    rule(out, length, ['┠', '┄', '┬', '┨'])?;
+    rule(out, &grid, ['┠', '┄', '┬', '┨'])?;
 
     // Column numbers, from the highest on the left to 1 on the right.
     out.write_char('┃')?;
@@ -209,7 +210,7 @@ pub fn position_title<W: fmt::Write + ?Sized>(
     }
     out.write_str("┃\n")?;
 
-    rule(out, length, ['┣', '━', '┷', '┫'])
+    rule(out, &grid, ['┣', '━', '┷', '┫'])
 }
 
 /// Store the operation title of the long multiplication.
@@ -257,7 +258,7 @@ pub fn operation_title<W: fmt::Write + ?Sized>(
     let length: usize = process.columns();
 
     title(out, length, "Ops.")?;
-    rule(out, length, ['┣', '━', '┯', '┫'])
+    rule(out, &Grid::new(length), ['┣', '━', '┯', '┫'])
 }
 
 /// Store the multiplication section of the long multiplication.
@@ -307,22 +308,22 @@ pub fn multiplication<W: fmt::Write + ?Sized>(
     let multiplicand: &str = process.multiplicand();
     let multiplier: &str = process.multiplier();
     let length: usize = process.columns();
-    let width: usize = cell_width(length);
+    let grid = Grid::new(length);
 
     // Multiplicand, right-aligned.
-    let mut row = Row::new(out, width)?;
+    let mut row = Row::new(out, &grid)?;
     row.empty(length - multiplicand.len())?;
     row.chars(multiplicand.chars())?;
     row.finish(format_args!(""))?;
 
     // Multiplier, right-aligned, with the `x` sign in the first cell.
-    let mut row = Row::new(out, width)?;
+    let mut row = Row::new(out, &grid)?;
     row.chars(['x'])?;
     row.empty(length - multiplier.len() - 1)?;
     row.chars(multiplier.chars())?;
     row.finish(format_args!(""))?;
 
-    rule(out, length, ['┣', '━', '┿', '┫'])
+    rule(out, &grid, ['┣', '━', '┿', '┫'])
 }
 
 /// Store the operations section of the long multiplication.
@@ -379,23 +380,25 @@ pub fn operations<W: fmt::Write + ?Sized>(
 ) -> fmt::Result {
     let step: usize = process.multiplicand().len();
     let length: usize = process.columns();
-    let width: usize = cell_width(length);
     let rows: usize = process.multiplier().len();
+    let grid = Grid::new(length);
+    let dotted: String = grid.rule(['┠', '┈', '┼', '┨']);
+    let light: String = grid.rule(['┠', '─', '┼', '┨']);
 
     for partial in process.rows() {
         let iteration: usize = partial.row;
 
         // Carries of this row, shifted one column to the left.
-        let mut row = Row::new(out, width)?;
+        let mut row = Row::new(out, &grid)?;
         row.empty(length - step - iteration)?;
         row.digits(partial.carries.iter().rev().copied())?;
         row.empty(iteration)?;
         row.finish(format_args!(" {iteration} ^"))?;
 
-        rule(out, length, ['┠', '┈', '┼', '┨'])?;
+        out.write_str(&dotted)?;
 
         // Units of this row.
-        let mut row = Row::new(out, width)?;
+        let mut row = Row::new(out, &grid)?;
         row.empty(length - step - iteration + 1)?;
         row.digits(partial.units.iter().rev().copied())?;
         row.empty(iteration - 1)?;
@@ -404,10 +407,10 @@ pub fn operations<W: fmt::Write + ?Sized>(
         if iteration == rows {
             break;
         }
-        rule(out, length, ['┠', '─', '┼', '┨'])?;
+        out.write_str(&light)?;
     }
 
-    rule(out, length, ['┣', '━', '┷', '┫'])
+    rule(out, &grid, ['┣', '━', '┷', '┫'])
 }
 
 /// Store the sum title of the long multiplication.
@@ -452,7 +455,7 @@ pub fn sum_title<W: fmt::Write + ?Sized>(process: &LongMultiplication, out: &mut
     let length: usize = process.columns();
 
     title(out, length, "Sum.")?;
-    rule(out, length, ['┣', '━', '┯', '┫'])
+    rule(out, &Grid::new(length), ['┣', '━', '┯', '┫'])
 }
 
 /// Store the long-sum section of the long multiplication.
@@ -511,23 +514,26 @@ pub fn sum_title<W: fmt::Write + ?Sized>(process: &LongMultiplication, out: &mut
 /// ```
 pub fn long_sum<W: fmt::Write + ?Sized>(process: &LongMultiplication, out: &mut W) -> fmt::Result {
     let length: usize = process.columns();
-    let width: usize = cell_width(length);
-    generate_rows_with_numbers(process.sum(), length, out)?;
+    let grid = Grid::new(length);
+    let dotted: String = grid.rule(['┠', '┈', '┼', '┨']);
+    let close: String = grid.rule(['┣', '━', '┷', '┫']);
+    let open: String = grid.rule(['┣', '━', '┯', '┫']);
+    generate_rows_with_numbers(process.sum(), &grid, &dotted, out)?;
 
     for (index, subtotal) in process.subtotals().enumerate() {
-        rule(out, length, ['┣', '━', '┷', '┫'])?;
+        out.write_str(&close)?;
         title_sub(out, length, index + 1)?;
-        rule(out, length, ['┣', '━', '┯', '┫'])?;
+        out.write_str(&open)?;
 
-        generate_rows_with_numbers(&subtotal, length, out)?;
+        generate_rows_with_numbers(&subtotal, &grid, &dotted, out)?;
     }
 
-    rule(out, length, ['┣', '━', '┷', '┫'])?;
+    out.write_str(&close)?;
     title(out, length, "Pro.")?;
-    rule(out, length, ['┣', '━', '┯', '┫'])?;
+    out.write_str(&open)?;
 
     // The product, most significant digit first.
-    let mut row = Row::new(out, width)?;
+    let mut row = Row::new(out, &grid)?;
     row.digits(process.product().iter().rev().copied())?;
     row.finish(format_args!(" P"))
 }
@@ -558,18 +564,20 @@ pub fn author<W: fmt::Write + ?Sized>(out: &mut W) -> fmt::Result {
     out.write_str(AUTHOR)
 }
 
+/// One `n C` row per column; `dotted` is the rule between two rows.
 fn generate_rows_with_numbers<W: fmt::Write + ?Sized>(
     numbers: &[usize],
-    length: usize,
+    grid: &Grid,
+    dotted: &str,
     out: &mut W,
 ) -> fmt::Result {
-    let width: usize = cell_width(length);
+    let length: usize = grid.length;
 
     for (column, &number) in numbers.iter().enumerate() {
         // The sum of column `column` is written so that its units
         // digit lands in that column; its tens spill to the left.
         let digits: usize = get_number_length(number);
-        let mut row = Row::new(out, width)?;
+        let mut row = Row::new(out, grid)?;
         row.empty(length - column - digits)?;
         row.number_digits(number, digits)?;
         row.empty(column)?;
@@ -578,7 +586,7 @@ fn generate_rows_with_numbers<W: fmt::Write + ?Sized>(
         if column + 1 == length {
             break;
         }
-        rule(out, length, ['┠', '┈', '┼', '┨'])?;
+        out.write_str(dotted)?;
     }
     Ok(())
 }
@@ -629,21 +637,62 @@ fn repeat<W: fmt::Write + ?Sized>(out: &mut W, ch: char, count: usize) -> fmt::R
     Ok(())
 }
 
-fn rule<W: fmt::Write + ?Sized>(
-    out: &mut W,
+/// Write a rule drawn once (see [`Grid::rule`]); for rules repeated
+/// row after row, keep the `String` and write it each time instead.
+fn rule<W: fmt::Write + ?Sized>(out: &mut W, grid: &Grid, chars: [char; 4]) -> fmt::Result {
+    out.write_str(&grid.rule(chars))
+}
+
+/// The shape of a table, with the pieces that every row repeats.
+///
+/// A table of `n` columns has rows of `n` cells, most of them empty,
+/// and the same rules again and again. Building those once per
+/// section turns each run of empty cells, and each rule, into a
+/// single write: a streaming writer pays for every call.
+struct Grid {
+    /// Number of columns.
     length: usize,
-    [left, fill, separator, right]: [char; 4],
-) -> fmt::Result {
-    let width: usize = cell_width(length);
-    out.write_char(left)?;
-    for n in 0..length {
-        if n > 0 {
-            out.write_char(separator)?;
+    /// Width of a cell, in characters.
+    width: usize,
+    /// `│` followed by `width` spaces, once per column.
+    blanks: String,
+}
+
+impl Grid {
+    fn new(length: usize) -> Self {
+        let width: usize = cell_width(length);
+        let mut blanks = String::with_capacity(length * (width + '│'.len_utf8()));
+        for _ in 0..length {
+            blanks.push('│');
+            blanks.extend(core::iter::repeat_n(' ', width));
         }
-        repeat(out, fill, width)?;
+        Self { length, width, blanks }
     }
-    out.write_char(right)?;
-    out.write_char('\n')
+
+    /// A whole rule, newline included: `left`, then each cell filled
+    /// with `fill` and separated by `separator`, then `right`.
+    fn rule(&self, [left, fill, separator, right]: [char; 4]) -> String {
+        // Every box-drawing character takes 3 bytes in UTF-8.
+        let mut line = String::with_capacity((self.length * (self.width + 1) + 1) * 3 + 1);
+        line.push(left);
+        for n in 0..self.length {
+            if n > 0 {
+                line.push(separator);
+            }
+            line.extend(core::iter::repeat_n(fill, self.width));
+        }
+        line.push(right);
+        line.push('\n');
+        line
+    }
+
+    /// `count` empty cells; the first one without its separator when
+    /// `first` is set (it follows the left border).
+    fn blanks(&self, count: usize, first: bool) -> &str {
+        let cell: usize = self.width + '│'.len_utf8();
+        let start: usize = if first { '│'.len_utf8() } else { 0 };
+        self.blanks.get(start..count * cell).unwrap_or("")
+    }
 }
 
 fn title<W: fmt::Write + ?Sized>(out: &mut W, length: usize, label: &str) -> fmt::Result {
@@ -686,14 +735,15 @@ fn push_cell<W: fmt::Write + ?Sized>(out: &mut W, width: usize, content: Cell) -
 
 struct Row<'a, W: fmt::Write + ?Sized> {
     out: &'a mut W,
+    grid: &'a Grid,
     width: usize,
     first: bool,
 }
 
 impl<'a, W: fmt::Write + ?Sized> Row<'a, W> {
-    fn new(out: &'a mut W, width: usize) -> Result<Self, fmt::Error> {
+    fn new(out: &'a mut W, grid: &'a Grid) -> Result<Self, fmt::Error> {
         out.write_char('┃')?;
-        Ok(Self { out, width, first: true })
+        Ok(Self { out, grid, width: grid.width, first: true })
     }
 
     fn separator(&mut self) -> fmt::Result {
@@ -704,11 +754,13 @@ impl<'a, W: fmt::Write + ?Sized> Row<'a, W> {
         Ok(())
     }
 
+    /// `count` empty cells, in one write.
     fn empty(&mut self, count: usize) -> fmt::Result {
-        for _ in 0..count {
-            self.separator()?;
-            repeat(self.out, ' ', self.width)?;
+        if count == 0 {
+            return Ok(());
         }
+        self.out.write_str(self.grid.blanks(count, self.first))?;
+        self.first = false;
         Ok(())
     }
 

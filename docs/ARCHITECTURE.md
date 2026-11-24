@@ -104,6 +104,9 @@ are not part of the supported public API:
   `multiplication`, `operations`, `sum_title`, `long_sum`,
   `bottom_border`, `author`). Each one draws its part of the school
   layout from a `&LongMultiplication` onto any `core::fmt::Write`.
+  Each section builds its rules and a row of empty cells once, so a
+  run of empty cells or a rule is a single write: a streaming writer
+  pays for every call, and most cells of a big table are empty.
 - `multiplication` — `get_table`, `estimate_table_bytes` and
   `check_output_size`, the string-based entry points.
 - `process` (private; its types are re-exported) — the
