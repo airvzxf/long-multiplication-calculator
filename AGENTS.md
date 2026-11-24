@@ -33,7 +33,14 @@ you are not touching dependencies or `crates/wasm`.
 ## Toolchain
 
 The project pins `stable` Rust in `rust-toolchain.toml`. MSRV is
-`1.85.0` (enforced via `.clippy.toml` and `package.rust-version`).
+`1.88.0` (enforced via `.clippy.toml`, `package.rust-version` and the
+`T1 · msrv` CI job, which checks every target, tests included).
+
+The MSRV is not a promise to old compilers: Rust has no LTS, and
+users get pre-built binaries or the current stable through
+`rust-toolchain.toml`. When a dependency or a new language feature
+needs a newer Rust, raise `rust-version`, `.clippy.toml` and the CI
+job together, to the lowest version that works.
 Required components: `clippy`, `rustfmt`. Required target for WASM:
 `wasm32-unknown-unknown`.
 

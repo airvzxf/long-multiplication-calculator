@@ -78,7 +78,8 @@ fn cli_store_suggests_mkdir_for_a_missing_directory() {
         .args(["5", "7", "--output", "store", "--file", file.to_str().unwrap()])
         .assert()
         .failure()
-        .stderr(predicate::str::contains(format!("mkdir -p {}", missing.display())));
+        .stderr(predicate::str::contains("does not exist (create it with `mkdir"))
+        .stderr(predicate::str::contains(missing.display().to_string()));
 }
 
 #[test]
@@ -294,7 +295,7 @@ fn cli_json_honours_the_output_limit() {
         .args(["--format", "json", "--max-output-mib", "1", nines.as_str(), nines.as_str()])
         .assert()
         .failure()
-        .stderr(predicate::str::contains("would take about"))
+        .stderr(predicate::str::contains("The JSON output would take about"))
         .stderr(predicate::str::contains("--max-output-mib"));
     cli()
         .args(["--format", "json", "--max-output-mib", "0", nines.as_str(), nines.as_str()])

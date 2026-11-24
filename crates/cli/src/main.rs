@@ -10,7 +10,9 @@ mod output;
 
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Parser, ValueEnum};
-use long_multiplication_core::{CoreError, LongMultiplication, MAX_DIGITS, validate_input};
+use long_multiplication_core::{
+    CoreError, LongMultiplication, MAX_DIGITS, format_bytes, validate_input,
+};
 use output::{Sink, SinkError};
 use std::fs::File;
 use std::io;
@@ -122,7 +124,14 @@ fn main() -> Result<()> {
             Format::Json => json::estimate_json_bytes(&process),
         };
         if estimated > max {
-            let error = CoreError::OutputTooLarge { estimated, max };
+            let error = match args.format {
+                Format::Text => CoreError::OutputTooLarge { estimated, max }.to_string(),
+                Format::Json => format!(
+                    "The JSON output would take about {} (limit {})",
+                    format_bytes(estimated),
+                    format_bytes(max)
+                ),
+            };
             bail!("{error}; use --max-output-mib <MiB> or --unlimited to render it anyway");
         }
     }
@@ -184,11 +193,27 @@ fn file_error(path: &Path, error: io::Error) -> anyhow::Error {
     let context = format!("Cannot write to '{}'", path.display());
     match missing_parent(path, &error) {
         Some(parent) => anyhow!(error).context(format!(
-            "{context}: the directory '{}' does not exist (create it with `mkdir -p {}`)",
+            "{context}: the directory '{}' does not exist (create it with `{}`)",
             parent.display(),
-            parent.display()
+            mkdir_command(parent)
         )),
         None => anyhow!(error).context(context),
+    }
+}
+
+/// The command that creates `dir` and its missing parents, quoted for
+/// the usual shell of the platform.
+fn mkdir_command(dir: &Path) -> String {
+    let dir = dir.display().to_string();
+    if cfg!(windows) {
+        // `mkdir` in cmd.exe and PowerShell creates the parents too.
+        return format!("mkdir \"{dir}\"");
+    }
+    let plain = dir.chars().all(|c| c.is_ascii_alphanumeric() || "/._-+,:@%=".contains(c));
+    if plain && !dir.is_empty() {
+        format!("mkdir -p {dir}")
+    } else {
+        format!("mkdir -p '{}'", dir.replace('\'', r"'\''"))
     }
 }
 
@@ -199,4 +224,23 @@ fn missing_parent<'a>(path: &'a Path, error: &io::Error) -> Option<&'a Path> {
         return None;
     }
     path.parent().filter(|parent| !parent.as_os_str().is_empty() && !parent.exists())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn mkdir_command_quotes_only_when_needed() {
+        assert_eq!(mkdir_command(Path::new("out/tables")), "mkdir -p out/tables");
+        assert_eq!(mkdir_command(Path::new("my tables")), "mkdir -p 'my tables'");
+        assert_eq!(mkdir_command(Path::new("it's")), r"mkdir -p 'it'\''s'");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn mkdir_command_uses_the_windows_syntax() {
+        assert_eq!(mkdir_command(Path::new(r"out\my tables")), r#"mkdir "out\my tables""#);
+    }
 }

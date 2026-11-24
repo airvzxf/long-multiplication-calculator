@@ -57,18 +57,20 @@ jobs:
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
   msrv:
-    name: 'T1 · msrv (rustc 1.85.0)'
+    name: 'T1 · msrv (rustc 1.88.0)'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
         with:
-          toolchain: 1.85.0
-      # `+1.85.0` overrides rust-toolchain.toml (`stable`). Only the
-      # shipped crates are checked: dev-dependencies (assert_cmd,
-      # tempfile, ...) are free to need a newer compiler.
-      - run: cargo +1.85.0 check --workspace --locked
+          toolchain: 1.88.0
+      # `+1.88.0` overrides rust-toolchain.toml (`stable`). Every
+      # target is checked, tests and benchmarks included, so the
+      # declared `rust-version` is true for the whole workspace and a
+      # dependency update that needs a newer compiler fails here. Raise
+      # the MSRV when that happens (see AGENTS.md, "Toolchain").
+      - run: cargo +1.88.0 check --workspace --all-targets --locked
 
   test:
     name: 'T2 · cargo test --workspace'

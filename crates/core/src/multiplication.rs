@@ -13,6 +13,11 @@ use crate::{CoreError, LongMultiplication, Result};
 /// products, sum, subtotals, product, author). I/O is intentionally
 /// not performed here; see the `cli` and `wasm` crates for adapters.
 ///
+/// The operands follow the rules of [`crate::validate_input`] (digits
+/// 0-9, surrounding whitespace ignored, no length limit). For anything
+/// else the result is an empty `String`, never a made-up table; use
+/// [`LongMultiplication::new`] to learn why an operand is refused.
+///
 /// # Examples
 ///
 /// ```
@@ -22,9 +27,14 @@ use crate::{CoreError, LongMultiplication, Result};
 /// // 5 * 7 = 35; the product row reads "┃ 3 │ 5 ┃ P".
 /// assert!(text.contains("3 │ 5 ┃ P"));
 /// assert!(text.contains("Symbols"));
+///
+/// assert_eq!(get_table(" 5 ", "7"), text);
+/// assert_eq!(get_table("5", "7a"), "");
 /// ```
 pub fn get_table(multiplicand: &str, multiplier: &str) -> String {
-    let process = LongMultiplication::from_digits(multiplicand, multiplier);
+    let Ok(process) = LongMultiplication::new(multiplicand, multiplier) else {
+        return String::new();
+    };
     let mut content: String = String::with_capacity(process.estimate_table_bytes());
     // Writing to a `String` cannot fail.
     if process.write_table(&mut content).is_err() {
@@ -39,7 +49,8 @@ pub fn get_table(multiplicand: &str, multiplier: &str) -> String {
 /// without rendering the table, so it costs a tiny fraction of
 /// [`get_table`]. The estimate is never below the real size and is
 /// usually within 1.5x of it. Use it to refuse inputs whose table
-/// would not fit in memory or on screen.
+/// would not fit in memory or on screen. Operands that [`get_table`]
+/// refuses give `0`, the size of its empty result.
 ///
 /// # Examples
 ///
@@ -52,12 +63,12 @@ pub fn get_table(multiplicand: &str, multiplier: &str) -> String {
 /// // Nines need one `Sub n.` section per digit: the table grows fast.
 /// let nines = "9".repeat(100);
 /// assert!(estimate_table_bytes(&nines, &nines) > 50 * 1024 * 1024);
+///
+/// assert_eq!(estimate_table_bytes("", "7"), 0);
 /// ```
 pub fn estimate_table_bytes(multiplicand: &str, multiplier: &str) -> usize {
-    if multiplicand.is_empty() || multiplier.is_empty() {
-        return 0;
-    }
-    LongMultiplication::from_digits(multiplicand, multiplier).estimate_table_bytes()
+    LongMultiplication::new(multiplicand, multiplier)
+        .map_or(0, |process| process.estimate_table_bytes())
 }
 
 /// Check that the table for these operands fits in `max_bytes`.

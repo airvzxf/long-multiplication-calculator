@@ -95,11 +95,10 @@ wider cells so the position row stays aligned.
 The internal modules are `pub` (so doctests can reach them) but they
 are not part of the supported public API:
 
-- `breakdown` — `break_down_multiplication`, `break_down_addition`,
-  `break_down_subtotal`. Pure functions over digit vectors.
-- `length` — `get_string_length`, `get_strings_length`,
-  `get_number_length`, `get_numbers_length`. Tells how many columns
-  the table needs.
+- `breakdown` — `break_down_subtotal`: one carry pass over the
+  column sums (each `Sub n.` section is one pass).
+- `length` — `get_number_length`: the decimal digits of a number
+  (cell widths, `n C` labels).
 - `generate` — the per-section Unicode emitters (`symbols`,
   `top_border`, `position_title`, `operation_title`,
   `multiplication`, `operations`, `sum_title`, `long_sum`,

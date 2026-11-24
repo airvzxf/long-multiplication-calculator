@@ -80,10 +80,10 @@ impl Sink {
     /// Write `text` to stdout only (for example the final newline
     /// that the text format prints but does not store).
     pub fn stdout_only(&mut self, text: &str) {
-        if self.flush_block().is_ok() {
-            if let Some(stdout) = &mut self.stdout {
-                stdout.write(text.as_bytes());
-            }
+        if self.flush_block().is_ok()
+            && let Some(stdout) = &mut self.stdout
+        {
+            stdout.write(text.as_bytes());
         }
     }
 
@@ -114,15 +114,16 @@ impl Sink {
     fn flush_block(&mut self) -> fmt::Result {
         let block = &self.buffer[..];
         let mut result = Ok(());
-        if let Some(file) = &mut self.file {
-            if !file.write(block) {
-                result = Err(fmt::Error);
-            }
+        if let Some(file) = &mut self.file
+            && !file.write(block)
+        {
+            result = Err(fmt::Error);
         }
-        if let Some(stdout) = &mut self.stdout {
-            if !stdout.write(block) && (!stdout.is_closed_pipe() || self.file.is_none()) {
-                result = Err(fmt::Error);
-            }
+        if let Some(stdout) = &mut self.stdout
+            && !stdout.write(block)
+            && (!stdout.is_closed_pipe() || self.file.is_none())
+        {
+            result = Err(fmt::Error);
         }
         self.buffer.clear();
         result

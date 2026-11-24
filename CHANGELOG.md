@@ -4,6 +4,39 @@ All notable changes to this project are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/) and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.1] - 2026-11-23
+
+The text table and the JSON output are byte for byte the same.
+
+### Changed
+
+- **MSRV 1.88** (was 1.85). Rust has no LTS and the binaries are
+  pre-built, so the minimum now follows what the dependencies need;
+  the `T1 · msrv` CI job checks every target, tests included, so the
+  declared version stays true. `proptest` 1.12 and `criterion` 0.8.
+- `core`: `format_bytes` is public (the wording of the size errors).
+
+### Fixed
+
+- `get_table` and `estimate_table_bytes` follow the rules of
+  `validate_input`: surrounding whitespace is ignored and an operand
+  that is not made of digits gives an empty table (`0` bytes)
+  instead of a made-up one.
+- CLI: the `mkdir` hint quotes directories with spaces or quotes,
+  and uses `mkdir "<dir>"` on Windows.
+- CLI: with `--format json`, the size limit says "The JSON output
+  would take about …" instead of "The table …".
+- Security: `rustix` 1.1.6 (RUSTSEC-2026-0486, test-only dependency).
+  `cargo audit` reports nothing.
+
+### Removed
+
+- `breakdown::break_down_addition`, `breakdown::break_down_multiplication`,
+  `length::get_string_length`, `length::get_strings_length` and
+  `length::get_numbers_length` (internal API, unused since 2.3.0;
+  the first two kept 8 bytes per digit pair in memory). Their test
+  cases now check `LongMultiplication::rows` and `sum`.
+
 ## [2.3.0] - 2026-11-23
 
 The text table is byte for byte the same as before.
