@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/) and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [2.4.0] - 2026-11-24
 
 The text table and the JSON output are byte for byte the same.
 
@@ -46,6 +46,8 @@ The text table and the JSON output are byte for byte the same.
   streaming path the CLI uses.
 - CI: the WASM size limit is 80 KB (was 50 KB); the bundle takes
   about 56 KB with `calculateJson`, and the log shows its gzip size.
+- `packaging/aur/` matches the published `long-multiplication-bin`
+  2.3.2-1; the release workflow moves the AUR to 2.4.0.
 
 ## [2.3.2] - 2026-11-24
 
